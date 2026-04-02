@@ -54,6 +54,7 @@ export default function CourseManagerTab() {
   const { openDialog: openSettingsDialog } = useSettingsDialogContext();
   const [clearConfirmOpen, setClearConfirmOpen] = useState<boolean>(false);
   const [taskSortOrder, setTaskSortOrder] = useState<'date' | 'priority'>('date');
+  const [showCompletedTasks, setShowCompletedTasks] = useState<boolean>(false);
   const [examNotesProgress, setExamNotesProgress] = useState<Record<string, ProgressData>>({});
   const [expandedExamNotes, setExpandedExamNotes] = useState<Record<string, boolean>>({});
   const courseTasks = tasks.filter(t => t.courseId === selectedCourseId);
@@ -342,67 +343,82 @@ export default function CourseManagerTab() {
 
               {completedTasks.length > 0 && (
                 <>
-                  <div className="text-xs uppercase tracking-wide text-zinc-500 mt-4">
-                    {tCommon('status.completed')}
-                  </div>
-                  <div className="space-y-2">
-                    {completedTasks.map(t => (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        key={t.id}
-                        className="flex items-center justify-between bg-white/40 dark:bg-white/5 p-3 rounded-xl group border-l-4"
-                        style={{ borderLeftColor: getItemTaskPriorityColor(t.priority) }}
-                      >
-                        <div
-                          className="flex-1 cursor-pointer"
-                          onClick={() => {
-                            // Edit completed task using the item dialog
-                            itemDialog.openEditDialog(t);
-                          }}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full mt-4 px-2 h-auto py-2 justify-between rounded-lg"
+                    onClick={() => setShowCompletedTasks(prev => !prev)}
+                    aria-expanded={showCompletedTasks}
+                  >
+                    <span className="text-xs uppercase tracking-wide text-zinc-100 dark:text-zinc-100">
+                      {tCommon('status.completed')} ({completedTasks.length})
+                      
+                    </span>
+                    <span className="text-xs text-zinc-700 dark:text-zinc-200 normal-case tracking-normal flex items-center gap-1 font-medium">
+                      {showCompletedTasks ? 'Hide completed tasks' : 'Show completed tasks'}
+                      {showCompletedTasks ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </span>
+                  </Button>
+                  {showCompletedTasks && (
+                    <div className="space-y-2">
+                      {completedTasks.map(t => (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          key={t.id}
+                          className="flex items-center justify-between bg-white/40 dark:bg-white/5 p-3 rounded-xl group border-l-4"
+                          style={{ borderLeftColor: getItemTaskPriorityColor(t.priority) }}
                         >
-                          <div className="line-through group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
-                            {t.title}
-                          </div>
-                          <div className="text-xs text-zinc-500">
-                            {t.dueAt ? formatDateDDMMYYYY(new Date(t.dueAt).toISOString().split('T')[0]) : '—'} ·{' '}
-                            {t.priority}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={e => {
-                              e.stopPropagation();
+                          <div
+                            className="flex-1 cursor-pointer"
+                            onClick={() => {
+                              // Edit completed task using the item dialog
                               itemDialog.openEditDialog(t);
                             }}
-                            title={tCourse('actions.edit')}
                           >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => updateItem(t.id, { isCompleted: false } as any)}
-                            title={tCourse('actions.undo')}
-                          >
-                            <Undo className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => deleteItem(t.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                            <div className="line-through group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+                              {t.title}
+                            </div>
+                            <div className="text-xs text-zinc-500">
+                              {t.dueAt ? formatDateDDMMYYYY(new Date(t.dueAt).toISOString().split('T')[0]) : '—'} ·{' '}
+                              {t.priority}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={e => {
+                                e.stopPropagation();
+                                itemDialog.openEditDialog(t);
+                              }}
+                              title={tCourse('actions.edit')}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => updateItem(t.id, { isCompleted: false } as any)}
+                              title={tCourse('actions.undo')}
+                            >
+                              <Undo className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => deleteItem(t.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </div>
