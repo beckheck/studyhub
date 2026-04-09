@@ -5,6 +5,7 @@
     "addProject": "Add Project",
     "editProject": "Edit Project",
     "saveProject": "Save Project",
+    "addTeamMember": "Add Team Member",
     "addMeeting": "Add Meeting",
     "addTask": "Add Task",
     "cancel": "Cancel"
@@ -41,14 +42,18 @@
     "emoji": "Emoji",
     "defaultIcon": "Default icon",
     "summary": "Short summary",
-    "teamRoles": "Team roles / structure",
+    "teamMembers": "Team members",
+    "yourRoles": "Your roles in the project",
     "resources": "Resources / links",
     "notes": "Project notes"
   },
   "placeholders": {
     "title": "e.g. Student Government",
     "summary": "Describe what the project is about and what it needs right now.",
-    "teamRoles": "President\nTreasurer\nCommunications lead",
+    "teamMemberName": "Member name",
+    "teamMemberRole": "Role / responsibility",
+    "teamMemberEmail": "Email address",
+    "yourRoles": "Project lead\nMember of the outreach team",
     "resources": "Agenda template | https://...\nShared drive | https://...",
     "notes": "Add meeting notes, decisions, deadlines, blockers, or anything the team should remember.",
     "untitledProject": "Untitled Project"
@@ -60,8 +65,17 @@
     "tasksDescription": "Track project work and deliverables.",
     "notes": "Notes",
     "notesDescription": "Keep project context and decisions in one place.",
-    "team": "Team & Resources",
-    "teamDescription": "Roles, links, and shared references."
+    "team": "Team",
+    "teamDescription": "The people involved in this project."
+  },
+  "team": {
+    "description": "Contacts participating in the project.",
+    "contactLabel": "Team contact",
+    "emailAriaLabel": "Email {{name}}",
+    "viewAll": "View all teammates",
+    "dialogDescription": "Read-only list of the full team.",
+    "moreMembers": "+{{count}} more",
+    "empty": "No team contacts added yet."
   },
   "empty": {
     "title": "No projects yet",

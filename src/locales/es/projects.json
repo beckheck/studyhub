@@ -5,6 +5,7 @@
     "addProject": "Agregar Proyecto",
     "editProject": "Editar Proyecto",
     "saveProject": "Guardar Proyecto",
+    "addTeamMember": "Agregar miembro",
     "addMeeting": "Agregar Reunión",
     "addTask": "Agregar Tarea",
     "cancel": "Cancelar"
@@ -41,14 +42,18 @@
     "emoji": "Emoji",
     "defaultIcon": "Icono predeterminado",
     "summary": "Resumen breve",
-    "teamRoles": "Roles / estructura del equipo",
+    "teamMembers": "Miembros del equipo",
+    "yourRoles": "Tus roles en el proyecto",
     "resources": "Recursos / enlaces",
     "notes": "Notas del proyecto"
   },
   "placeholders": {
     "title": "ej. Gobierno Estudiantil",
     "summary": "Describe de qué trata el proyecto y qué necesita ahora mismo.",
-    "teamRoles": "Presidencia\nTesorería\nComunicación",
+    "teamMemberName": "Nombre del miembro",
+    "teamMemberRole": "Rol / responsabilidad",
+    "teamMemberEmail": "Dirección de correo",
+    "yourRoles": "Liderazgo del proyecto\nEquipo de difusión",
     "resources": "Plantilla de agenda | https://...\nDrive compartido | https://...",
     "notes": "Agrega notas de reuniones, decisiones, plazos, bloqueos o cualquier cosa que el equipo deba recordar.",
     "untitledProject": "Proyecto sin título"
@@ -60,8 +65,18 @@
     "tasksDescription": "Registra el trabajo y los entregables del proyecto.",
     "notes": "Notas",
     "notesDescription": "Mantén el contexto y las decisiones del proyecto en un solo lugar.",
-    "team": "Equipo y recursos",
-    "teamDescription": "Roles, enlaces y referencias compartidas."
+    "team": "Equipo",
+    "teamDescription": "Las personas involucradas en este proyecto."
+  },
+  "team": {
+    "description": "Contactos que participan en el proyecto.",
+    "contactLabel": "Contacto del equipo",
+    "emailAriaLabel": "Enviar correo a {{name}}",
+
+    "viewAll": "Ver todo el equipo",
+    "dialogDescription": "Lista completa del equipo en modo de solo lectura.",
+    "moreMembers": "+{{count}} más",
+    "empty": "Aún no se agregan contactos al equipo."
   },
   "empty": {
     "title": "Aún no hay proyectos",

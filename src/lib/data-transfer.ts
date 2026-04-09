@@ -22,6 +22,7 @@ export class DataTransfer {
       examGrades: state.examGrades,
       sessionTasks: state.sessionTasks,
       items: convertDatesToTimestamps(state.items, /(At|^until)$/),
+      projects: convertDatesToTimestamps(state.projects ?? [], /(At)$/),
       weeklyGoals: state.weeklyGoals,
       degreePlan: {
         name: state.degreePlan.name,
@@ -121,6 +122,7 @@ export class DataTransfer {
       examGrades: data.examGrades,
       sessionTasks: data.sessionTasks,
       items,
+      projects: normalizeProjects(data.projects),
       weeklyGoals: data.weeklyGoals,
       selectedCourseId: data.settings.selectedCourseId,
       wellness: {
@@ -248,6 +250,30 @@ interface ExchangeFormatV2 {
     createdAt: number;
   }>;
   items: XItem[];
+  projects?: Array<{
+    id: string;
+    title: string;
+    type: string;
+    memberCount: number;
+    visualType: 'emoji' | 'icon';
+    emoji: string;
+    iconName: string;
+    summary: string;
+    notes: string;
+    teamMembers?: Array<{
+      name: string;
+      role: string;
+      email?: string;
+    }>;
+    yourRoles?: string[];
+    teamRoles?: string[];
+    resources: Array<{
+      label: string;
+      url: string;
+    }>;
+    createdAt: number;
+    updatedAt: number;
+  }>;
   degreePlan: {
     name: string;
     semesters: Array<{
@@ -611,4 +637,28 @@ function convertTimestampsToDates(obj: any, keyPattern: RegExp): any {
     return result;
   }
   return obj;
+}
+
+function normalizeProjects(projects: ExchangeFormatV2['projects']): AppState['projects'] {
+  if (!projects) {
+    return [];
+  }
+
+  return convertTimestampsToDates(projects, /(At)$/).map(project => ({
+    ...project,
+    teamMembers: Array.isArray(project.teamMembers)
+      ? project.teamMembers
+          .map(member => ({
+            name: member?.name?.trim() ?? '',
+            role: member?.role?.trim() ?? '',
+            email: member?.email?.trim() ?? '',
+          }))
+          .filter(member => member.name.length > 0 || member.role.length > 0 || member.email.length > 0)
+      : [],
+    yourRoles: Array.isArray(project.yourRoles)
+      ? project.yourRoles.filter(role => role?.trim())
+      : Array.isArray(project.teamRoles)
+        ? project.teamRoles.filter(role => role?.trim())
+        : [],
+  })) as AppState['projects'];
 }

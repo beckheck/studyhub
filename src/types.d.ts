@@ -270,6 +270,12 @@ export interface ProjectResource {
   url: string;
 }
 
+export interface ProjectMember {
+  name: string;
+  role: string;
+  email: string;
+}
+
 /**
  * Project object for student organizations, clubs, research teams, and similar groups
  */
@@ -283,8 +289,9 @@ export interface Project {
   iconName: ProjectIconName;
   summary: string;
   notes: string;
-  teamRoles: string[];
-  resources: ProjectResource[];
+  teamMembers: readonly ProjectMember[];
+  yourRoles: readonly string[];
+  resources: readonly ProjectResource[];
   createdAt: Date;
   updatedAt: Date;
 }

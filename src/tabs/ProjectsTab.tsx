@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useItems, useProjects } from '@/hooks/useStore';
 import { ItemDialog } from '@/items/base/dialog';
+import { ItemEvent } from '@/items/event/modelSchema';
+import { ItemTask } from '@/items/task/modelSchema';
 import { useItemDialog } from '@/items/useItemDialog';
-import { Project, ProjectIconName, ProjectType, ProjectVisualType } from '@/types';
+import { Project, ProjectIconName, ProjectMember, ProjectType, ProjectVisualType } from '@/types';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -19,6 +21,8 @@ import {
   Lightbulb,
   Megaphone,
   Microscope,
+  Mail,
+  GripVertical,
   Plus,
   Rocket,
   Trash2,
@@ -37,9 +41,12 @@ type ProjectForm = {
   iconName: ProjectIconName;
   summary: string;
   notes: string;
-  teamRolesText: string;
+  teamMembers: ProjectMember[];
+  yourRolesText: string;
   resourcesText: string;
 };
+
+type ProjectMemberForm = ProjectMember;
 
 const PROJECT_EMOJI_OPTIONS = ['🏫', '🎓', '🧪', '🗳️', '📣', '🤝', '📚', '🚀', '🧠', '💡', '🧩', '🧭'];
 
@@ -65,7 +72,8 @@ const DEFAULT_PROJECT_FORM: ProjectForm = {
   iconName: 'users',
   summary: '',
   notes: '',
-  teamRolesText: '',
+  teamMembers: [{ name: '', role: '', email: '' }],
+  yourRolesText: '',
   resourcesText: '',
 };
 
@@ -74,6 +82,10 @@ function splitMultilineList(value: string): string[] {
     .split('\n')
     .map(entry => entry.trim())
     .filter(Boolean);
+}
+
+function createEmptyProjectMember(): ProjectMemberForm {
+  return { name: '', role: '', email: '' };
 }
 
 function splitResourceLines(value: string) {
@@ -107,16 +119,52 @@ function ProjectVisual({ project, className }: { project: Project; className?: s
   return <span className={className}>{project.emoji}</span>;
 }
 
+function normalizeUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  return `https://${url}`;
+}
+
+function getContactInitials(name: string): string {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return '??';
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+}
+
+const CONTACT_AVATAR_STYLES = [
+  'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-200',
+  'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200',
+  'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
+  'bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200',
+  'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200',
+  'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200',
+];
+
 export default function ProjectsTab() {
   const { t } = useTranslation('projects');
-  const { projects, addProject, updateProject, deleteProject } = useProjects();
+  const { projects, addProject, updateProject, deleteProject, setProjects } = useProjects();
   const { items } = useItems();
   const itemDialog = useItemDialog();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [teamOverflowDialogOpen, setTeamOverflowDialogOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState<ProjectForm>(DEFAULT_PROJECT_FORM);
+  const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projects.length) {
@@ -136,14 +184,23 @@ export default function ProjectsTab() {
   );
 
   const linkedMeetings = useMemo(
-    () => items.filter(item => item.type === 'event' && item.projectId === selectedProject?.id && !item.isDeleted),
+    () =>
+      items.filter(
+        item => item.type === 'event' && item.projectId === selectedProject?.id && !item.isDeleted
+      ) as ItemEvent[],
     [items, selectedProject?.id]
   );
 
   const linkedTasks = useMemo(
-    () => items.filter(item => item.type === 'task' && item.projectId === selectedProject?.id && !item.isDeleted),
+    () =>
+      items.filter(
+        item => item.type === 'task' && item.projectId === selectedProject?.id && !item.isDeleted
+      ) as ItemTask[],
     [items, selectedProject?.id]
   );
+
+  const visibleTeamMembers = selectedProject?.teamMembers.slice(0, 3) ?? [];
+  const hiddenTeamMemberCount = Math.max(0, (selectedProject?.teamMembers.length ?? 0) - visibleTeamMembers.length);
 
   const openCreateProjectDialog = () => {
     setEditingProjectId(null);
@@ -162,10 +219,43 @@ export default function ProjectsTab() {
       iconName: project.iconName,
       summary: project.summary,
       notes: project.notes,
-      teamRolesText: project.teamRoles.join('\n'),
+      teamMembers: project.teamMembers.length
+        ? project.teamMembers.map(member => ({
+            name: member.name ?? '',
+            role: member.role ?? '',
+            email: member.email ?? '',
+          }))
+        : [createEmptyProjectMember()],
+      yourRolesText: project.yourRoles.join('\n'),
       resourcesText: project.resources.map(resource => `${resource.label} | ${resource.url}`).join('\n'),
     });
     setProjectDialogOpen(true);
+  };
+
+  const addTeamMember = () => {
+    setProjectForm(prev => ({
+      ...prev,
+      teamMembers: [...prev.teamMembers, createEmptyProjectMember()],
+    }));
+  };
+
+  const updateTeamMember = (index: number, field: keyof ProjectMemberForm, value: string) => {
+    setProjectForm(prev => ({
+      ...prev,
+      teamMembers: prev.teamMembers.map((member, memberIndex) =>
+        memberIndex === index ? { ...member, [field]: value } : member
+      ),
+    }));
+  };
+
+  const removeTeamMember = (index: number) => {
+    setProjectForm(prev => {
+      const nextTeamMembers = prev.teamMembers.filter((_, memberIndex) => memberIndex !== index);
+      return {
+        ...prev,
+        teamMembers: nextTeamMembers.length ? nextTeamMembers : [createEmptyProjectMember()],
+      };
+    });
   };
 
   const handleSaveProject = () => {
@@ -179,7 +269,14 @@ export default function ProjectsTab() {
       iconName: projectForm.visualType === 'icon' ? projectForm.iconName : 'users',
       summary: projectForm.summary.trim(),
       notes: projectForm.notes.trim(),
-      teamRoles: splitMultilineList(projectForm.teamRolesText),
+      teamMembers: projectForm.teamMembers
+        .map(member => ({
+          name: member.name.trim(),
+          role: member.role.trim(),
+          email: member.email.trim(),
+        }))
+        .filter(member => member.name.length > 0 || member.role.length > 0 || member.email.length > 0),
+      yourRoles: splitMultilineList(projectForm.yourRolesText),
       resources: splitResourceLines(projectForm.resourcesText),
     };
 
@@ -241,6 +338,24 @@ export default function ProjectsTab() {
     );
   };
 
+  const reorderProjects = (sourceProjectId: string, targetProjectId: string) => {
+    if (sourceProjectId === targetProjectId) {
+      return;
+    }
+
+    const sourceIndex = projects.findIndex(project => project.id === sourceProjectId);
+    const targetIndex = projects.findIndex(project => project.id === targetProjectId);
+
+    if (sourceIndex === -1 || targetIndex === -1) {
+      return;
+    }
+
+    const nextProjects = [...projects];
+    const [movedProject] = nextProjects.splice(sourceIndex, 1);
+    nextProjects.splice(targetIndex, 0, movedProject);
+    setProjects(nextProjects);
+  };
+
   const projectTypeOptions: Array<{ value: ProjectType; label: string }> = [
     { value: 'organization', label: t('types.organization') },
     { value: 'club', label: t('types.club') },
@@ -296,10 +411,12 @@ export default function ProjectsTab() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="space-y-4">
+
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
               {projects.map(project => {
                 const ProjectIconOrEmoji = ProjectVisual;
                 const isSelected = selectedProject?.id === project.id;
+                const isBeingDragged = draggedProjectId === project.id;
                 const projectMeetingCount = items.filter(
                   item => item.type === 'event' && item.projectId === project.id && !item.isDeleted
                 ).length;
@@ -310,14 +427,38 @@ export default function ProjectsTab() {
                 return (
                   <Card
                     key={project.id}
+                    draggable={projects.length > 1}
+                    onDragStart={event => {
+                      if (projects.length <= 1) return;
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', project.id);
+                      setDraggedProjectId(project.id);
+                    }}
+                    onDragOver={event => {
+                      if (!draggedProjectId || draggedProjectId === project.id) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = 'move';
+                    }}
+                    onDrop={event => {
+                      if (!draggedProjectId) return;
+                      event.preventDefault();
+                      reorderProjects(draggedProjectId, project.id);
+                      setDraggedProjectId(null);
+                    }}
+                    onDragEnd={() => setDraggedProjectId(null)}
                     className={`rounded-3xl border-none shadow-xl cursor-pointer transition-all duration-200 bg-white/80 dark:bg-white/10 backdrop-blur ${
                       isSelected ? 'ring-2 ring-emerald-400/70 scale-[1.01]' : 'hover:scale-[1.01]'
-                    }`}
+                    } ${isBeingDragged ? 'opacity-60' : ''} ${projects.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''}`}
                     onClick={() => setSelectedProjectId(project.id)}
                   >
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
+                          {projects.length > 1 && (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-300" aria-hidden="true">
+                              <GripVertical className="h-5 w-5" />
+                            </div>
+                          )}
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400/20 to-sky-400/20 text-2xl shadow-md">
                             <ProjectIconOrEmoji project={project} className="w-6 h-6" />
                           </div>
@@ -392,15 +533,31 @@ export default function ProjectsTab() {
                   <CardContent className="flex flex-wrap gap-2">
                     <span className="rounded-full bg-zinc-900/5 px-3 py-1 text-sm dark:bg-white/10">{t(`types.${selectedProject.type}`)}</span>
                     <span className="rounded-full bg-zinc-900/5 px-3 py-1 text-sm dark:bg-white/10">{t('meta.people', { count: selectedProject.memberCount })}</span>
-                    {selectedProject.teamRoles.map(role => (
+                    {selectedProject.yourRoles.map(role => (
                       <span key={role} className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm text-emerald-700 dark:text-emerald-300">
                         {role}
                       </span>
                     ))}
+                    {selectedProject.resources.length > 0 && (
+                      <div className="flex w-full flex-wrap gap-2 pt-2">
+                        {selectedProject.resources.map(resource => (
+                          <a
+                            key={`${resource.label}-${resource.url}`}
+                            href={normalizeUrl(resource.url)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-full bg-sky-500/10 px-3 py-1 text-sm text-sky-700 underline decoration-sky-500/40 underline-offset-2 hover:bg-sky-500/20 dark:text-sky-300"
+                            title={resource.url}
+                          >
+                            {resource.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
+                <div className="grid gap-4 xl:grid-cols-2">
                   <Card className="rounded-3xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
                     <CardHeader>
                       <CardTitle>{t('columns.meetings')}</CardTitle>
@@ -459,7 +616,7 @@ export default function ProjectsTab() {
                     </CardContent>
                   </Card>
 
-                  <Card className="rounded-3xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur xl:col-span-2 2xl:col-span-1">
+                  <Card className="rounded-3xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
                     <CardHeader>
                       <CardTitle>{t('columns.notes')}</CardTitle>
                       <CardDescription>{t('columns.notesDescription')}</CardDescription>
@@ -474,38 +631,72 @@ export default function ProjectsTab() {
                     </CardContent>
                   </Card>
 
-                  <Card className="rounded-3xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur xl:col-span-2 2xl:col-span-1">
+                  <Card className="rounded-3xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
                     <CardHeader>
                       <CardTitle>{t('columns.team')}</CardTitle>
                       <CardDescription>{t('columns.teamDescription')}</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>{t('forms.teamRoles')}</Label>
-                        <Textarea
-                          value={selectedProject.teamRoles.join('\n')}
-                          onChange={event =>
-                            updateProject(selectedProject.id, {
-                              teamRoles: splitMultilineList(event.target.value),
-                            })
-                          }
-                          placeholder={t('placeholders.teamRoles')}
-                          className="min-h-28 rounded-2xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{t('forms.resources')}</Label>
-                        <Textarea
-                          value={selectedProject.resources.map(resource => `${resource.label} | ${resource.url}`).join('\n')}
-                          onChange={event =>
-                            updateProject(selectedProject.id, {
-                              resources: splitResourceLines(event.target.value),
-                            })
-                          }
-                          placeholder={t('placeholders.resources')}
-                          className="min-h-28 rounded-2xl"
-                        />
-                      </div>
+                    <CardContent className="space-y-3">
+                      {visibleTeamMembers.length > 0 ? (
+                        visibleTeamMembers.map((contact, index) => {
+                          const initials = getContactInitials(contact.name);
+                          const avatarStyle = CONTACT_AVATAR_STYLES[index % CONTACT_AVATAR_STYLES.length];
+                          const emailHref = contact.email ? `mailto:${contact.email}` : null;
+
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/60 px-4 py-3 dark:bg-white/5"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle}`}>
+                                  {initials}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{contact.name}</div>
+                                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{contact.role || t('team.contactLabel')}</div>
+                                  {contact.email && (
+                                    <a
+                                      href={emailHref ?? undefined}
+                                      className="text-xs text-sky-600 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-700 dark:text-sky-300"
+                                    >
+                                      {contact.email}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+
+                              {emailHref ? (
+                                <a
+                                  href={emailHref}
+                                  aria-label={t('team.emailAriaLabel', { name: contact.name })}
+                                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-900/5 text-zinc-500 transition-colors hover:bg-sky-500/10 hover:text-sky-600 dark:bg-white/10 dark:text-zinc-300 dark:hover:text-sky-300"
+                                >
+                                  <Mail className="h-5 w-5" />
+                                </a>
+                              ) : (
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-900/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
+                                  <Mail className="h-5 w-5" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('team.empty')}</p>
+                      )}
+
+                      {hiddenTeamMemberCount > 0 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full rounded-xl justify-between px-4 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                          onClick={() => setTeamOverflowDialogOpen(true)}
+                        >
+                          <span>{t('team.viewAll')}</span>
+                          <span>{t('team.moreMembers', { count: hiddenTeamMemberCount })}</span>
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -516,7 +707,7 @@ export default function ProjectsTab() {
       )}
 
       <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
-        <DialogContent className="max-w-3xl rounded-3xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur">
           <DialogHeader>
             <DialogTitle>{editingProjectId ? t('actions.editProject') : t('actions.addProject')}</DialogTitle>
             <DialogDescription>{t('dialog.description')}</DialogDescription>
@@ -644,12 +835,55 @@ export default function ProjectsTab() {
               />
             </div>
 
+            <div className="space-y-3 md:col-span-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label>{t('forms.teamMembers')}</Label>
+                <Button type="button" variant="outline" className="rounded-xl" onClick={addTeamMember}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('actions.addTeamMember')}
+                </Button>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-white/20 bg-white/50 p-3 dark:bg-white/5">
+                {projectForm.teamMembers.map((member, index) => (
+                    <div key={index} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                    <Input
+                      value={member.name}
+                      onChange={event => updateTeamMember(index, 'name', event.target.value)}
+                      placeholder={t('placeholders.teamMemberName')}
+                      className="rounded-xl"
+                    />
+                    <Input
+                      value={member.role}
+                      onChange={event => updateTeamMember(index, 'role', event.target.value)}
+                      placeholder={t('placeholders.teamMemberRole')}
+                      className="rounded-xl"
+                    />
+                      <Input
+                        value={member.email}
+                        onChange={event => updateTeamMember(index, 'email', event.target.value)}
+                        placeholder={t('placeholders.teamMemberEmail')}
+                        className="rounded-xl"
+                      />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="rounded-xl text-red-500 hover:text-red-600"
+                      onClick={() => removeTeamMember(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2 md:col-span-2">
-              <Label>{t('forms.teamRoles')}</Label>
+              <Label>{t('forms.yourRoles')}</Label>
               <Textarea
-                value={projectForm.teamRolesText}
-                onChange={event => setProjectForm(prev => ({ ...prev, teamRolesText: event.target.value }))}
-                placeholder={t('placeholders.teamRoles')}
+                value={projectForm.yourRolesText}
+                onChange={event => setProjectForm(prev => ({ ...prev, yourRolesText: event.target.value }))}
+                placeholder={t('placeholders.yourRoles')}
                 className="min-h-24 rounded-2xl"
               />
             </div>
@@ -682,6 +916,66 @@ export default function ProjectsTab() {
             <Button className="rounded-xl" onClick={handleSaveProject}>
               {t('actions.saveProject')}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={teamOverflowDialogOpen} onOpenChange={setTeamOverflowDialogOpen}>
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden rounded-3xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur">
+          <DialogHeader>
+            <DialogTitle>{t('columns.team')}</DialogTitle>
+            <DialogDescription>{t('team.dialogDescription')}</DialogDescription>
+          </DialogHeader>
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+            {selectedProject?.teamMembers.length ? (
+              selectedProject.teamMembers.map((contact, index) => {
+                const initials = getContactInitials(contact.name);
+                const avatarStyle = CONTACT_AVATAR_STYLES[index % CONTACT_AVATAR_STYLES.length];
+                const emailHref = contact.email ? `mailto:${contact.email}` : null;
+
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/60 px-4 py-3 dark:bg-white/5"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle}`}>
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{contact.name}</div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">{contact.role || t('team.contactLabel')}</div>
+                        {contact.email && (
+                          <a
+                            href={emailHref ?? undefined}
+                            className="text-xs text-sky-600 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-700 dark:text-sky-300"
+                          >
+                            {contact.email}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {emailHref ? (
+                      <a
+                        href={emailHref}
+                        aria-label={t('team.emailAriaLabel', { name: contact.name })}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-900/5 text-zinc-500 transition-colors hover:bg-sky-500/10 hover:text-sky-600 dark:bg-white/10 dark:text-zinc-300 dark:hover:text-sky-300"
+                      >
+                        <Mail className="h-5 w-5" />
+                      </a>
+                    ) : (
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-900/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
+                        <Mail className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('team.empty')}</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
