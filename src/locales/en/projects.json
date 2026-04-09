@@ -1,0 +1,87 @@
+{
+  "title": "Projects",
+  "subtitle": "Manage clubs, organizations, research teams, campaigns, and anything else you’re building with other people.",
+  "actions": {
+    "addProject": "Add Project",
+    "editProject": "Edit Project",
+    "saveProject": "Save Project",
+    "addMeeting": "Add Meeting",
+    "addTask": "Add Task",
+    "cancel": "Cancel"
+  },
+  "dialog": {
+    "description": "Set up a project card, then track meetings, tasks, notes, and team resources in one place."
+  },
+  "types": {
+    "organization": "Organization",
+    "club": "Club",
+    "research": "Research",
+    "politics": "Politics",
+    "competition": "Competition",
+    "startup": "Startup",
+    "other": "Other"
+  },
+  "icons": {
+    "users": "Team",
+    "building": "Organization",
+    "microscope": "Research",
+    "vote": "Civic",
+    "megaphone": "Outreach",
+    "book": "Academic",
+    "lightbulb": "Ideas",
+    "rocket": "Startup",
+    "globe": "Global",
+    "handshake": "Partnership"
+  },
+  "forms": {
+    "title": "Project name",
+    "type": "Project type",
+    "peopleCount": "People involved",
+    "visualType": "Project visual",
+    "emoji": "Emoji",
+    "defaultIcon": "Default icon",
+    "summary": "Short summary",
+    "teamRoles": "Team roles / structure",
+    "resources": "Resources / links",
+    "notes": "Project notes"
+  },
+  "placeholders": {
+    "title": "e.g. Student Government",
+    "summary": "Describe what the project is about and what it needs right now.",
+    "teamRoles": "President\nTreasurer\nCommunications lead",
+    "resources": "Agenda template | https://...\nShared drive | https://...",
+    "notes": "Add meeting notes, decisions, deadlines, blockers, or anything the team should remember.",
+    "untitledProject": "Untitled Project"
+  },
+  "columns": {
+    "meetings": "Meetings",
+    "meetingsDescription": "Track project meetings and sessions.",
+    "tasks": "Tasks",
+    "tasksDescription": "Track project work and deliverables.",
+    "notes": "Notes",
+    "notesDescription": "Keep project context and decisions in one place.",
+    "team": "Team & Resources",
+    "teamDescription": "Roles, links, and shared references."
+  },
+  "empty": {
+    "title": "No projects yet",
+    "description": "Create your first project for a club, organization, research group, campaign, or startup-style idea. You can attach meetings and tasks later.",
+    "noSummary": "No summary added yet.",
+    "noMeetings": "No linked meetings yet.",
+    "noTasks": "No linked tasks yet.",
+    "untitled": "Untitled"
+  },
+  "meta": {
+    "people": "{{count}} people",
+    "meetings": "{{count}} meetings",
+    "tasks": "{{count}} tasks"
+  },
+  "priorities": {
+    "low": "Low priority",
+    "medium": "Medium priority",
+    "high": "High priority"
+  },
+  "confirmations": {
+    "deleteProject": "Delete \"{{title}}\"? Linked project items will stay in the planner if they still exist there."
+  }
+}

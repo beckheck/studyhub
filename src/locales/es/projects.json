@@ -1,0 +1,87 @@
+{
+  "title": "Proyectos",
+  "subtitle": "Administra clubes, organizaciones, equipos de investigación, campañas y cualquier cosa que estés construyendo con otras personas.",
+  "actions": {
+    "addProject": "Agregar Proyecto",
+    "editProject": "Editar Proyecto",
+    "saveProject": "Guardar Proyecto",
+    "addMeeting": "Agregar Reunión",
+    "addTask": "Agregar Tarea",
+    "cancel": "Cancelar"
+  },
+  "dialog": {
+    "description": "Configura una tarjeta de proyecto y luego sigue reuniones, tareas, notas y recursos del equipo en un solo lugar."
+  },
+  "types": {
+    "organization": "Organización",
+    "club": "Club",
+    "research": "Investigación",
+    "politics": "Política",
+    "competition": "Competencia",
+    "startup": "Startup",
+    "other": "Otro"
+  },
+  "icons": {
+    "users": "Equipo",
+    "building": "Organización",
+    "microscope": "Investigación",
+    "vote": "Cívico",
+    "megaphone": "Difusión",
+    "book": "Académico",
+    "lightbulb": "Ideas",
+    "rocket": "Startup",
+    "globe": "Global",
+    "handshake": "Alianza"
+  },
+  "forms": {
+    "title": "Nombre del proyecto",
+    "type": "Tipo de proyecto",
+    "peopleCount": "Personas involucradas",
+    "visualType": "Elemento visual",
+    "emoji": "Emoji",
+    "defaultIcon": "Icono predeterminado",
+    "summary": "Resumen breve",
+    "teamRoles": "Roles / estructura del equipo",
+    "resources": "Recursos / enlaces",
+    "notes": "Notas del proyecto"
+  },
+  "placeholders": {
+    "title": "ej. Gobierno Estudiantil",
+    "summary": "Describe de qué trata el proyecto y qué necesita ahora mismo.",
+    "teamRoles": "Presidencia\nTesorería\nComunicación",
+    "resources": "Plantilla de agenda | https://...\nDrive compartido | https://...",
+    "notes": "Agrega notas de reuniones, decisiones, plazos, bloqueos o cualquier cosa que el equipo deba recordar.",
+    "untitledProject": "Proyecto sin título"
+  },
+  "columns": {
+    "meetings": "Reuniones",
+    "meetingsDescription": "Registra las reuniones y sesiones del proyecto.",
+    "tasks": "Tareas",
+    "tasksDescription": "Registra el trabajo y los entregables del proyecto.",
+    "notes": "Notas",
+    "notesDescription": "Mantén el contexto y las decisiones del proyecto en un solo lugar.",
+    "team": "Equipo y recursos",
+    "teamDescription": "Roles, enlaces y referencias compartidas."
+  },
+  "empty": {
+    "title": "Aún no hay proyectos",
+    "description": "Crea tu primer proyecto para un club, organización, grupo de investigación, campaña o idea tipo startup. Después podrás vincular reuniones y tareas.",
+    "noSummary": "Todavía no hay resumen.",
+    "noMeetings": "Todavía no hay reuniones vinculadas.",
+    "noTasks": "Todavía no hay tareas vinculadas.",
+    "untitled": "Sin título"
+  },
+  "meta": {
+    "people": "{{count}} personas",
+    "meetings": "{{count}} reuniones",
+    "tasks": "{{count}} tareas"
+  },
+  "priorities": {
+    "low": "Prioridad baja",
+    "medium": "Prioridad media",
+    "high": "Prioridad alta"
+  },
+  "confirmations": {
+    "deleteProject": "¿Eliminar \"{{title}}\"? Los elementos vinculados del proyecto permanecerán en el planificador si todavía existen allí."
+  }
+}

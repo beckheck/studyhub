@@ -3,6 +3,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import MoonSunToggle from '@/components/MoonSunToggle';
 import OverflowTabs from '@/components/OverflowTabs';
 import SettingsDialogProvider from '@/components/settings/SettingsDialogProvider';
+import { Button } from '@/components/ui/button';
 import SoundtrackCard from '@/components/SoundtrackCard';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -19,6 +20,7 @@ import CourseManagerTab from '@/tabs/CourseManagerTab';
 import DashboardTab from '@/tabs/DashboardTab';
 import DegreePlanTab from '@/tabs/DegreePlanTab';
 import PlannerTab from '@/tabs/PlannerTab';
+import ProjectsTab from '@/tabs/ProjectsTab';
 import SettingsTab from '@/tabs/SettingsTab';
 import StudyTrackerTab from '@/tabs/StudyTrackerTab';
 import TestTab from '@/tabs/TestTab';
@@ -38,6 +40,8 @@ import {
   Home,
   Menu,
   NotebookPen,
+  FolderOpen,
+  Pencil,
   Settings as SettingsIcon,
   Sparkles,
   TestTubeDiagonal,
@@ -76,6 +80,7 @@ export default function StudyPortal(): React.JSX.Element {
   const { theme, setDarkMode } = useTheme();
   const { soundtrack, setSoundtrackPosition } = useSoundtrack();
   const { isLoading, error, status } = useStoreLoading();
+  const [isDashboardWidgetEditMode, setIsDashboardWidgetEditMode] = useState(false);
 
   const onSoundtrackPositionChange = useCallback(
     (position: SoundtrackPosition) => {
@@ -92,6 +97,7 @@ export default function StudyPortal(): React.JSX.Element {
   const tabs: AppTab[] = [
     { value: 'dashboard', label: t('navigation.dashboard'), icon: Home },
     { value: 'planner', label: t('navigation.planner'), icon: CalendarDays },
+    { value: 'projects', label: t('navigation.projects'), icon: FolderOpen },
     { value: 'timetable', label: t('navigation.timetable'), icon: CalendarRange },
     ...(import.meta.env.VITE_FEATURE_UGLY_CALENDAR
       ? [{ value: 'ugly-calendar', label: 'Ugly Calendar', icon: Calendar }]
@@ -134,6 +140,12 @@ export default function StudyPortal(): React.JSX.Element {
     },
     [setActiveTab, setIsDrawerOpen]
   );
+
+  useEffect(() => {
+    if (activeTab !== 'dashboard') {
+      setIsDashboardWidgetEditMode(false);
+    }
+  }, [activeTab]);
 
   // Handle opening in full tab
   const openInTab = useCallback(() => {
@@ -230,9 +242,22 @@ export default function StudyPortal(): React.JSX.Element {
                     </div>
 
                     {/* Dark/Light mode toggle in drawer */}
-                    <div className="flex items-center justify-center gap-6 px-3 py-2 rounded-xl bg-white/70 dark:bg-white/10 backdrop-blur">
+                    <div className="flex items-center justify-center gap-4 px-3 py-2 rounded-xl bg-white/70 dark:bg-white/10 backdrop-blur">
                       <LanguageSelector />
                       <MoonSunToggle checked={theme.darkMode} onCheckedChange={setDarkMode} />
+                      <Button
+                        type="button"
+                        variant={isDashboardWidgetEditMode ? 'secondary' : 'ghost'}
+                        size="icon"
+                        onClick={() => setIsDashboardWidgetEditMode(prev => !prev)}
+                        className={`rounded-full ${
+                          isDashboardWidgetEditMode ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' : ''
+                        }`}
+                        title={isDashboardWidgetEditMode ? 'Exit widget edit mode' : 'Edit dashboard widgets'}
+                        aria-label={isDashboardWidgetEditMode ? 'Exit widget edit mode' : 'Edit dashboard widgets'}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
                     </div>
 
                     {/* Navigation */}
@@ -292,9 +317,22 @@ export default function StudyPortal(): React.JSX.Element {
 
               {/* Desktop dark/light mode toggle */}
               <div className="hidden md:flex items-center gap-3">
-                <div className="flex items-center gap-6 px-3 py-2 rounded-xl bg-white/70 dark:bg-white/10 backdrop-blur">
+                <div className="flex items-center gap-4 px-3 py-2 rounded-xl bg-white/70 dark:bg-white/10 backdrop-blur">
                   <LanguageSelector />
                   <MoonSunToggle checked={theme.darkMode} onCheckedChange={setDarkMode} />
+                  <Button
+                    type="button"
+                    variant={isDashboardWidgetEditMode ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => setIsDashboardWidgetEditMode(prev => !prev)}
+                    className={`rounded-full ${
+                      isDashboardWidgetEditMode ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' : ''
+                    }`}
+                    title={isDashboardWidgetEditMode ? 'Exit widget edit mode' : 'Edit dashboard widgets'}
+                    aria-label={isDashboardWidgetEditMode ? 'Exit widget edit mode' : 'Edit dashboard widgets'}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </motion.header>
@@ -326,11 +364,15 @@ export default function StudyPortal(): React.JSX.Element {
               </div>
 
               <TabsContent value="dashboard" className="space-y-6">
-                <DashboardTab onTabChange={handleTabChange} />
+                <DashboardTab onTabChange={handleTabChange} isWidgetEditMode={isDashboardWidgetEditMode} />
               </TabsContent>
 
               <TabsContent value="planner">
                 <PlannerTab />
+              </TabsContent>
+
+              <TabsContent value="projects">
+                <ProjectsTab />
               </TabsContent>
 
               {import.meta.env.VITE_FEATURE_UGLY_CALENDAR && (

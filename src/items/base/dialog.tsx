@@ -5,7 +5,7 @@ import { FormError } from '@/components/ui/form-error';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { SimpleSelect, SimpleSelectOption } from '@/components/ui/simple-select';
-import { useCourses } from '@/hooks/useStore';
+import { useCourses, useProjects } from '@/hooks/useStore';
 import { t } from '@/i18n/config';
 import { ItemForm, itemFormSchemaMap } from '@/items/forms';
 import { ITEM_TYPES, ItemType, Item } from '@/items/models';
@@ -45,6 +45,7 @@ export function ItemDialog({
   onDelete,
 }: ItemDialogProps) {
   const { courses } = useCourses();
+  const { projects } = useProjects();
   const [showScrollHint, setShowScrollHint] = useState(false);
   const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
 
@@ -234,6 +235,35 @@ export function ItemDialog({
                             ]}
                           />
                           <FormError message={errors.courseId?.message} />
+                        </div>
+                      )}
+
+                      {!hidden.projectId && (
+                        <div>
+                          <LabelWithRequiredIndicator
+                            required={isFieldRequired(currentSchema, 'projectId')}
+                            value={methods.watch('projectId')}
+                          >
+                            {t('items:common.fields.project')}
+                          </LabelWithRequiredIndicator>
+                          <SimpleSelect
+                            value={methods.watch('projectId') || 'none'}
+                            onValueChange={value => {
+                              const projectId = value === 'none' ? '' : value;
+                              methods.setValue('projectId', projectId);
+                            }}
+                            placeholder={t('items:common.fields.project')}
+                            className="rounded-xl"
+                            disabled={disabled.projectId}
+                            options={[
+                              { value: 'none', label: t('common:common.none') },
+                              ...projects.map(project => ({
+                                value: project.id,
+                                label: project.title,
+                              })),
+                            ]}
+                          />
+                          <FormError message={errors.projectId?.message} />
                         </div>
                       )}
 

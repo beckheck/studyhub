@@ -9,12 +9,14 @@
     "fields": {
       "title": "Title",
       "course": "Course",
+      "project": "Project",
       "notes": "Notes",
       "color": "Color",
       "type": "Type"
     },
     "placeholders": {
       "selectCourse": "Select a course",
+      "selectProject": "Select a project",
       "notesPlaceholder": "Additional details..."
     },
     "warnings": {

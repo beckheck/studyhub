@@ -6,6 +6,7 @@ import { browser } from 'wxt/browser';
 // Import translation files
 import enCommon from '../locales/en/common.json';
 import enPlanner from '../locales/en/planner.json';
+import enProjects from '../locales/en/projects.json';
 import enWellness from '../locales/en/wellness.json';
 import enSettings from '../locales/en/settings.json';
 import enTracker from '../locales/en/tracker.json';
@@ -18,6 +19,7 @@ import enItems from '../items/locales/en/items.json';
 
 import esCommon from '../locales/es/common.json';
 import esPlanner from '../locales/es/planner.json';
+import esProjects from '../locales/es/projects.json';
 import esWellness from '../locales/es/wellness.json';
 import esSettings from '../locales/es/settings.json';
 import esTracker from '../locales/es/tracker.json';
@@ -33,6 +35,7 @@ const resources = {
   en: {
     common: enCommon,
     planner: enPlanner,
+    projects: enProjects,
     wellness: enWellness,
     settings: enSettings,
     tracker: enTracker,
@@ -46,6 +49,7 @@ const resources = {
   es: {
     common: esCommon,
     planner: esPlanner,
+    projects: esProjects,
     wellness: esWellness,
     settings: esSettings,
     tracker: esTracker,
@@ -77,6 +81,7 @@ i18n
     ns: [
       'common',
       'planner',
+      'projects',
       'wellness',
       'settings',
       'tracker',

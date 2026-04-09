@@ -21,6 +21,7 @@ export type ItemExamForm = z.infer<typeof itemExamFormSchema>;
 export const DEFAULT_ITEM_EXAM_FORM: ItemExamForm = {
   title: '',
   courseId: '',
+  projectId: '',
   color: '#ef4444',
   notes: '',
   tags: [],

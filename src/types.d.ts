@@ -249,6 +249,46 @@ export interface Course {
   syllabusFileId?: string;
 }
 
+export type ProjectType = 'organization' | 'club' | 'research' | 'politics' | 'competition' | 'startup' | 'other';
+
+export type ProjectVisualType = 'emoji' | 'icon';
+
+export type ProjectIconName =
+  | 'users'
+  | 'building'
+  | 'microscope'
+  | 'vote'
+  | 'megaphone'
+  | 'book'
+  | 'lightbulb'
+  | 'rocket'
+  | 'globe'
+  | 'handshake';
+
+export interface ProjectResource {
+  label: string;
+  url: string;
+}
+
+/**
+ * Project object for student organizations, clubs, research teams, and similar groups
+ */
+export interface Project {
+  id: string;
+  title: string;
+  type: ProjectType;
+  memberCount: number;
+  visualType: ProjectVisualType;
+  emoji: string;
+  iconName: ProjectIconName;
+  summary: string;
+  notes: string;
+  teamRoles: string[];
+  resources: ProjectResource[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 /**
  * Course record entry for tracking daily notes and activities
  */
@@ -456,6 +496,14 @@ export interface Soundtrack {
 }
 
 /**
+ * Dashboard widget layout configuration
+ */
+export interface DashboardState {
+  widgetVisibility: Record<string, boolean>;
+  widgetOrder: string[];
+}
+
+/**
  * Complete application state interface
  */
 /**
@@ -491,6 +539,7 @@ export interface AppState {
   weeklyGoals: WeeklyGoal[];
   items: Item[];
   courses: Course[];
+  projects: Project[];
   selectedCourseId: string;
   theme: ThemeState;
   soundtrack: Soundtrack;
@@ -498,6 +547,7 @@ export interface AppState {
   degreePlan: DegreePlan;
   wellness: Wellness;
   fileAttachments: FileAttachmentStore;
+  dashboard: DashboardState;
   activeTabsByMode: Record<string, string>;
   focusTimer: FocusTimerConfig;
   courseRecords: CourseRecord[];

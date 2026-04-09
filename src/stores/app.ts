@@ -77,6 +77,18 @@ const DEFAULT_WEATHER_LOCATION: WeatherLocation = {
   city: '',
 };
 
+const DEFAULT_DASHBOARD_WIDGET_VISIBILITY = {
+  weather: true,
+  datetime: true,
+  schedule: true,
+  nextUp: true,
+  calendar: true,
+  soundtrack: true,
+  tips: true,
+};
+
+const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips'];
+
 // Create the initial state with proper defaults
 function createInitialState(): AppState {
   // Detect system preference for dark mode
@@ -91,6 +103,7 @@ function createInitialState(): AppState {
     weeklyGoals: [],
     items: [],
     courses: [...DEFAULT_COURSES],
+    projects: [],
     selectedCourseId: DEFAULT_COURSES[0]?.id,
 
     // Theme configuration
@@ -136,6 +149,12 @@ function createInitialState(): AppState {
     fileAttachments: {
       files: {},
       metadata: {},
+    },
+
+    // Dashboard widget layout
+    dashboard: {
+      widgetVisibility: { ...DEFAULT_DASHBOARD_WIDGET_VISIBILITY },
+      widgetOrder: [...DEFAULT_DASHBOARD_WIDGET_ORDER],
     },
 
     // Active tabs per mode

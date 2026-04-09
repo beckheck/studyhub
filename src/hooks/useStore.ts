@@ -8,12 +8,15 @@ import type {
   DegreePlan,
   ExamGrade,
   Item,
+  Project,
   SoundtrackPosition,
   StudySession,
   StudySessionTask,
   WeatherLocation,
   WeeklyGoal,
 } from '../types';
+
+const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips'];
 
 // Hook for loading state
 export function useStoreLoading() {
@@ -25,6 +28,54 @@ export function useStoreLoading() {
  */
 export function useAppState() {
   return useSnapshot(store);
+}
+
+/**
+ * Hook to access and modify dashboard widget layout
+ */
+export function useDashboardLayout() {
+  const dashboard = useSnapshot(store.dashboard);
+
+  return {
+    dashboard,
+    setWidgetVisibility: (widgetId: string, visible: boolean) => {
+      store.dashboard.widgetVisibility[widgetId] = visible;
+    },
+    toggleWidgetVisibility: (widgetId: string) => {
+      const currentVisibility = store.dashboard.widgetVisibility[widgetId] !== false;
+      store.dashboard.widgetVisibility[widgetId] = !currentVisibility;
+    },
+    setWidgetOrder: (widgetOrder: string[]) => {
+      store.dashboard.widgetOrder = widgetOrder;
+    },
+    moveWidgetBefore: (widgetId: string, targetWidgetId: string) => {
+      const currentOrder = [...(store.dashboard.widgetOrder ?? DEFAULT_DASHBOARD_WIDGET_ORDER)];
+      const fromIndex = currentOrder.indexOf(widgetId);
+      const targetIndex = currentOrder.indexOf(targetWidgetId);
+
+      if (fromIndex === -1 || targetIndex === -1 || widgetId === targetWidgetId) {
+        return;
+      }
+
+      currentOrder.splice(fromIndex, 1);
+
+      const adjustedTargetIndex = currentOrder.indexOf(targetWidgetId);
+      currentOrder.splice(adjustedTargetIndex, 0, widgetId);
+      store.dashboard.widgetOrder = currentOrder;
+    },
+    moveWidgetToEnd: (widgetId: string) => {
+      const currentOrder = [...(store.dashboard.widgetOrder ?? DEFAULT_DASHBOARD_WIDGET_ORDER)];
+      const fromIndex = currentOrder.indexOf(widgetId);
+
+      if (fromIndex === -1 || fromIndex === currentOrder.length - 1) {
+        return;
+      }
+
+      currentOrder.splice(fromIndex, 1);
+      currentOrder.push(widgetId);
+      store.dashboard.widgetOrder = currentOrder;
+    },
+  };
 }
 
 /**
@@ -483,6 +534,9 @@ export function useItems() {
     getItemsByCourse: (courseId: string) => {
       return items.filter(item => item.courseId === courseId);
     },
+    getItemsByProject: (projectId: string) => {
+      return items.filter(item => item.projectId === projectId);
+    },
     addItem: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>) => {
       const now = new Date();
       const newItem = {
@@ -552,6 +606,55 @@ export function useItems() {
     },
     setItems: (items: Item[]) => {
       store.items = items;
+    },
+  };
+}
+
+/**
+ * Hook to access and modify projects
+ */
+export function useProjects() {
+  const projects = useSnapshot(store.projects);
+
+  return {
+    projects,
+    getProjectById: (projectId: string) => {
+      return projects.find(project => project.id === projectId);
+    },
+    addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const now = new Date();
+      const newProject = {
+        ...project,
+        id: uid(),
+        createdAt: now,
+        updatedAt: now,
+      } as Project;
+      store.projects.unshift(newProject);
+      return newProject;
+    },
+    updateProject: (projectId: string, updates: Partial<Omit<Project, 'id' | 'createdAt'>>) => {
+      const projectIndex = store.projects.findIndex(project => project.id === projectId);
+      if (projectIndex !== -1) {
+        store.projects[projectIndex] = {
+          ...store.projects[projectIndex],
+          ...updates,
+          updatedAt: new Date(),
+        } as Project;
+        return store.projects[projectIndex];
+      }
+      return null;
+    },
+    deleteProject: (projectId: string) => {
+      const projectIndex = store.projects.findIndex(project => project.id === projectId);
+      if (projectIndex !== -1) {
+        store.projects.splice(projectIndex, 1);
+
+        return true;
+      }
+      return false;
+    },
+    setProjects: (projectList: Project[]) => {
+      store.projects = projectList;
     },
   };
 }

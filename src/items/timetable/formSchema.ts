@@ -21,6 +21,7 @@ export type ItemTimetableForm = z.infer<typeof itemTimetableFormSchema>;
 export const DEFAULT_ITEM_TIMETABLE_FORM: ItemTimetableForm = {
   title: '',
   courseId: '',
+  projectId: '',
   color: '#06b6d4',
   notes: '',
   tags: [],

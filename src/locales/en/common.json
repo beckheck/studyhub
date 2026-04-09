@@ -67,6 +67,7 @@
   "navigation": {
     "dashboard": "Dashboard",
     "planner": "Planner",
+    "projects": "Projects",
     "timetable": "Timetable",
     "courses": "Courses",
     "degreePlan": "Degree Plan",

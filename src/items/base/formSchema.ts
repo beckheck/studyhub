@@ -14,6 +14,7 @@ const OMITTED_ITEM_MODEL_PROPS = {
 
 export const itemBaseFormSchema = ItemBaseSchema.omit(OMITTED_ITEM_MODEL_PROPS).extend({
   courseId: z.string().optional(), // Make optional for form (can be empty string)
+  projectId: z.string().optional(),
 });
 
 export type ItemFormBase = z.infer<typeof itemBaseFormSchema>;
@@ -33,6 +34,7 @@ export const getExistingItemModel = (existingItem?: ItemBase) => {
 export const getBaseFormFromModel = (item: Item): ItemFormBase => ({
   title: item.title,
   courseId: item.courseId,
+  projectId: item.projectId,
   color: item.color || '#3b82f6',
   notes: item.notes || '',
   tags: item.tags || [],
@@ -41,6 +43,7 @@ export const getBaseFormFromModel = (item: Item): ItemFormBase => ({
 export const getBaseModelFromForm = (form: ItemFormBase): Omit<ItemBase, keyof typeof OMITTED_ITEM_MODEL_PROPS> => ({
   title: form.title,
   courseId: form.courseId || undefined, // Convert empty string to undefined
+  projectId: form.projectId || undefined,
   color: form.color,
   notes: form.notes || undefined,
   tags: form.tags && form.tags.length > 0 ? form.tags : undefined,
@@ -50,6 +53,7 @@ export const getItemFormBase = (form: ItemForm): ItemFormBase => {
   return {
     title: form.title,
     courseId: form.courseId,
+    projectId: form.projectId,
     color: form.color,
     notes: form.notes,
     tags: form.tags,

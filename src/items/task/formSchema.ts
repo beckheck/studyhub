@@ -20,6 +20,7 @@ export type ItemTaskForm = z.infer<typeof itemTaskFormSchema>;
 export const DEFAULT_ITEM_TASK_FORM: ItemTaskForm = {
   title: '',
   courseId: '',
+  projectId: '',
   color: '#3b82f6',
   notes: '',
   tags: [],

@@ -35,6 +35,7 @@ export type ItemEventForm = z.infer<typeof itemEventFormSchema>;
 export const DEFAULT_ITEM_EVENT_FORM: ItemEventForm = {
   title: '',
   courseId: '',
+  projectId: '',
   color: '#8b5cf6',
   notes: '',
   tags: [],

@@ -7,7 +7,8 @@ export const ItemBaseSchema = z.object({
   // title: z
   //   .string({ message: t('items:common.validation.titleRequired') })
   //   .min(1, { message: t('items:common.validation.titleMinLength') }),
-  courseId: z.string({ message: t('items:common.validation.courseRequired') }),
+  courseId: z.string().optional(),
+  projectId: z.string().optional(),
   color: z.string().optional(),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),

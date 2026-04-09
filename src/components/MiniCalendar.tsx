@@ -16,50 +16,52 @@ interface MiniCalendarProps {
   isExpanded?: boolean; // New prop to control layout
 }
 
+export function buildCalendarMatrix(currentDate: Date): Date[] {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  // Adjust for Monday start (0 = Sunday, 1 = Monday, etc.)
+  const startDay = firstDay.getDay();
+  const adjustedStartDay = startDay === 0 ? 6 : startDay - 1;
+
+  const daysInMonth = lastDay.getDate();
+  const matrix: Date[] = [];
+
+  // Add previous month days
+  for (let i = adjustedStartDay - 1; i >= 0; i--) {
+    matrix.push(new Date(year, month, -i));
+  }
+
+  // Add current month days
+  for (let day = 1; day <= daysInMonth; day++) {
+    matrix.push(new Date(year, month, day));
+  }
+
+  // Add next month days to complete the grid (6 weeks = 42 days)
+  const remainingDays = 42 - matrix.length;
+  for (let day = 1; day <= remainingDays; day++) {
+    matrix.push(new Date(year, month + 1, day));
+  }
+
+  return matrix;
+}
+
 export default function MiniCalendar({ onTabChange, onCourseSelect, isExpanded = false }: MiniCalendarProps) {
   const { t } = useTranslation('planner');
   const { getShortDayNames, formatDate: localizedFormatDate } = useLocalization();
   const { getCourseTitle } = useCourses();
   const { items } = useItems();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   // Get all items for event counting
   const tasks = items.filter(item => item.type === 'task');
   const exams = items.filter(item => item.type === 'exam');
-  const events = items.filter(item => item.type === 'event');
 
   // Generate calendar matrix
-  const matrix = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    // Adjust for Monday start (0 = Sunday, 1 = Monday, etc.)
-    const startDay = firstDay.getDay();
-    const adjustedStartDay = startDay === 0 ? 6 : startDay - 1;
-    
-    const daysInMonth = lastDay.getDate();
-    const matrix: Date[] = [];
-    
-    // Add previous month days
-    for (let i = adjustedStartDay - 1; i >= 0; i--) {
-      matrix.push(new Date(year, month, -i));
-    }
-    
-    // Add current month days
-    for (let day = 1; day <= daysInMonth; day++) {
-      matrix.push(new Date(year, month, day));
-    }
-    
-    // Add next month days to complete the grid (6 weeks = 42 days)
-    const remainingDays = 42 - matrix.length;
-    for (let day = 1; day <= remainingDays; day++) {
-      matrix.push(new Date(year, month + 1, day));
-    }
-    
-    return matrix;
-  }, [currentDate]);
+  const matrix = useMemo(() => buildCalendarMatrix(currentDate), [currentDate]);
 
   // Helper to get all events for a specific date (show all events including completed)
   const getAllEventsForDate = (date: Date) => {
@@ -169,50 +171,58 @@ export default function MiniCalendar({ onTabChange, onCourseSelect, isExpanded =
 
         {/* Calendar grid */}
         <div className={`grid grid-cols-7 gap-1 ${isExpanded ? 'gap-2' : 'gap-1'}`}>
-          {matrix.slice(0, 35).map((date, i) => { // Show 5 weeks instead of 6 to save space
+          {matrix.map((date, i) => {
             const inMonth = date.getMonth() === currentDate.getMonth();
             const isToday = date.toDateString() === today.toDateString();
             const isPastDate = date < today;
             const eventCount = getEventCountForDate(date);
             const dayEvents = getAllEventsForDate(date);
+            const isHovered = hoveredDate?.toDateString() === date.toDateString();
+            const row = Math.floor(i / 7);
+            const showTooltipBelow = row < 2;
 
             return (
-              <div
-                key={i}
-                className={`
-                  group relative flex flex-col items-center justify-center text-xs rounded-md
-                  transition-colors cursor-pointer hover:bg-white/20
-                  ${isExpanded 
-                    ? 'h-12 w-full' // Rectangular when expanded
-                    : 'aspect-square' // Square when not expanded
-                  }
-                  ${isToday 
-                    ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 font-bold' 
-                    : isPastDate 
-                      ? 'text-zinc-400 dark:text-zinc-500 opacity-60' // Grey out past dates
-                      : inMonth 
-                        ? 'text-zinc-800 dark:text-zinc-200' 
-                        : 'text-zinc-400 dark:text-zinc-600'
-                  }
-                `}
-                onClick={goToPlanner}
-              >
-                <span className="text-xs leading-none">{date.getDate()}</span>
-                {eventCount > 0 && (
-                  <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2">
-                    <div className={`w-1 h-1 rounded-full ${
-                      isToday 
-                        ? 'bg-violet-600 dark:bg-violet-400' 
-                        : isPastDate
-                          ? 'bg-zinc-400 dark:bg-zinc-500 opacity-60' // Grey dot for past dates
-                          : 'bg-blue-500 dark:bg-blue-400'
-                    }`} />
-                  </div>
-                )}
+              <div key={i} className="relative">
+                <div
+                  className={`
+                    flex flex-col items-center justify-center text-xs rounded-md
+                    transition-colors cursor-pointer hover:bg-white/20
+                    ${isExpanded 
+                      ? 'h-12 w-full' // Rectangular when expanded
+                      : 'aspect-square' // Square when not expanded
+                    }
+                    ${isToday 
+                      ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 font-bold' 
+                      : isPastDate 
+                        ? 'text-zinc-400 dark:text-zinc-500 opacity-60' // Grey out past dates
+                        : inMonth 
+                          ? 'text-zinc-800 dark:text-zinc-200' 
+                          : 'text-zinc-400 dark:text-zinc-600'
+                    }
+                  `}
+                  onClick={goToPlanner}
+                  onMouseEnter={() => (dayEvents.length > 0 ? setHoveredDate(date) : setHoveredDate(null))}
+                  onMouseLeave={() => setHoveredDate(null)}
+                >
+                  <span className="text-xs leading-none">{date.getDate()}</span>
+                  {eventCount > 0 && (
+                    <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2">
+                      <div className={`w-1 h-1 rounded-full ${
+                        isToday 
+                          ? 'bg-violet-600 dark:bg-violet-400' 
+                          : isPastDate
+                            ? 'bg-zinc-400 dark:bg-zinc-500 opacity-60' // Grey dot for past dates
+                            : 'bg-blue-500 dark:bg-blue-400'
+                      }`} />
+                    </div>
+                  )}
+                </div>
 
                 {/* Tooltip */}
-                {dayEvents.length > 0 && (
-                  <div className={`absolute left-1/2 bottom-full mb-2 w-64 shadow-xl rounded-xl p-3 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform -translate-x-1/2 border ${
+                {isHovered && dayEvents.length > 0 && (
+                  <div className={`absolute left-1/2 z-50 w-64 -translate-x-1/2 transform rounded-xl border p-3 shadow-xl pointer-events-none ${
+                    showTooltipBelow ? 'top-full mt-2' : 'bottom-full mb-2'
+                  } ${
                     isPastDate 
                       ? 'bg-zinc-100 dark:bg-zinc-700 border-zinc-300 dark:border-zinc-600' // Muted colors for past dates
                       : 'bg-white dark:bg-zinc-800 border-white/20 dark:border-white/10'
@@ -223,56 +233,54 @@ export default function MiniCalendar({ onTabChange, onCourseSelect, isExpanded =
                           ? 'text-zinc-600 dark:text-zinc-300' // Muted text for past dates
                           : 'text-zinc-900 dark:text-zinc-100'
                       }`}>
-                        {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        {localizedFormatDate(date, { weekday: 'long', month: 'long', day: 'numeric' })}
                       </div>
                       <div className="text-xs text-zinc-500 dark:text-zinc-400">
                         {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}
                       </div>
                     </div>
 
-                    {dayEvents.length > 0 && (
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {dayEvents.slice(0, 5).map((event, idx) => (
-                          <div
-                            key={idx}
-                            className={`space-y-1 p-2 rounded-lg cursor-pointer transition-colors ${
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {dayEvents.slice(0, 5).map((event, idx) => (
+                        <div
+                          key={idx}
+                          className={`space-y-1 rounded-lg p-2 transition-colors ${
+                            isPastDate 
+                              ? 'bg-zinc-100 dark:bg-zinc-600/50 hover:bg-zinc-200 dark:hover:bg-zinc-600/70' // Muted event styling for past dates
+                              : 'bg-zinc-50 dark:bg-zinc-700/50 hover:bg-blue-100 dark:hover:bg-blue-900/50'
+                          }`}
+                          onClick={clickEvent => {
+                            clickEvent.stopPropagation();
+                            goToPlanner();
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <EventTypeIndicator event={event} size="sm" />
+                            <span className={`truncate text-xs font-medium ${
                               isPastDate 
-                                ? 'bg-zinc-100 dark:bg-zinc-600/50 hover:bg-zinc-200 dark:hover:bg-zinc-600/70' // Muted event styling for past dates
-                                : 'bg-zinc-50 dark:bg-zinc-700/50 hover:bg-blue-100 dark:hover:bg-blue-900/50'
-                            }`}
-                            onClick={(clickEvent) => {
-                              clickEvent.stopPropagation();
-                              goToPlanner();
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <EventTypeIndicator event={event} size="sm" />
-                              <span className={`font-medium text-xs truncate ${
-                                isPastDate 
-                                  ? 'text-zinc-600 dark:text-zinc-300' // Muted text for past events
-                                  : 'text-zinc-900 dark:text-zinc-100'
-                              }`}>
-                                {event.title || `${event.type.charAt(0).toUpperCase() + event.type.slice(1)}`}
-                                {'isCompleted' in event && event.isCompleted && <span className="ml-1 text-green-600">✓</span>}
-                              </span>
-                            </div>
-                            <div className={`text-xs ml-4 ${
-                              isPastDate 
-                                ? 'text-zinc-500 dark:text-zinc-400' // Muted details for past events
-                                : 'text-zinc-600 dark:text-zinc-300'
+                                ? 'text-zinc-600 dark:text-zinc-300' // Muted text for past events
+                                : 'text-zinc-900 dark:text-zinc-100'
                             }`}>
-                              <div className="font-medium">{getCourseTitle(event.courseId) || 'No course'}</div>
-                              {'startsAtTime' in event && event.startsAtTime && <div>{String(event.startsAtTime)}</div>}
-                            </div>  
+                              {event.title || `${event.type.charAt(0).toUpperCase() + event.type.slice(1)}`}
+                              {'isCompleted' in event && event.isCompleted && <span className="ml-1 text-green-600">✓</span>}
+                            </span>
                           </div>
-                        ))}
-                        {dayEvents.length > 5 && (
-                          <div className="text-xs text-zinc-500 dark:text-zinc-400 text-center py-1">
-                            +{dayEvents.length - 5} more events
+                          <div className={`ml-4 text-xs ${
+                            isPastDate 
+                              ? 'text-zinc-500 dark:text-zinc-400' // Muted details for past events
+                              : 'text-zinc-600 dark:text-zinc-300'
+                          }`}>
+                            <div className="font-medium">{getCourseTitle(event.courseId) || 'No course'}</div>
+                            {'startsAtTime' in event && event.startsAtTime && <div>{String(event.startsAtTime)}</div>}
                           </div>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      ))}
+                      {dayEvents.length > 5 && (
+                        <div className="py-1 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                          +{dayEvents.length - 5} more events
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

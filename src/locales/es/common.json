@@ -67,6 +67,7 @@
   "navigation": {
     "dashboard": "Panel",
     "planner": "Planificador",
+    "projects": "Proyectos",
     "timetable": "Horario",
     "courses": "Cursos",
     "degreePlan": "Malla Interactiva",
