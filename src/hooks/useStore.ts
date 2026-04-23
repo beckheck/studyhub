@@ -131,8 +131,8 @@ export function useCourses() {
         course.title = title;
       }
     },
-    addCourse: (title: string) => {
-      const newCourse = { id: uid(), title };
+    addCourse: (title: string, emoji?: string) => {
+      const newCourse = { id: uid(), title, emoji: emoji || '📚' };
       store.courses.push(newCourse);
       // If this is the first course, select it
       if (store.courses.length === 1) {
@@ -172,6 +172,12 @@ export function useCourses() {
       const course = store.courses.find(c => c.id === courseId);
       if (course) {
         course.syllabusFileId = syllabusFileId;
+      }
+    },
+    updateCourseEmoji: (courseId: string, emoji: string) => {
+      const course = store.courses.find(c => c.id === courseId);
+      if (course) {
+        course.emoji = emoji;
       }
     },
   };

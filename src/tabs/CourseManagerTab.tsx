@@ -36,12 +36,14 @@ import {
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+const DEFAULT_COURSE_EMOJI = '📚';
+
 export default function CourseManagerTab() {
   const { t: tCourse } = useTranslation('courseManager');
   const { t: tCommon } = useTranslation('common');
   const { formatDateDDMMYYYY } = useLocalization();
   const { courses, selectedCourseId, getCourseTitle, setSelectedCourse, clearCourseData, updateCourseSyllabus } = useCourses();
-  const { items, getItemsByType, updateItem, deleteItem } = useItems();
+  const { getItemsByType, updateItem, deleteItem } = useItems();
 
   // Get items by type
   const tasks = getItemsByType('task') as ItemTask[];
@@ -61,6 +63,17 @@ export default function CourseManagerTab() {
   const courseExams = exams.filter(e => e.courseId === selectedCourseId);
   const upcomingExams = courseExams.filter(e => !e.isCompleted);
   const completedExams = courseExams.filter(e => e.isCompleted);
+  const selectedCourse = courses.find(course => course.id === selectedCourseId);
+
+  const courseStats = useMemo(() => {
+    return courses.reduce<Record<string, { openTasks: number; upcomingExams: number }>>((acc, course) => {
+      acc[course.id] = {
+        openTasks: tasks.filter(task => task.courseId === course.id && !task.isCompleted).length,
+        upcomingExams: exams.filter(exam => exam.courseId === course.id && !exam.isCompleted).length,
+      };
+      return acc;
+    }, {});
+  }, [courses, exams, tasks]);
 
   // Toggle expanded state for exam notes
   const toggleExamNotesExpanded = (examId: string) => {
@@ -209,15 +222,84 @@ export default function CourseManagerTab() {
   return (
     <div className="space-y-6">
       <Confetti confetti={confetti} />
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden lg:block">
+          <Card className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
+            <CardHeader className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <CardTitle>{tCourse('courseMenu.title')}</CardTitle>
+                  <CardDescription>{tCourse('courseMenu.description')}</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={() => openSettingsDialog('courses')}
+                  title={tCourse('courseMenu.manageCourses')}
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {courses.map(course => {
+                const isSelected = course.id === selectedCourseId;
+                const stats = courseStats[course.id] || { openTasks: 0, upcomingExams: 0 };
+
+                return (
+                  <button
+                    type="button"
+                    key={course.id}
+                    onClick={() => setSelectedCourse(course.id)}
+                    className={`w-full rounded-xl border px-3 py-3 text-left transition-all ${
+                      isSelected
+                        ? 'border-emerald-300/80 bg-emerald-50/80 dark:bg-emerald-900/20 ring-2 ring-emerald-400/70'
+                        : 'border-white/20 bg-white/60 hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 text-xl shadow-sm dark:bg-zinc-900/60">
+                        {course.emoji || DEFAULT_COURSE_EMOJI}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{course.title}</div>
+                        <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          {tCourse('courseMenu.openTasks', { count: stats.openTasks })}
+                        </div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {tCourse('courseMenu.upcomingExams', { count: stats.upcomingExams })}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-3 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 dark:border-red-900 dark:hover:bg-red-950"
+                onClick={() => setClearConfirmOpen(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                {tCourse('actions.clearCourseData')}
+              </Button>
+            </CardContent>
+          </Card>
+        </aside>
+
+        <main className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 lg:hidden">
           <Select value={selectedCourseId} onValueChange={v => setSelectedCourse(v)}>
             <SelectTrigger className="w-56 rounded-xl">
-              <SelectValue />
+              <SelectValue placeholder={selectedCourse?.title || tCourse('courseMenu.title')} />
             </SelectTrigger>
             <SelectContent>
               {courses.map(c => (
                 <SelectItem key={c.id} value={c.id}>
+                  <span className="mr-2">{c.emoji || DEFAULT_COURSE_EMOJI}</span>
                   {c.title}
                 </SelectItem>
               ))}
@@ -228,7 +310,7 @@ export default function CourseManagerTab() {
             size="sm"
             className="rounded-xl"
             onClick={() => openSettingsDialog('courses')}
-            title="Manage courses"
+            title={tCourse('courseMenu.manageCourses')}
           >
             <Settings className="w-4 h-4" />
           </Button>
@@ -355,7 +437,7 @@ export default function CourseManagerTab() {
                       
                     </span>
                     <span className="text-xs text-zinc-700 dark:text-zinc-200 normal-case tracking-normal flex items-center gap-1 font-medium">
-                      {showCompletedTasks ? 'Hide completed tasks' : 'Show completed tasks'}
+                      {showCompletedTasks ? tCourse('tasks.hideCompleted') : tCourse('tasks.showCompleted')}
                       {showCompletedTasks ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     </span>
                   </Button>
@@ -620,7 +702,7 @@ export default function CourseManagerTab() {
                               </div>
                               <div className="text-xs text-zinc-500 ml-6">
                                 {formatDateDDMMYYYY(new Date(e.startsAt).toISOString().split('T')[0])} · {e.weight}% ·
-                                Completed
+                                {tCommon('status.completed')}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -632,7 +714,7 @@ export default function CourseManagerTab() {
                                   ev.stopPropagation();
                                   updateItem(e.id, { isCompleted: false } as any);
                                 }}
-                                title="Mark as upcoming"
+                                title={tCourse('exams.upcoming.title')}
                               >
                                 <Undo className="w-4 h-4" />
                               </Button>
@@ -789,6 +871,8 @@ export default function CourseManagerTab() {
 
         {/* Course Record Calendar Card */}
         <CourseRecordCalendar courseId={selectedCourseId} />
+      </div>
+        </main>
       </div>
 
       {/* Confirmation Dialog for clearing course data */}

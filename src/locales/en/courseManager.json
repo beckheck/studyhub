@@ -1,4 +1,11 @@
 {
+  "courseMenu": {
+    "title": "Courses",
+    "description": "Choose which course to view",
+    "openTasks": "{{count}} open tasks",
+    "upcomingExams": "{{count}} upcoming exams",
+    "manageCourses": "Manage courses"
+  },
   "actions": {
     "addTask": "Add task",
     "addExam": "Add exam",
@@ -29,6 +36,8 @@
     "sections": {
       "open": "Open"
     },
+    "showCompleted": "Show completed tasks",
+    "hideCompleted": "Hide completed tasks",
     "empty": {
       "noPending": "Nothing pending. Go touch sky ☁️"
     },

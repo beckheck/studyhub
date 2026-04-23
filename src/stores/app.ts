@@ -8,6 +8,8 @@ import type { AppState, DegreePlan, MoodEmojis, WeatherLocation, FocusTimerConfi
 const STORAGE_KEY = 'sp:appStateExchange';
 
 // Default values
+const DEFAULT_COURSE_EMOJIS = ['📐', '🧪', '📊', '💹', '💻', '🎨', '📝'];
+
 const DEFAULT_COURSES = [
   'Calculus',
   'Chemistry',
@@ -16,9 +18,10 @@ const DEFAULT_COURSES = [
   'Programming',
   'Elective',
   'Optional Course',
-].map(c => ({
+].map((c, index) => ({
   id: uid(),
   title: c,
+  emoji: DEFAULT_COURSE_EMOJIS[index] ?? '📚',
 }));
 
 export const DEFAULT_MOOD_EMOJIS: MoodEmojis = {

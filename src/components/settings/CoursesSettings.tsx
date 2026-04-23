@@ -11,9 +11,25 @@ import { useTranslation } from 'react-i18next';
 export default function CoursesSettings() {
   const { t } = useTranslation('settings');
   const { t: tCommon } = useTranslation('common');
-  const { courses, renameCourse, addCourse, removeCourse, setCourses } = useCourses();
+  const { courses, renameCourse, addCourse, removeCourse, setCourses, updateCourseEmoji } = useCourses();
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [courseToDelete, setCourseToDelete] = useState<{ id: string; title: string } | null>(null);
+
+  const getFirstGrapheme = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+      const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+      const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
+      const first = iterator.next();
+      return first.done ? '' : first.value.segment;
+    }
+
+    return Array.from(trimmed)[0] || '';
+  };
 
   const handleAddCourse = () => {
     if (newCourseTitle.trim()) {
@@ -91,6 +107,17 @@ export default function CoursesSettings() {
                     onDeferredChange={value => renameCourse(course.id, value)}
                     className="rounded-lg border-none bg-transparent focus:bg-white/50 dark:focus:bg-white/10"
                   />
+                </div>
+
+                <div className="flex flex-col items-end gap-1">
+                  <Input
+                    value={course.emoji || ''}
+                    onChange={e => updateCourseEmoji(course.id, getFirstGrapheme(e.target.value))}
+                    placeholder={t('courses.emojiPlaceholder')}
+                    aria-label={t('courses.emojiLabel')}
+                    className="w-16 h-8 text-center rounded-lg"
+                  />
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-none">{t('courses.emojiHint')}</span>
                 </div>
 
                 {/* Remove button */}

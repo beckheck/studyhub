@@ -9,6 +9,9 @@
     "addCourse": "Agregar Curso",
     "removeCourse": "Eliminar",
     "newCoursePlaceholder": "Nuevo Curso",
+    "emojiLabel": "Emoji",
+    "emojiPlaceholder": "📚",
+    "emojiHint": "Elige un emoji por curso",
     "dragToReorder": "Arrastra para reordenar",
     "cannotRemoveLastCourse": "No se puede eliminar el último curso",
     "deleteConfirmation": {

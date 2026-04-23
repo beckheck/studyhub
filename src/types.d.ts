@@ -246,6 +246,7 @@ export interface DegreeCourse {
 export interface Course {
   id: string;
   title: string;
+  emoji?: string;
   syllabusFileId?: string;
 }
 

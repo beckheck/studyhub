@@ -1,4 +1,11 @@
 {
+  "courseMenu": {
+    "title": "Cursos",
+    "description": "Elige qué curso ver",
+    "openTasks": "{{count}} tareas pendientes",
+    "upcomingExams": "{{count}} evaluaciones próximas",
+    "manageCourses": "Gestionar cursos"
+  },
   "actions": {
     "addTask": "Agregar tarea",
     "addExam": "Agregar examen",
@@ -29,6 +36,8 @@
     "sections": {
       "open": "Pendientes"
     },
+    "showCompleted": "Mostrar tareas completadas",
+    "hideCompleted": "Ocultar tareas completadas",
     "empty": {
       "noPending": "Nada pendiente. Ve a tocar el cielo ☁️"
     },
