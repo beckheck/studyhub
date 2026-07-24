@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import { proxy, snapshot, subscribe } from 'valtio';
 import { DataTransfer } from '../lib/data-transfer';
 import { hybridStorage } from '../lib/hybrid-storage';
-import type { AppState, DegreePlan, MoodEmojis, WeatherLocation, FocusTimerConfig, GoogleCalendarConfig } from '../types';
+import type { AppState, DegreePlan, MoodEmojis, WeatherLocation, FocusTimerConfig, GoogleCalendarConfig, SemesterDates } from '../types';
 
 const STORAGE_KEY = 'sp:appStateExchange';
 
@@ -80,6 +80,19 @@ const DEFAULT_WEATHER_LOCATION: WeatherLocation = {
   city: '',
 };
 
+const DEFAULT_SEMESTER_DATES: SemesterDates = {
+  semesterStart: '',
+  semesterEnd: '',
+  midtermsStart: '',
+  midtermsEnd: '',
+  finalsStart: '',
+  finalsEnd: '',
+  springBreakStart: '',
+  springBreakEnd: '',
+  winterBreakStart: '',
+  winterBreakEnd: '',
+};
+
 const DEFAULT_DASHBOARD_WIDGET_VISIBILITY = {
   weather: true,
   datetime: true,
@@ -137,6 +150,9 @@ function createInitialState(): AppState {
 
     // Academic planning
     degreePlan: { ...DEFAULT_DEGREE_PLAN },
+
+    // Semester dates
+    semesterDates: { ...DEFAULT_SEMESTER_DATES },
 
     // Wellness tracking
     wellness: {

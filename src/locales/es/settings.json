@@ -32,6 +32,32 @@
     "title": "Plan de Grado",
     "description": "Personaliza la configuración y información de tu plan de grado"
   },
+  "semesterDates": {
+    "title": "Fechas del Semestre",
+    "description": "Establece las fechas importantes del semestre actual",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "semesterPeriod": {
+      "title": "Período del Semestre",
+      "description": "Las fechas de inicio y fin de tu semestre actual"
+    },
+    "midterms": {
+      "title": "Parciales",
+      "description": "El período de exámenes parciales"
+    },
+    "finals": {
+      "title": "Finales",
+      "description": "El período de exámenes finales"
+    },
+    "springBreak": {
+      "title": "Vacaciones de Primavera",
+      "description": "El período de vacaciones de primavera"
+    },
+    "winterBreak": {
+      "title": "Vacaciones de Invierno",
+      "description": "El período de vacaciones de invierno"
+    }
+  },
   "about": {
     "title": "Acerca de",
     "description": "Local · Privado · Súper lindo",

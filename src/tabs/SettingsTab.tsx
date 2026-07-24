@@ -13,6 +13,7 @@ export default function SettingsTab() {
     'about',
     'courses',
     'degreePlan',
+    'semesterDates',
     'focusTimer',
     'soundtrack',
     'googleCalendar',

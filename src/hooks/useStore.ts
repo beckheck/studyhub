@@ -368,6 +368,22 @@ export function useFocusTimer() {
 }
 
 /**
+ * Hook to access and modify semester dates
+ */
+export function useSemesterDates() {
+  const semesterDates = useSnapshot(store.semesterDates);
+
+  return {
+    semesterDates,
+    setSemesterDates: (dates: Partial<typeof store.semesterDates>) => {
+      Object.entries(dates).forEach(([key, value]) => {
+        (store.semesterDates as any)[key] = value;
+      });
+    },
+  };
+}
+
+/**
  * Hook to access and modify degree plan
  */
 export function useDegreePlan() {

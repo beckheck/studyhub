@@ -503,6 +503,22 @@ export interface DegreePlan {
 }
 
 /**
+ * Semester dates configuration
+ */
+export interface SemesterDates {
+  semesterStart: string;
+  semesterEnd: string;
+  midtermsStart: string;
+  midtermsEnd: string;
+  finalsStart: string;
+  finalsEnd: string;
+  springBreakStart: string;
+  springBreakEnd: string;
+  winterBreakStart: string;
+  winterBreakEnd: string;
+}
+
+/**
  * Soundtrack configuration object
  */
 export interface Soundtrack {
@@ -587,6 +603,7 @@ export interface AppState {
   dashboard: DashboardState;
   activeTabsByMode: Record<string, string>;
   focusTimer: FocusTimerConfig;
+  semesterDates: SemesterDates;
   courseRecords: CourseRecord[];
 }
 

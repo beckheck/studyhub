@@ -9,12 +9,14 @@ import DegreePlanSettings from '@/components/settings/DegreePlanSettings';
 import FocusTimerSettings from '@/components/settings/FocusTimerSettings';
 import GoogleCalendarSettings from '@/components/settings/GoogleCalendarSettings';
 import HydrationSettings from '@/components/settings/HydrationSettings';
+import SemesterDatesSettings from '@/components/settings/SemesterDatesSettings';
 import SoundtrackSettings from '@/components/settings/SoundtrackSettings';
 import WeatherApiSettings from '@/components/settings/WeatherApiSettings';
 import {
   BookOpen,
   Brush,
   Calendar,
+  CalendarDays,
   Cloud,
   Droplets,
   GraduationCap,
@@ -90,6 +92,12 @@ export function useSettingsDialog() {
         subtitle: t('degreePlan.description'),
         Icon: GraduationCap,
         Body: DegreePlanSettings,
+      } as SettingsDialog,
+      semesterDates: {
+        title: t('semesterDates.title'),
+        subtitle: t('semesterDates.description'),
+        Icon: CalendarDays,
+        Body: SemesterDatesSettings,
       } as SettingsDialog,
       focusTimer: {
         title: t('focusTimer.title'),

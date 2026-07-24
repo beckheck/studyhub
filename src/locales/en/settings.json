@@ -32,6 +32,32 @@
     "title": "Degree Plan",
     "description": "Customize your degree plan settings and information"
   },
+  "semesterDates": {
+    "title": "Semester Dates",
+    "description": "Set important dates for the current semester",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "semesterPeriod": {
+      "title": "Semester Period",
+      "description": "The start and end dates of your current semester"
+    },
+    "midterms": {
+      "title": "Midterms",
+      "description": "The midterm exam period"
+    },
+    "finals": {
+      "title": "Finals",
+      "description": "The final exam period"
+    },
+    "springBreak": {
+      "title": "Spring Break",
+      "description": "The spring break period"
+    },
+    "winterBreak": {
+      "title": "Winter Break",
+      "description": "The winter break period"
+    }
+  },
   "about": {
     "title": "About",
     "description": "Local-first · Private · Cute af",
