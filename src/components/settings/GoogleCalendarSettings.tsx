@@ -2,20 +2,23 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useGoogleCalendar } from '@/hooks/useStore';
+import { useGoogleCalendar, useItems } from '@/hooks/useStore';
 import { useAppState } from '@/hooks/useStore';
 import { useTranslation } from 'react-i18next';
 import { googleOAuthManager } from '@/lib/google-oauth';
 import { googleCalendarSync } from '@/lib/google-calendar-sync';
-import { Loader2, LogOut, Upload } from 'lucide-react';
+import { Loader2, LogOut, Upload, Download } from 'lucide-react';
+import { Item } from '@/items/models';
 
 export default function GoogleCalendarSettings() {
   const { t } = useTranslation('settings');
   const { googleCalendar, setGoogleCalendarConfig, setCalendars, setSelectedCalendar, setSyncEnabled, clearGoogleCalendar } =
     useGoogleCalendar();
   const appState = useAppState();
+  const { addItem } = useItems();
   const [loading, setLoading] = useState(false);
   const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -109,7 +112,7 @@ export default function GoogleCalendarSettings() {
       });
 
       const results = await googleCalendarSync.bulkSyncItems(
-        appState.items,
+        appState.items as unknown as Item[],
         googleCalendar.accessToken,
         googleCalendar.calendarId,
         coursesMap,
@@ -136,6 +139,94 @@ export default function GoogleCalendarSettings() {
       setError(err instanceof Error ? err.message : 'Failed to export items');
     } finally {
       setBulkExporting(false);
+      setBulkProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const handleBulkImport = async () => {
+    if (!googleCalendar.accessToken || !googleCalendar.calendarId) return;
+
+    setBulkImporting(true);
+    setError(null);
+    setSuccessMessage(null);
+    setBulkProgress({ current: 0, total: 0 });
+
+    try {
+      // Fetch events from exactly 30 days ago and into the future
+      const timeMin = new Date();
+      timeMin.setDate(timeMin.getDate() - 30);
+      const events = await googleCalendarSync.fetchEventsFromCalendar(
+        googleCalendar.accessToken,
+        googleCalendar.calendarId,
+        timeMin
+      );
+      
+      setBulkProgress({ current: 0, total: events.length });
+
+      if (events.length === 0) {
+        setSuccessMessage('No events found to import.');
+        setBulkImporting(false);
+        return;
+      }
+
+      let importedCount = 0;
+      let skippedCount = 0;
+
+      for (let i = 0; i < events.length; i++) {
+        const ev = events[i];
+        setBulkProgress({ current: i + 1, total: events.length });
+
+        // Skip events without start time
+        if (!ev.start || (!ev.start.dateTime && !ev.start.date)) {
+          skippedCount++;
+          continue;
+        }
+
+        const isAllDay = !!ev.start.date;
+        const startsAt = isAllDay ? new Date(ev.start.date) : new Date(ev.start.dateTime);
+        const endsAt = ev.end ? (isAllDay ? new Date(ev.end.date) : new Date(ev.end.dateTime)) : startsAt;
+
+        // Skip duplicates
+        // Match by title, date, or if it already has googleCalendarEventId matching ev.id in our local state
+        const isDuplicate = appState.items.some(item => {
+          if (item.type !== 'event' && item.type !== 'task' && item.type !== 'exam') return false;
+          const i = item as any;
+          return i.googleCalendarEventId === ev.id || 
+          (i.title === ev.summary && i.startsAt && new Date(i.startsAt).toISOString() === startsAt.toISOString());
+        });
+
+        if (isDuplicate) {
+          skippedCount++;
+          continue;
+        }
+
+        // Add to our items
+        addItem({
+          type: 'event',
+          title: ev.summary || 'Untitled Event',
+          courseId: undefined,
+          projectId: undefined,
+          startsAt,
+          endsAt,
+          isAllDay,
+          notes: ev.description || '',
+          location: ev.location || '',
+          googleCalendarEventId: ev.id,
+          isDeleted: false,
+        } as any);
+
+        importedCount++;
+      }
+
+      setSuccessMessage(
+        `✅ Successfully imported ${importedCount} item${importedCount !== 1 ? 's' : ''} from Google Calendar` +
+        (skippedCount > 0 ? ` (${skippedCount} duplicates skipped)` : '')
+      );
+    } catch (err) {
+      console.error('Bulk import error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to import items');
+    } finally {
+      setBulkImporting(false);
       setBulkProgress({ current: 0, total: 0 });
     }
   };
@@ -211,7 +302,7 @@ export default function GoogleCalendarSettings() {
           {/* Bulk Export Button */}
           <Button
             onClick={handleBulkExport}
-            disabled={bulkExporting || appState.items.length === 0}
+            disabled={bulkExporting || bulkImporting || appState.items.length === 0}
             variant="outline"
             className="w-full"
           >
@@ -227,6 +318,30 @@ export default function GoogleCalendarSettings() {
                 <Upload className="w-4 h-4 mr-2" />
                 {t('googleCalendar.bulkExport', {
                   defaultValue: `Export All Items to Google Calendar (${appState.items.length})`
+                })}
+              </>
+            )}
+          </Button>
+
+          {/* Bulk Import Button */}
+          <Button
+            onClick={handleBulkImport}
+            disabled={bulkImporting || bulkExporting}
+            variant="outline"
+            className="w-full"
+          >
+            {bulkImporting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {t('googleCalendar.bulkImporting', {
+                  defaultValue: `Importing (${bulkProgress.current}/${bulkProgress.total})`
+                })}
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                {t('googleCalendar.bulkImport', {
+                  defaultValue: `Import Items from Google Calendar`
                 })}
               </>
             )}

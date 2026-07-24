@@ -43,7 +43,7 @@ export function ExamForm({ hidden, disabled }: ExamFormProps) {
           <Input
             {...field}
             type="number"
-            className="rounded-xl"
+            step="any"
             min="0"
             max="100"
             disabled={disabled.weight}

@@ -117,6 +117,28 @@
     "removeFailed": "Failed to remove syllabus. Please try again.",
     "removeConfirmation": "Are you sure you want to remove this syllabus?"
   },
+  "courseLinks": {
+    "title": "Quick Links",
+    "addLink": "Add Link",
+    "done": "Done",
+    "add": "Add Link",
+    "remove": "Remove",
+    "labelPlaceholder": "Label (e.g., Canvas)",
+    "urlPlaceholder": "URL (https://...)",
+    "empty": "No quick links yet. Add one to get started!"
+  },
+  "courseContacts": {
+    "title": "Teacher & TA Contacts",
+    "addContact": "Add Contact",
+    "done": "Done",
+    "add": "Add Contact",
+    "remove": "Remove",
+    "namePlaceholder": "Name (e.g., Dr. Rivera)",
+    "rolePlaceholder": "Role (e.g., Teacher, TA)",
+    "emailPlaceholder": "Email",
+    "phonePlaceholder": "Phone (optional)",
+    "empty": "No teacher or TA contacts yet. Add one to get started!"
+  },
   "confirmations": {
     "clearData": {
       "title": "Clear {{course}} Data",

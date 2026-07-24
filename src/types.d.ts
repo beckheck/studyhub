@@ -248,6 +248,15 @@ export interface Course {
   title: string;
   emoji?: string;
   syllabusFileId?: string;
+  links?: { label: string; url: string }[];
+  contacts?: CourseContact[];
+}
+
+export interface CourseContact {
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
 }
 
 export type ProjectType = 'organization' | 'club' | 'research' | 'politics' | 'competition' | 'startup' | 'other';

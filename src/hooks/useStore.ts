@@ -4,6 +4,7 @@ import { uid } from '../lib/utils';
 import { store, storeLoadingState } from '../stores/app';
 import type {
   Course,
+  CourseContact,
   CourseRecord,
   DegreePlan,
   ExamGrade,
@@ -179,6 +180,18 @@ export function useCourses() {
       const course = store.courses.find(c => c.id === courseId);
       if (course) {
         course.emoji = emoji;
+      }
+    },
+    updateCourseLinks: (courseId: string, links: { label: string; url: string }[]) => {
+      const course = store.courses.find(c => c.id === courseId);
+      if (course) {
+        course.links = links;
+      }
+    },
+    updateCourseContacts: (courseId: string, contacts: CourseContact[]) => {
+      const course = store.courses.find(c => c.id === courseId);
+      if (course) {
+        course.contacts = contacts;
       }
     },
   };

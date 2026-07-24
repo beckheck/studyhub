@@ -2,6 +2,7 @@ import { ItemEvent } from '@/items/event/modelSchema';
 import { EventRecurrence } from '@/items/event/modelSchema';
 import { ItemTask } from '@/items/task/modelSchema';
 import { ItemExam } from '@/items/exam/modelSchema';
+import { Item } from '@/items/models';
 import { googleOAuthManager } from './google-oauth';
 
 interface GoogleCalendarEvent {
@@ -412,6 +413,39 @@ export class GoogleCalendarSync {
     } catch (error) {
       console.error('Error fetching calendars:', error);
       return null;
+    }
+  }
+
+  async fetchEventsFromCalendar(
+    accessToken: string,
+    calendarId: string,
+    timeMin?: Date
+  ): Promise<any[]> {
+    try {
+      console.log(`Fetching events from calendar ${calendarId}...`);
+      let endpoint = `/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime&maxResults=500`;
+      
+      if (timeMin) {
+        endpoint += `&timeMin=${timeMin.toISOString()}`;
+      }
+
+      const response = await this.makeApiRequest(
+        'GET',
+        endpoint,
+        null,
+        accessToken
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch events');
+        return [];
+      }
+
+      const data = await response.json();
+      return data.items || [];
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      return [];
     }
   }
 

@@ -117,6 +117,28 @@
     "removeFailed": "Error al eliminar el programa. Por favor, inténtalo de nuevo.",
     "removeConfirmation": "¿Estás seguro de que quieres eliminar este programa?"
   },
+  "courseLinks": {
+    "title": "Enlaces Rápidos",
+    "addLink": "Agregar Enlace",
+    "done": "Hecho",
+    "add": "Agregar Enlace",
+    "remove": "Eliminar",
+    "labelPlaceholder": "Etiqueta (p. ej., Canvas)",
+    "urlPlaceholder": "URL (https://...)",
+    "empty": "Aún no hay enlaces rápidos. ¡Agrega uno para comenzar!"
+  },
+  "courseContacts": {
+    "title": "Contactos de Profesor y Ayudantes",
+    "addContact": "Agregar Contacto",
+    "done": "Hecho",
+    "add": "Agregar Contacto",
+    "remove": "Eliminar",
+    "namePlaceholder": "Nombre (p. ej., Dra. Rivera)",
+    "rolePlaceholder": "Rol (p. ej., Profesor, Ayudante)",
+    "emailPlaceholder": "Correo",
+    "phonePlaceholder": "Teléfono (opcional)",
+    "empty": "Aún no hay contactos de profesor o ayudante. ¡Agrega uno para comenzar!"
+  },
   "confirmations": {
     "clearData": {
       "title": "Limpiar Datos de {{course}}",

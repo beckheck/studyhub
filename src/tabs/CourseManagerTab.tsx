@@ -27,14 +27,27 @@ import {
   ChevronDown,
   ChevronRight,
   Edit,
+  ExternalLink,
+  Link as LinkIcon,
   ListTodo,
   Plus,
   Settings,
   Trash2,
   Undo,
+  Mail,
+  Phone,
+  UserRound,
+  X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+
+type CourseContact = {
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+};
 
 const DEFAULT_COURSE_EMOJI = '📚';
 
@@ -42,7 +55,16 @@ export default function CourseManagerTab() {
   const { t: tCourse } = useTranslation('courseManager');
   const { t: tCommon } = useTranslation('common');
   const { formatDateDDMMYYYY } = useLocalization();
-  const { courses, selectedCourseId, getCourseTitle, setSelectedCourse, clearCourseData, updateCourseSyllabus } = useCourses();
+  const {
+    courses,
+    selectedCourseId,
+    getCourseTitle,
+    setSelectedCourse,
+    clearCourseData,
+    updateCourseSyllabus,
+    updateCourseLinks,
+    updateCourseContacts,
+  } = useCourses();
   const { getItemsByType, updateItem, deleteItem } = useItems();
 
   // Get items by type
@@ -59,11 +81,26 @@ export default function CourseManagerTab() {
   const [showCompletedTasks, setShowCompletedTasks] = useState<boolean>(false);
   const [examNotesProgress, setExamNotesProgress] = useState<Record<string, ProgressData>>({});
   const [expandedExamNotes, setExpandedExamNotes] = useState<Record<string, boolean>>({});
+  const [showLinkManager, setShowLinkManager] = useState<boolean>(false);
+  const [linkFormData, setLinkFormData] = useState<{ label: string; url: string }>({ label: '', url: '' });
+  const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
+  const [showContactManager, setShowContactManager] = useState<boolean>(false);
+  const [contactFormData, setContactFormData] = useState<CourseContact>({ name: '', role: '', email: '', phone: '' });
+  const [contacts, setContacts] = useState<CourseContact[]>([]);
+
   const courseTasks = tasks.filter(t => t.courseId === selectedCourseId);
   const courseExams = exams.filter(e => e.courseId === selectedCourseId);
   const upcomingExams = courseExams.filter(e => !e.isCompleted);
   const completedExams = courseExams.filter(e => e.isCompleted);
   const selectedCourse = courses.find(course => course.id === selectedCourseId);
+
+  // Sync links when selected course changes
+  useEffect(() => {
+    setLinks((selectedCourse?.links as { label: string; url: string }[]) || []);
+    setLinkFormData({ label: '', url: '' });
+    setContacts((selectedCourse?.contacts as CourseContact[]) || []);
+    setContactFormData({ name: '', role: '', email: '', phone: '' });
+  }, [selectedCourseId, selectedCourse]);
 
   const courseStats = useMemo(() => {
     return courses.reduce<Record<string, { openTasks: number; upcomingExams: number }>>((acc, course) => {
@@ -209,6 +246,36 @@ export default function CourseManagerTab() {
     }
   };
 
+  const handleAddLink = () => {
+    if (linkFormData.label.trim() && linkFormData.url.trim()) {
+      const newLinks = [...links, linkFormData];
+      setLinks(newLinks);
+      updateCourseLinks(selectedCourseId, newLinks);
+      setLinkFormData({ label: '', url: '' });
+    }
+  };
+
+  const handleRemoveLink = (index: number) => {
+    const newLinks = links.filter((_, i) => i !== index);
+    setLinks(newLinks);
+    updateCourseLinks(selectedCourseId, newLinks);
+  };
+
+  const handleAddContact = () => {
+    if (contactFormData.name.trim() && contactFormData.role.trim() && contactFormData.email.trim()) {
+      const newContacts = [...contacts, contactFormData];
+      setContacts(newContacts);
+      updateCourseContacts(selectedCourseId, newContacts);
+      setContactFormData({ name: '', role: '', email: '', phone: '' });
+    }
+  };
+
+  const handleRemoveContact = (index: number) => {
+    const newContacts = contacts.filter((_, i) => i !== index);
+    setContacts(newContacts);
+    updateCourseContacts(selectedCourseId, newContacts);
+  };
+
   const progress = useMemo(() => {
     const completed = courseTasks.filter(t => t.isCompleted).length;
     const total = courseTasks.length || 1;
@@ -327,6 +394,218 @@ export default function CourseManagerTab() {
         <div className="text-sm text-zinc-600 dark:text-zinc-400">{tCourse('tasks.taskProgress')}</div>
       </div>
       <Progress value={progress} className="h-3 rounded-xl" />
+
+      {/* Course Header with Title and Quick Links */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">{selectedCourse?.emoji || DEFAULT_COURSE_EMOJI}</span>
+          <div>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{selectedCourse?.title || tCourse('courseMenu.title')}</h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">{tCourse('courseMenu.description')}</p>
+          </div>
+        </div>
+
+        {/* Quick Access Links Bar */}
+        <Card className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LinkIcon className="w-5 h-5" />
+                <CardTitle>{tCourse('courseLinks.title') || 'Quick Links'}</CardTitle>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => setShowLinkManager(!showLinkManager)}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                {showLinkManager ? tCourse('courseLinks.done') || 'Done' : tCourse('courseLinks.addLink') || 'Add Link'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {showLinkManager && (
+              <div className="bg-white/70 dark:bg-white/5 p-4 rounded-xl space-y-3 border-l-4 border-blue-400">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={tCourse('courseLinks.labelPlaceholder') || 'Label (e.g., Canvas)'}
+                    value={linkFormData.label}
+                    onChange={e => setLinkFormData({ ...linkFormData, label: e.target.value })}
+                    className="rounded-lg"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={tCourse('courseLinks.urlPlaceholder') || 'URL (https://...)'}
+                    value={linkFormData.url}
+                    onChange={e => setLinkFormData({ ...linkFormData, url: e.target.value })}
+                    className="rounded-lg"
+                  />
+                </div>
+                <Button
+                  onClick={handleAddLink}
+                  className="w-full rounded-lg"
+                  style={{
+                    backgroundColor: `hsl(var(--accent-h) var(--accent-s) var(--accent-l))`,
+                    color: 'white',
+                  }}
+                >
+                  {tCourse('courseLinks.add') || 'Add Link'}
+                </Button>
+              </div>
+            )}
+
+            {links.length === 0 ? (
+              <div className="text-sm text-zinc-500 text-center py-4">{tCourse('courseLinks.empty') || 'No quick links yet. Add one to get started!'}</div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {links.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-white/70 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
+                  >
+                    <img 
+                      src={`https://www.google.com/s2/favicons?sz=16&domain=${new URL(link.url).hostname}`}
+                      alt=""
+                      className="w-4 h-4 rounded"
+                      onError={(e) => e.currentTarget.style.display = 'none'}
+                    />
+                    <span className="text-sm font-medium">{link.label}</span>
+                    <ExternalLink className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300" />
+                    {showLinkManager && (
+                      <button
+                        onClick={e => {
+                          e.preventDefault();
+                          handleRemoveLink(index);
+                        }}
+                        className="ml-1 text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </a>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserRound className="w-5 h-5" />
+                <CardTitle>{tCourse('courseContacts.title') || 'Teacher & TA Contacts'}</CardTitle>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => setShowContactManager(!showContactManager)}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                {showContactManager ? tCourse('courseContacts.done') || 'Done' : tCourse('courseContacts.addContact') || 'Add Contact'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {showContactManager && (
+              <div className="bg-white/70 dark:bg-white/5 p-4 rounded-xl space-y-3 border-l-4 border-emerald-400">
+                <div className="grid gap-2 md:grid-cols-2">
+                  <Input
+                    placeholder={tCourse('courseContacts.namePlaceholder') || 'Name (e.g., Dr. Rivera)'}
+                    value={contactFormData.name}
+                    onChange={e => setContactFormData({ ...contactFormData, name: e.target.value })}
+                    className="rounded-lg"
+                  />
+                  <Input
+                    placeholder={tCourse('courseContacts.rolePlaceholder') || 'Role (e.g., Teacher, TA)'}
+                    value={contactFormData.role}
+                    onChange={e => setContactFormData({ ...contactFormData, role: e.target.value })}
+                    className="rounded-lg"
+                  />
+                </div>
+                <div className="grid gap-2 md:grid-cols-2">
+                  <Input
+                    placeholder={tCourse('courseContacts.emailPlaceholder') || 'Email'}
+                    type="email"
+                    value={contactFormData.email}
+                    onChange={e => setContactFormData({ ...contactFormData, email: e.target.value })}
+                    className="rounded-lg"
+                  />
+                  <Input
+                    placeholder={tCourse('courseContacts.phonePlaceholder') || 'Phone (optional)'}
+                    value={contactFormData.phone || ''}
+                    onChange={e => setContactFormData({ ...contactFormData, phone: e.target.value })}
+                    className="rounded-lg"
+                  />
+                </div>
+                <Button
+                  onClick={handleAddContact}
+                  className="w-full rounded-lg"
+                  style={{
+                    backgroundColor: `hsl(var(--accent-h) var(--accent-s) var(--accent-l))`,
+                    color: 'white',
+                  }}
+                >
+                  {tCourse('courseContacts.add') || 'Add Contact'}
+                </Button>
+              </div>
+            )}
+
+            {contacts.length === 0 ? (
+              <div className="text-sm text-zinc-500 text-center py-4">
+                {tCourse('courseContacts.empty') || 'No teacher or TA contacts yet. Add one to get started!'}
+              </div>
+            ) : (
+              <div className="grid gap-2 md:grid-cols-2">
+                {contacts.map((contact, index) => (
+                  <div
+                    key={`${contact.email}-${index}`}
+                    className="rounded-xl bg-white/70 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 px-3 py-3 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <UserRound className="w-4 h-4 text-zinc-500" />
+                          <span className="text-sm font-medium truncate">{contact.name}</span>
+                        </div>
+                        <div className="mt-1 text-xs text-zinc-500">{contact.role}</div>
+                        <a href={`mailto:${contact.email}`} className="mt-2 flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 hover:underline">
+                          <Mail className="w-4 h-4" />
+                          <span className="truncate">{contact.email}</span>
+                        </a>
+                        {contact.phone ? (
+                          <a href={`tel:${contact.phone}`} className="mt-1 flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 hover:underline">
+                            <Phone className="w-4 h-4" />
+                            <span className="truncate">{contact.phone}</span>
+                          </a>
+                        ) : null}
+                      </div>
+                      {showContactManager && (
+                        <button
+                          onClick={e => {
+                            e.preventDefault();
+                            handleRemoveContact(index);
+                          }}
+                          className="ml-1 text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                          aria-label={tCourse('courseContacts.remove') || 'Remove'}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Tasks */}

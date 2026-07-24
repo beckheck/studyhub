@@ -179,6 +179,8 @@
     "selectPlaceholder": "Choose a calendar...",
     "bulkExport": "Export All Items to Google Calendar",
     "bulkExporting": "Exporting...",
+    "bulkImport": "Import Items from Google Calendar",
+    "bulkImporting": "Importing...",
     "status": {
       "connected": "Connected to Google Calendar",
       "notConnected": "Not connected to Google Calendar"
