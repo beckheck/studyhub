@@ -35,9 +35,9 @@ export default function SemesterDatesSettings() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Semester Period */}
-      <div className="space-y-4">
+      <div className="space-y-3 p-4 rounded-xl bg-white/30 dark:bg-white/5 border border-white/20 dark:border-white/10">
         <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             {t('semesterDates.semesterPeriod.title')}
@@ -53,7 +53,7 @@ export default function SemesterDatesSettings() {
       </div>
 
       {/* Midterms */}
-      <div className="space-y-4">
+      <div className="space-y-3 p-4 rounded-xl bg-white/30 dark:bg-white/5 border border-white/20 dark:border-white/10">
         <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             {t('semesterDates.midterms.title')}
@@ -69,7 +69,7 @@ export default function SemesterDatesSettings() {
       </div>
 
       {/* Finals */}
-      <div className="space-y-4">
+      <div className="space-y-3 p-4 rounded-xl bg-white/30 dark:bg-white/5 border border-white/20 dark:border-white/10">
         <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             {t('semesterDates.finals.title')}
@@ -85,7 +85,7 @@ export default function SemesterDatesSettings() {
       </div>
 
       {/* Spring Break */}
-      <div className="space-y-4">
+      <div className="space-y-3 p-4 rounded-xl bg-white/30 dark:bg-white/5 border border-white/20 dark:border-white/10">
         <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             {t('semesterDates.springBreak.title')}
@@ -101,7 +101,7 @@ export default function SemesterDatesSettings() {
       </div>
 
       {/* Winter Break */}
-      <div className="space-y-4">
+      <div className="space-y-3 p-4 rounded-xl bg-white/30 dark:bg-white/5 border border-white/20 dark:border-white/10">
         <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             {t('semesterDates.winterBreak.title')}
