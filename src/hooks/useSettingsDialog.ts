@@ -7,12 +7,14 @@ import CoursesSettings from '@/components/settings/CoursesSettings';
 import CustomCursorSettings from '@/components/settings/CustomCursorSettings';
 import DegreePlanSettings from '@/components/settings/DegreePlanSettings';
 import FocusTimerSettings from '@/components/settings/FocusTimerSettings';
+import GoogleCalendarSettings from '@/components/settings/GoogleCalendarSettings';
 import HydrationSettings from '@/components/settings/HydrationSettings';
 import SoundtrackSettings from '@/components/settings/SoundtrackSettings';
 import WeatherApiSettings from '@/components/settings/WeatherApiSettings';
 import {
   BookOpen,
   Brush,
+  Calendar,
   Cloud,
   Droplets,
   GraduationCap,
@@ -94,6 +96,12 @@ export function useSettingsDialog() {
         subtitle: t('focusTimer.description'),
         Icon: Timer,
         Body: FocusTimerSettings,
+      } as SettingsDialog,
+      googleCalendar: {
+        title: t('googleCalendar.title'),
+        subtitle: t('googleCalendar.description'),
+        Icon: Calendar,
+        Body: GoogleCalendarSettings,
       } as SettingsDialog,
       hydration: {
         title: t('hydration.title'),

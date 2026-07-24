@@ -32,7 +32,7 @@ const editItemDialogOptions: ItemDialogOptions = {
 
 export default function PlannerTab() {
   const { courses } = useCourses();
-  const { items, getItemsByType } = useItems();
+  const { items, getItemsByType, updateItem } = useItems();
 
   // Localization hooks
   const { t } = useTranslation('planner');
@@ -132,6 +132,35 @@ export default function PlannerTab() {
       return isSameDate(itemDate, date) && (filterCourse === 'all' || item.courseId === filterCourse);
     });
   }
+
+  const handleEventDrop = (itemId: string, itemType: string, targetDate: Date) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (item.type === 'event') {
+      const oldStart = new Date(item.startsAt);
+      const startOfDay = new Date(oldStart.getFullYear(), oldStart.getMonth(), oldStart.getDate());
+      const targetOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      const daysDiff = Math.round((targetOfDay.getTime() - startOfDay.getTime()) / (1000 * 60 * 60 * 24));
+
+      const newStart = new Date(item.startsAt);
+      newStart.setDate(newStart.getDate() + daysDiff);
+      const newEnd = new Date(item.endsAt);
+      newEnd.setDate(newEnd.getDate() + daysDiff);
+
+      updateItem(itemId, { startsAt: newStart, endsAt: newEnd } as any);
+    } else if (item.type === 'exam') {
+      const oldDate = new Date(item.startsAt);
+      const newDate = new Date(oldDate);
+      newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      updateItem(itemId, { startsAt: newDate } as any);
+    } else if (item.type === 'task') {
+      const oldDate = new Date(item.dueAt);
+      const newDate = new Date(oldDate);
+      newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      updateItem(itemId, { dueAt: newDate } as any);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -255,6 +284,7 @@ export default function PlannerTab() {
           handleDayClick={handleDayClick}
           itemDialog={itemDialog}
           editItemDialogOptions={editItemDialogOptions}
+          handleEventDrop={handleEventDrop}
         />
       ) : (
         <PlannerMonthView
@@ -267,6 +297,7 @@ export default function PlannerTab() {
           handleDayClick={handleDayClick}
           itemDialog={itemDialog}
           editItemDialogOptions={editItemDialogOptions}
+          handleEventDrop={handleEventDrop}
         />
       )}
     </div>

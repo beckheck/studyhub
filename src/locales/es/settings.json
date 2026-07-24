@@ -167,5 +167,35 @@
       "highCapacity": "✓ Usando almacenamiento de alta capacidad",
       "upgradeWarning": "⚠ Considera actualizar tu navegador para más almacenamiento"
     }
+  },
+  "googleCalendar": {
+    "title": "Google Calendar",
+    "description": "Sincroniza automáticamente tus eventos de estudio con Google Calendar",
+    "connectButton": "Conectar Google Calendar",
+    "disconnectButton": "Desconectar",
+    "connecting": "Conectando...",
+    "disconnecting": "Desconectando...",
+    "selectCalendar": "Seleccionar Calendario",
+    "selectPlaceholder": "Elige un calendario...",
+    "bulkExport": "Exportar Todos los Elementos a Google Calendar",
+    "bulkExporting": "Exportando...",
+    "status": {
+      "connected": "Conectado a Google Calendar",
+      "notConnected": "No conectado a Google Calendar"
+    },
+    "connected": "✅ Conectado exitosamente a Google Calendar",
+    "disconnected": "✅ Desconectado de Google Calendar",
+    "syncInfo": {
+      "title": "📋 Información de Sincronización:",
+      "auto": "Los eventos se sincronizan automáticamente cuando se crean",
+      "updates": "Los cambios de eventos se sincronizan en tiempo real",
+      "deletes": "Los eventos eliminados se quitan de Google Calendar"
+    },
+    "errors": {
+      "userCancelled": "La conexión fue cancelada",
+      "connectionFailed": "Error al conectar con Google Calendar",
+      "noCalendars": "No se encontraron calendarios. Asegúrate de que tu Cuenta de Google tenga calendarios.",
+      "disconnectFailed": "Error al desconectar de Google Calendar"
+    }
   }
 }

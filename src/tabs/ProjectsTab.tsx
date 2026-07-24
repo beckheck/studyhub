@@ -23,12 +23,14 @@ import {
   Microscope,
   Mail,
   GripVertical,
+  Check,
   Plus,
   Rocket,
   Trash2,
   Users,
   Vote,
 } from 'lucide-react';
+import { isDateBefore } from '@/lib/date-utils';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -156,7 +158,7 @@ const CONTACT_AVATAR_STYLES = [
 export default function ProjectsTab() {
   const { t } = useTranslation('projects');
   const { projects, addProject, updateProject, deleteProject, setProjects } = useProjects();
-  const { items } = useItems();
+  const { items, updateItem } = useItems();
   const itemDialog = useItemDialog();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -186,7 +188,12 @@ export default function ProjectsTab() {
   const linkedMeetings = useMemo(
     () =>
       items.filter(
-        item => item.type === 'event' && item.projectId === selectedProject?.id && !item.isDeleted
+        item =>
+          item.type === 'event' &&
+          item.projectId === selectedProject?.id &&
+          !item.isDeleted &&
+          // hide events that have already ended (compare by calendar day)
+          !isDateBefore((item as ItemEvent).endsAt, new Date())
       ) as ItemEvent[],
     [items, selectedProject?.id]
   );
@@ -194,7 +201,12 @@ export default function ProjectsTab() {
   const linkedTasks = useMemo(
     () =>
       items.filter(
-        item => item.type === 'task' && item.projectId === selectedProject?.id && !item.isDeleted
+        item =>
+          item.type === 'task' &&
+          item.projectId === selectedProject?.id &&
+          !item.isDeleted &&
+          // hide tasks whose due date is before today
+          !isDateBefore((item as ItemTask).dueAt, new Date())
       ) as ItemTask[],
     [items, selectedProject?.id]
   );
@@ -418,10 +430,18 @@ export default function ProjectsTab() {
                 const isSelected = selectedProject?.id === project.id;
                 const isBeingDragged = draggedProjectId === project.id;
                 const projectMeetingCount = items.filter(
-                  item => item.type === 'event' && item.projectId === project.id && !item.isDeleted
+                  item =>
+                    item.type === 'event' &&
+                    item.projectId === project.id &&
+                    !item.isDeleted &&
+                    !isDateBefore((item as ItemEvent).endsAt, new Date())
                 ).length;
                 const projectTaskCount = items.filter(
-                  item => item.type === 'task' && item.projectId === project.id && !item.isDeleted
+                  item =>
+                    item.type === 'task' &&
+                    item.projectId === project.id &&
+                    !item.isDeleted &&
+                    !isDateBefore((item as ItemTask).dueAt, new Date())
                 ).length;
 
                 return (
@@ -600,13 +620,31 @@ export default function ProjectsTab() {
                         {linkedTasks.length ? (
                           linkedTasks.map(task => (
                             <div key={task.id} className="rounded-2xl border border-white/20 bg-white/60 p-3 dark:bg-white/5">
-                              <div className="font-medium">{task.title || t('empty.untitled')}</div>
-                              <div className="text-xs text-zinc-600 dark:text-zinc-400">{t(`priorities.${task.priority}`)}</div>
-                              {task.dueAt && (
-                                <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                                  {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(task.dueAt))}
+                              <div className={`flex items-start justify-between gap-3 ${task.isCompleted ? 'line-through opacity-60' : ''}`}>
+                                <div>
+                                  <div className="font-medium">{task.title || t('empty.untitled')}</div>
+                                  <div className="text-xs text-zinc-600 dark:text-zinc-400">{t(`priorities.${task.priority}`)}</div>
+                                  {task.dueAt && (
+                                    <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                                      {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(task.dueAt))}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    className={`h-8 w-8 rounded-full ${task.isCompleted ? 'text-green-500' : ''}`}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      updateItem(task.id, { isCompleted: !task.isCompleted } as any);
+                                    }}
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
                           ))
                         ) : (

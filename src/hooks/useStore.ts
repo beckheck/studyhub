@@ -14,6 +14,7 @@ import type {
   StudySessionTask,
   WeatherLocation,
   WeeklyGoal,
+  GoogleCalendarConfig,
 } from '../types';
 
 const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips'];
@@ -749,6 +750,41 @@ export function useCourseRecords() {
           store.courseRecords.splice(i, 1);
         }
       }
+    },
+  };
+}
+
+/**
+ * Hook to access and modify Google Calendar configuration
+ */
+export function useGoogleCalendar() {
+  const googleCalendar = useSnapshot(store.googleCalendar);
+
+  return {
+    googleCalendar,
+    setGoogleCalendarConfig: (config: Partial<GoogleCalendarConfig>) => {
+      store.googleCalendar = { ...store.googleCalendar, ...config };
+    },
+    setAccessToken: (token: string, expiresAt: number) => {
+      store.googleCalendar.accessToken = token;
+      store.googleCalendar.tokenExpiresAt = expiresAt;
+    },
+    setRefreshToken: (token: string) => {
+      store.googleCalendar.refreshToken = token;
+    },
+    setCalendars: (calendars: Array<{ id: string; summary: string }>) => {
+      store.googleCalendar.calendars = calendars;
+    },
+    setSelectedCalendar: (calendarId: string) => {
+      store.googleCalendar.calendarId = calendarId;
+    },
+    setSyncEnabled: (enabled: boolean) => {
+      store.googleCalendar.syncEnabled = enabled;
+    },
+    clearGoogleCalendar: () => {
+      store.googleCalendar = {
+        syncEnabled: false,
+      };
     },
   };
 }

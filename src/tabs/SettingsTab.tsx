@@ -15,6 +15,7 @@ export default function SettingsTab() {
     'degreePlan',
     'focusTimer',
     'soundtrack',
+    'googleCalendar',
     'background',
     'backgroundGradient',
     'accentColor',

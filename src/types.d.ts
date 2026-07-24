@@ -504,11 +504,30 @@ export interface Soundtrack {
 }
 
 /**
+ * Google Calendar configuration object
+ */
+export interface GoogleCalendarConfig {
+  /** OAuth access token */
+  accessToken?: string;
+  /** OAuth refresh token */
+  refreshToken?: string;
+  /** Token expiration timestamp */
+  tokenExpiresAt?: number;
+  /** Selected Google Calendar ID */
+  calendarId?: string;
+  /** List of available calendars */
+  calendars?: Array<{ id: string; summary: string }>;
+  /** Whether sync is enabled */
+  syncEnabled: boolean;
+}
+
+/**
  * Dashboard widget layout configuration
  */
 export interface DashboardState {
   widgetVisibility: Record<string, boolean>;
   widgetOrder: string[];
+  widgetCollapsed: Record<string, boolean>;
 }
 
 /**
@@ -552,6 +571,7 @@ export interface AppState {
   theme: ThemeState;
   soundtrack: Soundtrack;
   weather: WeatherConfig;
+  googleCalendar: GoogleCalendarConfig;
   degreePlan: DegreePlan;
   wellness: Wellness;
   fileAttachments: FileAttachmentStore;

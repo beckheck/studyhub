@@ -9,6 +9,7 @@ export const ItemTaskSchema = z.object({
   dueAt: z.date({ message: t('items:task.validation.dueAtRequired') }),
   priority: z.enum(ITEM_TASK_PRIORITIES, { message: t('items:task.validation.priorityRequired') }),
   isCompleted: z.boolean({ message: t('items:task.validation.isCompletedRequired') }),
+  googleCalendarEventId: z.string().optional(),
 });
 
 export const ItemTaskCompleteSchema = ItemBaseSchema.extend(ItemTaskSchema.shape);

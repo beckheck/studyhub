@@ -36,6 +36,7 @@ export default defineConfig({
       'scripting',
       'offscreen',
       'notifications',
+      'identity',
       // 'file://*/*',
     ],
     commands: {
@@ -50,7 +51,7 @@ export default defineConfig({
     icons: {
       96: 'hearticon.png',
     },
-    host_permissions: ['<all_urls>'],
+    host_permissions: ['<all_urls>', 'https://accounts.google.com/', 'https://oauth2.googleapis.com/', 'https://www.googleapis.com/'],
     web_accessible_resources: [
       {
         resources: ['*.js', '*.css', 'assets/*', '*.html'],

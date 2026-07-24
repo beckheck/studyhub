@@ -15,6 +15,7 @@ import useDarkModeStyles from '@/hooks/useDarkModeStyles';
 import useModeAwareTab from '@/hooks/useModeAwareTab';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore';
+import { useOAuthRedirect } from '@/hooks/useOAuthRedirect';
 import { handleNavigationClick } from '@/lib/navigation-utils';
 import CourseManagerTab from '@/tabs/CourseManagerTab';
 import DashboardTab from '@/tabs/DashboardTab';
@@ -71,6 +72,9 @@ function AppSubtitle() {
 }
 
 export default function StudyPortal(): React.JSX.Element {
+  // Handle OAuth redirects from Google
+  useOAuthRedirect();
+
   // Translation hook
   const { t } = useTranslation('common');
 
@@ -203,7 +207,7 @@ export default function StudyPortal(): React.JSX.Element {
         >
           {theme.bgImage && (
             <div
-              className="pointer-events-none absolute inset-0 bg-center bg-cover bg-no-repeat opacity-60 mix-blend-luminosity"
+              className="pointer-events-none absolute inset-0 bg-center bg-cover bg-no-repeat opacity-70 mix-blend-luminosity"
               style={{ backgroundImage: `url(${theme.bgImage})` }}
               aria-hidden="true"
             />

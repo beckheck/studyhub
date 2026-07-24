@@ -154,7 +154,7 @@
     "title": "Storage Status",
     "status": {
       "good": "Good",
-      "warning": "Warning", 
+      "warning": "Warning",
       "critical": "Critical"
     },
     "used": "Used: {{amount}}",
@@ -166,6 +166,36 @@
       "unlimitedCapacity": "✓ Using unlimited storage",
       "highCapacity": "✓ Using high-capacity storage",
       "upgradeWarning": "⚠ Consider upgrading browser for more storage"
+    }
+  },
+  "googleCalendar": {
+    "title": "Google Calendar",
+    "description": "Automatically sync study events to Google Calendar",
+    "connectButton": "Connect Google Calendar",
+    "disconnectButton": "Disconnect",
+    "connecting": "Connecting...",
+    "disconnecting": "Disconnecting...",
+    "selectCalendar": "Select Calendar",
+    "selectPlaceholder": "Choose a calendar...",
+    "bulkExport": "Export All Items to Google Calendar",
+    "bulkExporting": "Exporting...",
+    "status": {
+      "connected": "Connected to Google Calendar",
+      "notConnected": "Not connected to Google Calendar"
+    },
+    "connected": "✅ Successfully connected to Google Calendar",
+    "disconnected": "✅ Disconnected from Google Calendar",
+    "syncInfo": {
+      "title": "📋 Sync Information:",
+      "auto": "Events are automatically synced when created",
+      "updates": "Event changes are synced in real-time",
+      "deletes": "Deleted events are removed from Google Calendar"
+    },
+    "errors": {
+      "userCancelled": "Connection was cancelled",
+      "connectionFailed": "Failed to connect to Google Calendar",
+      "noCalendars": "No calendars found. Please ensure your Google Account has calendars.",
+      "disconnectFailed": "Failed to disconnect from Google Calendar"
     }
   }
 }

@@ -22,6 +22,7 @@ interface PlannerWeekViewProps {
   handleDayClick: (date: Date) => void;
   itemDialog: any;
   editItemDialogOptions?: any;
+  handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void;
 }
 
 export function PlannerWeekView({
@@ -30,6 +31,7 @@ export function PlannerWeekView({
   handleDayClick,
   itemDialog,
   editItemDialogOptions,
+  handleEventDrop,
 }: PlannerWeekViewProps) {
   const { getCourseTitle } = useCourses();
   const { weeklyGoals, addGoal, toggleGoal, deleteGoal, clearAllGoals } = useWeeklyGoals();
@@ -141,6 +143,22 @@ export function PlannerWeekView({
               key={dayKey}
               className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => handleDayClick(dayDate)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                  if (data && data.itemId) {
+                    handleEventDrop(data.itemId, data.itemType, dayDate);
+                  }
+                } catch (err) {
+                  // Ignore invalid drop data
+                }
+              }}
               title={t('messages.clickToCreate')}
             >
               <CardHeader className="relative z-[1] lg:block hidden">
@@ -217,6 +235,14 @@ export function PlannerWeekView({
 
                           {/* Right: Event content */}
                           <div
+                            draggable
+                            onDragStart={(dragEvent) => {
+                              dragEvent.stopPropagation();
+                              dragEvent.dataTransfer.setData(
+                                'application/json',
+                                JSON.stringify({ itemId: e.id, itemType: e.type })
+                              );
+                            }}
                             className="flex-1 group relative bg-white/70 dark:bg-white/5 p-2.5 rounded-xl cursor-pointer hover:bg-white/90 dark:hover:bg-white/10 transition-colors"
                             onClick={clickEvent => {
                               clickEvent.stopPropagation();
@@ -262,6 +288,14 @@ export function PlannerWeekView({
                   {eventsForWeekdayName(dayKey).map(e => (
                     <div
                       key={e.id}
+                      draggable
+                      onDragStart={(dragEvent) => {
+                        dragEvent.stopPropagation();
+                        dragEvent.dataTransfer.setData(
+                          'application/json',
+                          JSON.stringify({ itemId: e.id, itemType: e.type })
+                        );
+                      }}
                       className="group relative flex flex-row items-start justify-between gap-2 bg-white/70 dark:bg-white/5 p-3 rounded-xl mb-2 cursor-pointer hover:bg-white/90 dark:hover:bg-white/10 transition-colors"
                       onClick={clickEvent => {
                         clickEvent.stopPropagation();

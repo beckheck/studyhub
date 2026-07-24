@@ -21,6 +21,7 @@ interface PlannerMonthViewProps {
   handleDayClick: (date: Date) => void;
   itemDialog: any;
   editItemDialogOptions?: any;
+  handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void;
 }
 
 export function PlannerMonthView({
@@ -33,6 +34,7 @@ export function PlannerMonthView({
   handleDayClick,
   itemDialog,
   editItemDialogOptions,
+  handleEventDrop,
 }: PlannerMonthViewProps) {
   const { getCourseTitle } = useCourses();
   const { getItemsByType, updateItem } = useItems();
@@ -94,6 +96,22 @@ export function PlannerMonthView({
                 borderTopColor: hasMultiDayEvent ? multiDayEventColor : undefined,
               }}
               onClick={() => handleDayClick(date)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                  if (data && data.itemId) {
+                    handleEventDrop(data.itemId, data.itemType, date);
+                  }
+                } catch (err) {
+                  // Ignore invalid drop data
+                }
+              }}
               title={t('messages.clickToCreate')}
             >
               <div className="flex items-center justify-between mb-1 sm:mb-2">
@@ -130,6 +148,14 @@ export function PlannerMonthView({
                 {dayEvents.slice(0, 4).map((e, idx) => (
                   <div
                     key={idx}
+                    draggable
+                    onDragStart={(dragEvent) => {
+                      dragEvent.stopPropagation();
+                      dragEvent.dataTransfer.setData(
+                        'application/json',
+                        JSON.stringify({ itemId: e.id, itemType: e.type })
+                      );
+                    }}
                     className="text-xs truncate flex items-center gap-1.5 p-1 rounded bg-white/50 dark:bg-white/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                     onClick={clickEvent => {
                       clickEvent.stopPropagation();

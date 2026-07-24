@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import { proxy, snapshot, subscribe } from 'valtio';
 import { DataTransfer } from '../lib/data-transfer';
 import { hybridStorage } from '../lib/hybrid-storage';
-import type { AppState, DegreePlan, MoodEmojis, WeatherLocation, FocusTimerConfig } from '../types';
+import type { AppState, DegreePlan, MoodEmojis, WeatherLocation, FocusTimerConfig, GoogleCalendarConfig } from '../types';
 
 const STORAGE_KEY = 'sp:appStateExchange';
 
@@ -130,6 +130,9 @@ function createInitialState(): AppState {
     weather: {
       apiKey: '',
       location: { ...DEFAULT_WEATHER_LOCATION },
+    },
+    googleCalendar: {
+      syncEnabled: false,
     },
 
     // Academic planning
