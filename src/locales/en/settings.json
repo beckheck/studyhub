@@ -37,21 +37,22 @@
     "description": "Set important dates for the current semester",
     "startDate": "Start Date",
     "endDate": "End Date",
-    "semesterPeriod": {
-      "title": "Semester Period",
-      "description": "The start and end dates of your current semester"
+    "currentlyActive": "NOW",
+    "firstSemester": {
+      "title": "1st Semester",
+      "description": "Start and end dates of the first semester"
     },
-    "midterms": {
-      "title": "Midterms",
-      "description": "The midterm exam period"
+    "secondSemester": {
+      "title": "2nd Semester",
+      "description": "Start and end dates of the second semester"
     },
     "finals": {
-      "title": "Finals",
+      "title": "Final Season",
       "description": "The final exam period"
     },
-    "springBreak": {
-      "title": "Spring Break",
-      "description": "The spring break period"
+    "recessWeek": {
+      "title": "Recess Week",
+      "description": "Semana de Receso - mid-semester break period"
     },
     "winterBreak": {
       "title": "Winter Break",
@@ -85,6 +86,13 @@
     },
     "placeholder": "https://open.spotify.com/embed/playlist/...",
     "preview": "Soundtrack preview"
+  },
+  "missionLink": {
+    "title": "Mission Link",
+    "description": "Add a link for This week's mission",
+    "label": "This week's mission hyperlink",
+    "placeholder": "https://example.com",
+    "helper": "The dashboard will show an external link icon when this is set."
   },
   "background": {
     "title": "Background",

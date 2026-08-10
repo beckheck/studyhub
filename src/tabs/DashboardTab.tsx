@@ -1,5 +1,4 @@
 import CurrentDateTime from '@/components/CurrentDateTime';
-import MiniCalendar from '@/components/MiniCalendar';
 import SoundtrackCard from '@/components/SoundtrackCard';
 import TipsRow from '@/components/TipsRow';
 import TodaySchedule from '@/components/TodaySchedule';
@@ -13,7 +12,7 @@ import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } f
 import { ItemExam } from '@/items/exam/modelSchema';
 import { ItemTask } from '@/items/task/modelSchema';
 import { compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils';
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronRight, GripVertical, Pencil, Plus, X } from 'lucide-react';
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronRight, ExternalLink, GripVertical, Pencil, Plus, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,9 +21,9 @@ interface DashboardTabProps {
   isWidgetEditMode: boolean;
 }
 
-type DashboardWidgetId = 'weather' | 'datetime' | 'schedule' | 'nextUp' | 'calendar' | 'soundtrack' | 'tips' | 'scratchpad' | 'mytasks';
+type DashboardWidgetId = 'weather' | 'datetime' | 'schedule' | 'nextUp' | 'soundtrack' | 'tips' | 'scratchpad' | 'mytasks';
 
-const DEFAULT_WIDGET_ORDER: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp', 'calendar', 'mytasks', 'soundtrack', 'tips'];
+const DEFAULT_WIDGET_ORDER: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp', 'mytasks', 'soundtrack', 'tips'];
 
 interface DashboardWidgetFrameProps {
   id: DashboardWidgetId;
@@ -215,7 +214,15 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const { t } = useTranslation('common');
   const { setSelectedCourse } = useCourses();
   const { getItemsByType, updateItem } = useItems();
-  const { dashboard, setWidgetVisibility, moveWidgetBefore, moveWidgetToEnd } = useDashboardLayout();
+  const {
+    dashboard,
+    missionText,
+    missionLink,
+    setMissionText,
+    setWidgetVisibility,
+    moveWidgetBefore,
+    moveWidgetToEnd,
+  } = useDashboardLayout();
 
   const tasks = getItemsByType('task') as ItemTask[];
   const exams = getItemsByType('exam') as ItemExam[];
@@ -223,6 +230,12 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const { weather } = useWeather();
   const { soundtrack, setSoundtrackPosition } = useSoundtrack();
   const { openDialog } = useSettingsDialogContext();
+  const normalizedMissionLink = missionLink.trim();
+  const missionLinkHref = normalizedMissionLink
+    ? /^https?:\/\//i.test(normalizedMissionLink)
+      ? normalizedMissionLink
+      : `https://${normalizedMissionLink}`
+    : '';
 
   const [nextUpExpanded, setNextUpExpanded] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -230,15 +243,20 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const [pendingExpanded, setPendingExpanded] = useState(false);
   const [draggedWidgetId, setDraggedWidgetId] = useState<DashboardWidgetId | null>(null);
   const [dropTargetWidgetId, setDropTargetWidgetId] = useState<DashboardWidgetId | null>(null);
-  const [scratchpadText, setScratchpadText] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
 
   const widgetOrder = (() => {
     if (!dashboard.widgetOrder?.length) return DEFAULT_WIDGET_ORDER;
-    const stored = dashboard.widgetOrder as DashboardWidgetId[];
-    // Add any new widgets from DEFAULT_WIDGET_ORDER that aren't in stored order
-    const missingWidgets = DEFAULT_WIDGET_ORDER.filter(w => !stored.includes(w));
-    return [...stored, ...missingWidgets];
+    const validWidgetIds = new Set<DashboardWidgetId>(DEFAULT_WIDGET_ORDER);
+    const stored = (dashboard.widgetOrder as string[]).filter((widgetId): widgetId is DashboardWidgetId => validWidgetIds.has(widgetId as DashboardWidgetId));
+    const pinnedOrder: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp'];
+
+    // Keep the schedule, mission, and next-up widgets locked together at the top.
+    const pinnedWidgets = pinnedOrder.filter(widgetId => stored.includes(widgetId) || DEFAULT_WIDGET_ORDER.includes(widgetId));
+    const remainingWidgets = stored.filter(widgetId => !pinnedOrder.includes(widgetId));
+    const missingWidgets = DEFAULT_WIDGET_ORDER.filter(widgetId => !pinnedWidgets.includes(widgetId) && !remainingWidgets.includes(widgetId));
+
+    return [...pinnedWidgets, ...remainingWidgets, ...missingWidgets];
   })();
 
   useEffect(() => {
@@ -350,27 +368,6 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
         );
       case 'nextUp':
         return <Fragment key={widgetId}>{renderNextUpWidget()}</Fragment>;
-      case 'calendar':
-        return (
-          <DashboardWidgetFrame
-            key={widgetId}
-            id={widgetId}
-            title="Calendar preview"
-            description="A compact monthly view."
-            isEditMode={isWidgetEditMode}
-            isVisible={isWidgetVisible(widgetId)}
-            onAdd={widgetId => setWidgetVisible(widgetId, true)}
-            onRemove={widgetId => setWidgetVisible(widgetId, false)}
-            className={soundtrackVisible ? 'xl:col-span-7' : 'xl:col-span-12'}
-            {...draggableWidgetProps}
-          >
-            <MiniCalendar
-              onTabChange={onTabChange}
-              onCourseSelect={setSelectedCourse}
-              isExpanded={!soundtrackVisible}
-            />
-          </DashboardWidgetFrame>
-        );
       case 'soundtrack':
         return (
           <DashboardWidgetFrame
@@ -382,7 +379,7 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
             isVisible={isWidgetVisible(widgetId) && soundtrack.position === 'dashboard'}
             onAdd={widgetId => setWidgetVisible(widgetId, true)}
             onRemove={widgetId => setWidgetVisible(widgetId, false)}
-            className={calendarVisible ? 'xl:col-span-5' : 'xl:col-span-12'}
+            className="xl:col-span-12"
             {...draggableWidgetProps}
           >
             <SoundtrackCard
@@ -415,23 +412,44 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
           <DashboardWidgetFrame
             key={widgetId}
             id={widgetId}
-            title="Scratch Pad"
-            description="Quick notes and ideas."
+            title="This week's mission"
+            description="A tiny freeform note area for the week ahead."
             isEditMode={isWidgetEditMode}
             isVisible={isWidgetVisible(widgetId)}
             onAdd={widgetId => setWidgetVisible(widgetId, true)}
             onRemove={widgetId => setWidgetVisible(widgetId, false)}
-            className="xl:col-span-6"
+            className="xl:col-span-12"
             {...draggableWidgetProps}
           >
             <Card className="rounded-2xl border-none shadow-xl bg-yellow-50/80 dark:bg-yellow-950/20 backdrop-blur">
-              <CardContent className="p-5">
-                <textarea
-                  value={scratchpadText}
-                  onChange={e => setScratchpadText(e.target.value)}
-                  placeholder="Write down ideas, tasks, or quick notes..."
-                  className="w-full h-48 p-4 rounded-lg border border-yellow-200/40 bg-white/60 dark:bg-white/5 dark:border-yellow-400/20 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none"
-                />
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center gap-3">
+                  <div className="min-w-28 shrink-0">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                      This week's mission
+                    </div>
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400">Write freely here.</div>
+                  </div>
+                  <textarea
+                    value={missionText}
+                    onChange={e => setMissionText(e.target.value)}
+                    placeholder="Type your mission for the week..."
+                    rows={1}
+                    className="h-40 min-h-40 max-h-16 w-full resize-none rounded-lg border border-yellow-200/40 bg-white/60 p-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 dark:border-yellow-400/20 dark:bg-white/5 dark:text-white dark:placeholder-zinc-500"
+                  />
+                  {missionLinkHref && (
+                    <a
+                      href={missionLinkHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Open this week's mission link"
+                      title="Open this week's mission link"
+                      className="mt-2 inline-flex self-start items-center justify-center text-amber-700 transition-colors hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </DashboardWidgetFrame>
@@ -676,7 +694,6 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   };
 
   const soundtrackVisible = isWidgetVisible('soundtrack') && soundtrack.position === 'dashboard';
-  const calendarVisible = isWidgetVisible('calendar');
 
   return (
     <div className="space-y-6">

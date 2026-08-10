@@ -9,6 +9,7 @@ import DegreePlanSettings from '@/components/settings/DegreePlanSettings';
 import FocusTimerSettings from '@/components/settings/FocusTimerSettings';
 import GoogleCalendarSettings from '@/components/settings/GoogleCalendarSettings';
 import HydrationSettings from '@/components/settings/HydrationSettings';
+import MissionLinkSettings from '@/components/settings/MissionLinkSettings';
 import SemesterDatesSettings from '@/components/settings/SemesterDatesSettings';
 import SoundtrackSettings from '@/components/settings/SoundtrackSettings';
 import WeatherApiSettings from '@/components/settings/WeatherApiSettings';
@@ -25,6 +26,7 @@ import {
   Layers,
   MousePointer,
   Music,
+  Link2,
   Palette,
   Timer,
 } from 'lucide-react';
@@ -122,6 +124,12 @@ export function useSettingsDialog() {
         subtitle: t('soundtrack.description'),
         Icon: Music,
         Body: SoundtrackSettings,
+      } as SettingsDialog,
+      missionLink: {
+        title: t('missionLink.title'),
+        subtitle: t('missionLink.description'),
+        Icon: Link2,
+        Body: MissionLinkSettings,
       } as SettingsDialog,
       weatherApi: {
         title: t('weatherApi.title'),

@@ -13,6 +13,7 @@ import type {
   SoundtrackPosition,
   StudySession,
   StudySessionTask,
+  SemesterDates,
   WeatherLocation,
   WeeklyGoal,
   GoogleCalendarConfig,
@@ -40,6 +41,14 @@ export function useDashboardLayout() {
 
   return {
     dashboard,
+    missionText: dashboard.missionText ?? '',
+    missionLink: dashboard.missionLink ?? '',
+    setMissionText: (missionText: string) => {
+      store.dashboard.missionText = missionText;
+    },
+    setMissionLink: (missionLink: string) => {
+      store.dashboard.missionLink = missionLink;
+    },
     setWidgetVisibility: (widgetId: string, visible: boolean) => {
       store.dashboard.widgetVisibility[widgetId] = visible;
     },
@@ -322,6 +331,23 @@ export function useWeather() {
 }
 
 /**
+ * Hook to access and modify semester date settings
+ */
+export function useSemesterDates() {
+  const semesterDates = useSnapshot(store.semesterDates);
+
+  return {
+    semesterDates,
+    setSemesterDates: (updates: Partial<SemesterDates>) => {
+      store.semesterDates = {
+        ...store.semesterDates,
+        ...updates,
+      };
+    },
+  };
+}
+
+/**
  * Hook to access and modify soundtrack settings
  */
 export function useSoundtrack() {
@@ -363,22 +389,6 @@ export function useFocusTimer() {
     },
     setSites: (sites: string) => {
       store.focusTimer.sites = sites;
-    },
-  };
-}
-
-/**
- * Hook to access and modify semester dates
- */
-export function useSemesterDates() {
-  const semesterDates = useSnapshot(store.semesterDates);
-
-  return {
-    semesterDates,
-    setSemesterDates: (dates: Partial<typeof store.semesterDates>) => {
-      Object.entries(dates).forEach(([key, value]) => {
-        (store.semesterDates as any)[key] = value;
-      });
     },
   };
 }

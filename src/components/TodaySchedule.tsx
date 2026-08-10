@@ -1,8 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { QuickRecordDialog } from '@/components/CourseRecordCalendar';
-import { useCourses, useItems } from '@/hooks/useStore';
+import { useCourses, useItems, useSemesterDates } from '@/hooks/useStore';
 import { ItemTimetable, TIME_BLOCKS } from '@/items/timetable/modelSchema';
-import { Clock, NotebookPen } from 'lucide-react';
+import { Clock, NotebookPen, Palmtree } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,8 +17,49 @@ export default function TodaySchedule({ onTabChange }: TodayScheduleProps) {
   const { t } = useTranslation('common');
   const { getCourseTitle } = useCourses();
   const { getItemsByType } = useItems();
+  const { semesterDates } = useSemesterDates();
 
   const timetableEvents = getItemsByType('timetable') as ItemTimetable[];
+
+  // Check if today is during an active semester or on break
+  const isDuringSemester = (() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const inRange = (start: string, end: string) =>
+      start && end && todayStr >= start && todayStr <= end;
+
+    if (inRange(semesterDates.firstSemesterStart, semesterDates.firstSemesterEnd)) return true;
+    if (inRange(semesterDates.secondSemesterStart, semesterDates.secondSemesterEnd)) return true;
+    return false;
+  })();
+
+  const isOnBreak = (() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const inRange = (start: string, end: string) =>
+      start && end && todayStr >= start && todayStr <= end;
+
+    if (inRange(semesterDates.recessWeekStart, semesterDates.recessWeekEnd)) return true;
+    if (inRange(semesterDates.winterBreakStart, semesterDates.winterBreakEnd)) return true;
+    return false;
+  })();
+
+  // If dates are configured but user is not in an active semester, hide schedule
+  const hasAnyDates = semesterDates.firstSemesterStart || semesterDates.secondSemesterStart;
+  if (hasAnyDates && !isDuringSemester) {
+    return (
+      <Card className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
+            <Palmtree className="w-4 h-4" />
+            <span className="text-sm">
+              {isOnBreak
+                ? t('dashboard.onBreak', 'You\'re on break — enjoy your time off!')
+                : t('dashboard.notInSemester', 'No active semester — enjoy your break!')}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Quick record dialog state
   const [quickRecordOpen, setQuickRecordOpen] = useState(false);

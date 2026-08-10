@@ -1,4 +1,10 @@
-import { DEFAULT_FOCUS_TIMER_CONFIG, DEFAULT_HYDRATION_SETTINGS, DEFAULT_MOOD_EMOJIS } from '@/stores/app';
+import {
+  DEFAULT_DASHBOARD_WIDGET_ORDER,
+  DEFAULT_DASHBOARD_WIDGET_VISIBILITY,
+  DEFAULT_FOCUS_TIMER_CONFIG,
+  DEFAULT_HYDRATION_SETTINGS,
+  DEFAULT_MOOD_EMOJIS,
+} from '@/stores/app';
 import { AppState, CourseRecord, Item, SoundtrackPosition } from '@/types';
 import { createLocalMidnightDate } from './date-utils';
 
@@ -31,6 +37,7 @@ export class DataTransfer {
       },
       wellness: state.wellness,
       fileAttachments: state.fileAttachments,
+      dashboard: state.dashboard,
       courseRecords: convertDatesToTimestamps(state.courseRecords ?? [], /(At)$/),
       settings: {
         selectedCourseId: state.selectedCourseId,
@@ -165,6 +172,16 @@ export class DataTransfer {
       fileAttachments: data.fileAttachments || {
         files: {},
         metadata: {},
+      },
+      dashboard: {
+        widgetVisibility: {
+          ...DEFAULT_DASHBOARD_WIDGET_VISIBILITY,
+          ...(data.dashboard?.widgetVisibility || {}),
+        },
+        widgetOrder: data.dashboard?.widgetOrder || [...DEFAULT_DASHBOARD_WIDGET_ORDER],
+        widgetCollapsed: data.dashboard?.widgetCollapsed || {},
+        missionText: data.dashboard?.missionText || '',
+        missionLink: data.dashboard?.missionLink || '',
       },
       activeTabsByMode: data.settings.activeTabsByMode || {},
       courseRecords: data.courseRecords 

@@ -37,21 +37,22 @@
     "description": "Establece las fechas importantes del semestre actual",
     "startDate": "Fecha de Inicio",
     "endDate": "Fecha de Fin",
-    "semesterPeriod": {
-      "title": "Período del Semestre",
-      "description": "Las fechas de inicio y fin de tu semestre actual"
+    "currentlyActive": "AHORA",
+    "firstSemester": {
+      "title": "1er Semestre",
+      "description": "Fechas de inicio y fin del primer semestre"
     },
-    "midterms": {
-      "title": "Parciales",
-      "description": "El período de exámenes parciales"
+    "secondSemester": {
+      "title": "2do Semestre",
+      "description": "Fechas de inicio y fin del segundo semestre"
     },
     "finals": {
-      "title": "Finales",
+      "title": "Temporada de Finales",
       "description": "El período de exámenes finales"
     },
-    "springBreak": {
-      "title": "Vacaciones de Primavera",
-      "description": "El período de vacaciones de primavera"
+    "recessWeek": {
+      "title": "Semana de Receso",
+      "description": "Período de descanso de mitad de semestre"
     },
     "winterBreak": {
       "title": "Vacaciones de Invierno",
@@ -85,6 +86,13 @@
     },
     "placeholder": "https://open.spotify.com/embed/playlist/...",
     "preview": "Vista previa de banda sonora"
+  },
+  "missionLink": {
+    "title": "Enlace de la misión",
+    "description": "Agrega un enlace para la misión de esta semana",
+    "label": "Hipervínculo de la misión de esta semana",
+    "placeholder": "https://ejemplo.com",
+    "helper": "El panel mostrará un ícono de enlace externo cuando esté configurado."
   },
   "background": {
     "title": "Fondo",

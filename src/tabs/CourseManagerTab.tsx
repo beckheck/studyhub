@@ -87,6 +87,9 @@ export default function CourseManagerTab() {
   const [showContactManager, setShowContactManager] = useState<boolean>(false);
   const [contactFormData, setContactFormData] = useState<CourseContact>({ name: '', role: '', email: '', phone: '' });
   const [contacts, setContacts] = useState<CourseContact[]>([]);
+  const [contactEditorOpen, setContactEditorOpen] = useState<boolean>(false);
+  const [editingContactIndex, setEditingContactIndex] = useState<number | null>(null);
+  const [contactEditorData, setContactEditorData] = useState<CourseContact>({ name: '', role: '', email: '', phone: '' });
 
   const courseTasks = tasks.filter(t => t.courseId === selectedCourseId);
   const courseExams = exams.filter(e => e.courseId === selectedCourseId);
@@ -100,6 +103,9 @@ export default function CourseManagerTab() {
     setLinkFormData({ label: '', url: '' });
     setContacts((selectedCourse?.contacts as CourseContact[]) || []);
     setContactFormData({ name: '', role: '', email: '', phone: '' });
+    setContactEditorOpen(false);
+    setEditingContactIndex(null);
+    setContactEditorData({ name: '', role: '', email: '', phone: '' });
   }, [selectedCourseId, selectedCourse]);
 
   const courseStats = useMemo(() => {
@@ -274,6 +280,41 @@ export default function CourseManagerTab() {
     const newContacts = contacts.filter((_, i) => i !== index);
     setContacts(newContacts);
     updateCourseContacts(selectedCourseId, newContacts);
+  };
+
+  const openContactEditor = (index: number) => {
+    const contact = contacts[index];
+    if (!contact) return;
+
+    setEditingContactIndex(index);
+    setContactEditorData({
+      name: contact.name,
+      role: contact.role,
+      email: contact.email,
+      phone: contact.phone || '',
+    });
+    setContactEditorOpen(true);
+  };
+
+  const handleSaveContactEdit = () => {
+    if (editingContactIndex === null) return;
+    if (!contactEditorData.name.trim() || !contactEditorData.role.trim() || !contactEditorData.email.trim()) return;
+
+    const updatedContacts = contacts.map((contact, index) => (index === editingContactIndex ? contactEditorData : contact));
+    setContacts(updatedContacts);
+    updateCourseContacts(selectedCourseId, updatedContacts);
+    setContactEditorOpen(false);
+    setEditingContactIndex(null);
+  };
+
+  const handleDeleteContactEdit = () => {
+    if (editingContactIndex === null) return;
+
+    const updatedContacts = contacts.filter((_, index) => index !== editingContactIndex);
+    setContacts(updatedContacts);
+    updateCourseContacts(selectedCourseId, updatedContacts);
+    setContactEditorOpen(false);
+    setEditingContactIndex(null);
   };
 
   const progress = useMemo(() => {
@@ -566,7 +607,8 @@ export default function CourseManagerTab() {
                 {contacts.map((contact, index) => (
                   <div
                     key={`${contact.email}-${index}`}
-                    className="rounded-xl bg-white/70 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 px-3 py-3 transition-colors"
+                    className="rounded-xl bg-white/70 dark:bg-white/5 hover:bg-white/90 dark:hover:bg-white/10 px-3 py-3 transition-colors cursor-pointer"
+                    onClick={() => openContactEditor(index)}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -575,29 +617,25 @@ export default function CourseManagerTab() {
                           <span className="text-sm font-medium truncate">{contact.name}</span>
                         </div>
                         <div className="mt-1 text-xs text-zinc-500">{contact.role}</div>
-                        <a href={`mailto:${contact.email}`} className="mt-2 flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 hover:underline">
+                        <a
+                          href={`mailto:${contact.email}`}
+                          onClick={e => e.stopPropagation()}
+                          className="mt-2 flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 hover:underline"
+                        >
                           <Mail className="w-4 h-4" />
                           <span className="truncate">{contact.email}</span>
                         </a>
                         {contact.phone ? (
-                          <a href={`tel:${contact.phone}`} className="mt-1 flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 hover:underline">
+                          <a
+                            href={`tel:${contact.phone}`}
+                            onClick={e => e.stopPropagation()}
+                            className="mt-1 flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300 hover:underline"
+                          >
                             <Phone className="w-4 h-4" />
                             <span className="truncate">{contact.phone}</span>
                           </a>
                         ) : null}
                       </div>
-                      {showContactManager && (
-                        <button
-                          onClick={e => {
-                            e.preventDefault();
-                            handleRemoveContact(index);
-                          }}
-                          className="ml-1 text-red-500 hover:text-red-700 dark:hover:text-red-300"
-                          aria-label={tCourse('courseContacts.remove') || 'Remove'}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -606,6 +644,62 @@ export default function CourseManagerTab() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={contactEditorOpen} onOpenChange={setContactEditorOpen}>
+        <DialogContent className="rounded-xl bg-white dark:bg-zinc-950 border-none shadow-xl backdrop-blur">
+          <DialogHeader>
+            <DialogTitle>{tCourse('courseContacts.title') || 'Teacher & TA Contacts'}</DialogTitle>
+            <DialogDescription>
+              {editingContactIndex !== null
+                ? tCourse('courseContacts.editDescription') || 'Update the contact details or delete this contact.'
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-2 md:grid-cols-2">
+              <Input
+                placeholder={tCourse('courseContacts.namePlaceholder') || 'Name (e.g., Dr. Rivera)'}
+                value={contactEditorData.name}
+                onChange={e => setContactEditorData({ ...contactEditorData, name: e.target.value })}
+                className="rounded-lg"
+              />
+              <Input
+                placeholder={tCourse('courseContacts.rolePlaceholder') || 'Role (e.g., Teacher, TA)'}
+                value={contactEditorData.role}
+                onChange={e => setContactEditorData({ ...contactEditorData, role: e.target.value })}
+                className="rounded-lg"
+              />
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              <Input
+                placeholder={tCourse('courseContacts.emailPlaceholder') || 'Email'}
+                type="email"
+                value={contactEditorData.email}
+                onChange={e => setContactEditorData({ ...contactEditorData, email: e.target.value })}
+                className="rounded-lg"
+              />
+              <Input
+                placeholder={tCourse('courseContacts.phonePlaceholder') || 'Phone (optional)'}
+                value={contactEditorData.phone || ''}
+                onChange={e => setContactEditorData({ ...contactEditorData, phone: e.target.value })}
+                className="rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setContactEditorOpen(false)}>
+              {tCommon('actions.cancel')}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteContactEdit}>
+              <Trash2 className="w-4 h-4 mr-1" />
+              {tCourse('courseContacts.remove') || 'Remove'}
+            </Button>
+            <Button onClick={handleSaveContactEdit} style={{ backgroundColor: `hsl(var(--accent-h) var(--accent-s) var(--accent-l))`, color: 'white' }}>
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Tasks */}

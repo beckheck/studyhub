@@ -15,6 +15,7 @@ export default function SettingsTab() {
     'degreePlan',
     'semesterDates',
     'focusTimer',
+    'missionLink',
     'soundtrack',
     'googleCalendar',
     'background',

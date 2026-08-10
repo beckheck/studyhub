@@ -81,19 +81,19 @@ const DEFAULT_WEATHER_LOCATION: WeatherLocation = {
 };
 
 const DEFAULT_SEMESTER_DATES: SemesterDates = {
-  semesterStart: '',
-  semesterEnd: '',
-  midtermsStart: '',
-  midtermsEnd: '',
+  firstSemesterStart: '',
+  firstSemesterEnd: '',
+  secondSemesterStart: '',
+  secondSemesterEnd: '',
   finalsStart: '',
   finalsEnd: '',
-  springBreakStart: '',
-  springBreakEnd: '',
+  recessWeekStart: '',
+  recessWeekEnd: '',
   winterBreakStart: '',
   winterBreakEnd: '',
 };
 
-const DEFAULT_DASHBOARD_WIDGET_VISIBILITY = {
+export const DEFAULT_DASHBOARD_WIDGET_VISIBILITY = {
   weather: true,
   datetime: true,
   schedule: true,
@@ -103,7 +103,8 @@ const DEFAULT_DASHBOARD_WIDGET_VISIBILITY = {
   tips: true,
 };
 
-const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips'];
+export const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips'];
+const DEFAULT_DASHBOARD_MISSION_TEXT = '';
 
 // Create the initial state with proper defaults
 function createInitialState(): AppState {
@@ -177,6 +178,9 @@ function createInitialState(): AppState {
     dashboard: {
       widgetVisibility: { ...DEFAULT_DASHBOARD_WIDGET_VISIBILITY },
       widgetOrder: [...DEFAULT_DASHBOARD_WIDGET_ORDER],
+      widgetCollapsed: {},
+      missionText: DEFAULT_DASHBOARD_MISSION_TEXT,
+      missionLink: '',
     },
 
     // Active tabs per mode

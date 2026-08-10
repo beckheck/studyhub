@@ -175,6 +175,22 @@ export interface WeatherConfig {
 }
 
 /**
+ * Semester date configuration for schedule-aware views
+ */
+export interface SemesterDates {
+  firstSemesterStart: string;
+  firstSemesterEnd: string;
+  secondSemesterStart: string;
+  secondSemesterEnd: string;
+  finalsStart: string;
+  finalsEnd: string;
+  recessWeekStart: string;
+  recessWeekEnd: string;
+  winterBreakStart: string;
+  winterBreakEnd: string;
+}
+
+/**
  * Weather data object for displaying current weather information
  */
 export interface Weather {
@@ -503,22 +519,6 @@ export interface DegreePlan {
 }
 
 /**
- * Semester dates configuration
- */
-export interface SemesterDates {
-  semesterStart: string;
-  semesterEnd: string;
-  midtermsStart: string;
-  midtermsEnd: string;
-  finalsStart: string;
-  finalsEnd: string;
-  springBreakStart: string;
-  springBreakEnd: string;
-  winterBreakStart: string;
-  winterBreakEnd: string;
-}
-
-/**
  * Soundtrack configuration object
  */
 export interface Soundtrack {
@@ -553,6 +553,8 @@ export interface DashboardState {
   widgetVisibility: Record<string, boolean>;
   widgetOrder: string[];
   widgetCollapsed: Record<string, boolean>;
+  missionText: string;
+  missionLink: string;
 }
 
 /**
