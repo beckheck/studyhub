@@ -43,7 +43,7 @@ A structured map of semesters and their planned courses toward a degree.
 _Avoid_: Curriculum, Academic Plan
 
 **Study Session**:
-A record of time spent studying — captured by the focus timer, with technique used, duration, and mood before/after. The timer is the tool; the session is the outcome.
+A record of time spent studying — captured by the focus timer, with technique used, duration, and mood before/after. The timer is the tool; the session is the outcome. The timer's behavior (audio, notifications, site blocking, countdown) is governed by Focus Timer Settings, stored on-device in `store.focusTimer` and synced across contexts.
 _Avoid_: Focus Session, Pomodoro, Timer Session
 
 ## Activities

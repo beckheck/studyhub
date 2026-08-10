@@ -10,7 +10,13 @@ import { snapshot } from 'valtio'
 declare function defineBackground(fn: () => void): any
 
 export default defineBackground(() => {
-  const timerManager = new StudySessionTimerManager(updateBadgeFromTimerState)
+  const timerManager = new StudySessionTimerManager({
+    onStateChange: updateBadgeFromTimerState,
+    getFocusTimerSettings: () => snapshot(store).focusTimer,
+    onNotificationPermissionDenied: () => {
+      store.focusTimer.notificationsEnabled = false
+    },
+  })
 
   void listenLanguageChangeInExtensionBackground()
 

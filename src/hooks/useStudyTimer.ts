@@ -1,12 +1,19 @@
 import { browserRuntime, browserRuntimeStub, isExtension } from '@/lib/browser-runtime-stub'
 import { StudySessionTimerManager } from '@/lib/study-session-timer-manager'
+import { store } from '@/stores/app'
 import { BackgroundMessage_Timer, BackgroundTimerState, StudySession } from '@/types'
 import { useCallback, useEffect, useState } from 'react'
+import { snapshot } from 'valtio'
 
 let studySessionTimerManager: StudySessionTimerManager | undefined = undefined
 
 if (!isExtension) {
-  studySessionTimerManager = new StudySessionTimerManager()
+  studySessionTimerManager = new StudySessionTimerManager({
+    getFocusTimerSettings: () => snapshot(store).focusTimer,
+    onNotificationPermissionDenied: () => {
+      store.focusTimer.notificationsEnabled = false
+    },
+  })
 }
 
 function sendBackgroundMessage(message: BackgroundMessage_Timer) {

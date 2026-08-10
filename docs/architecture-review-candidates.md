@@ -10,43 +10,8 @@
 
 | ID  | Candidate                                                                                      | Strength                       |
 | --- | ---------------------------------------------------------------------------------------------- | ------------------------------ |
-| C   | Timer manager untestable via `store` singleton import                                          | Worth exploring                |
 | F   | Google Calendar OAuth client hardening (dynamic redirect URI, PKCE, per-call refresh) deferred | **Worth exploring** (deferred) |
 | G   | File attachments store base64 in valtio, persisted on every mutation                           | Worth exploring                |
-
----
-
-<a id="candidate-c"></a>
-
-## Candidate C: Timer manager untestable via `store` singleton import
-
-**Files:** `src/lib/study-session-timer-manager.ts:8,44,346`, `src/hooks/useStudyTimer.ts`, `src/entrypoints/background.ts:13`
-
-### Problem
-
-~~"Two `StudySessionTimerManager` instances" / "self-message loop" / "state in 3 places"~~. These are **not friction**. They are the intended dual-context topology (see [Execution contexts and state ownership](./ARCHITECTURE.md#execution-contexts) in ARCHITECTURE.md). The background owns the timer in extension mode so it survives popup close. The web mode in-bundle singleton + `BrowserRuntimeStub` is the correct adapter. The primary (manager) + persistence (storage) + replica (`useState`) pattern is sound.
-
-The **real** friction is narrower:
-
-- `StudySessionTimerManager` imports `store` at module top (`study-session-timer-manager.ts:8`) and reads `snapshot(store).focusTimer` (line 44). The **read** is justified. It is the synced-cache read, the cleanest way for the background to get settings without React.
-- The **write** `store.focusTimer.notificationsEnabled = false` (line 346) is a seam violation. A lib module mutates the app store singleton.
-- The manager is untestable (0 tests) because it also imports `hybridStorage`, `notifications`, `site-blocking`, `audio` at module top. No injection points.
-
-### Deletion test
-
-Deleting the `store` write and injecting a `onNotificationPermissionDenied` callback concentrates the store-mutation seam into the React/background layer where it belongs. The read stays (justified).
-
-### Deepened version
-
-Inject `getFocusTimerSettings: () => FocusTimerConfig` and `onNotificationPermissionDenied: () => void` as constructor params. The background passes `() => snapshot(store).focusTimer`. The web singleton passes the same. Tests pass a stub. **Everything else stays**: the message bridge, the separate storage key, the stub adapter, the cross-context topology.
-
-### Benefits
-
-- **Locality:** the store-mutation seam concentrates in the caller layer.
-- **Leverage:** the manager becomes testable by injecting callbacks instead of standing up the whole app (valtio + storage + notifications + site-blocking + audio).
-- **Tests:** `StudySessionTimerManager` (453 lines, 0 tests) becomes testable through its constructor-injected interface.
-
-**Recommendation: Worth exploring**
 
 ---
 

@@ -6,9 +6,7 @@ import { enactSiteBlockingStrategy } from '@/lib/site-blocking'
 import { getNextPhase, shouldTransitionPhase, getTechniqueConfig } from '@/lib/technique-utils'
 import { getNotificationTranslationAsync } from '@/lib/translation-utils'
 import { uid } from '@/lib/utils'
-import { store } from '@/stores/app'
-import { snapshot } from 'valtio'
-import { BackgroundMessage_Timer, BackgroundTimerState, StudySession } from '@/types'
+import { BackgroundMessage_Timer, BackgroundTimerState, FocusTimerConfig, StudySession } from '@/types'
 import { AudioKey, playAudio } from './audio'
 
 const STORAGE_KEY = 'sp:studySessionTimerState'
@@ -41,16 +39,18 @@ export class StudySessionTimerManager {
 
   private timerInterval: NodeJS.Timeout | null = null
 
-  constructor(private readonly onStateChange?: (state: BackgroundTimerState) => void) {
+  constructor(
+    private readonly deps: {
+      getFocusTimerSettings: () => FocusTimerConfig
+      onStateChange?: (state: BackgroundTimerState) => void
+      onNotificationPermissionDenied?: () => void
+    },
+  ) {
     this.initializeTimerState().catch(console.error)
   }
 
-  /**
-   * Get current focus timer settings from the app store
-   */
-  private getFocusTimerSettings() {
-    const storeSnapshot = snapshot(store)
-    return storeSnapshot.focusTimer
+  private getFocusTimerSettings(): FocusTimerConfig {
+    return this.deps.getFocusTimerSettings()
   }
 
   private setStorageValue(newValue: any) {
@@ -212,7 +212,7 @@ export class StudySessionTimerManager {
   }
 
   private broadcastTimerState() {
-    this.onStateChange?.(this.timerState)
+    this.deps.onStateChange?.(this.timerState)
 
     // Send message to other extension contexts (popup, sidepanel, etc.)
     sendBackgroundMessage({
@@ -344,8 +344,7 @@ export class StudySessionTimerManager {
       const permission = await requestNotificationPermission()
       if (permission === 'denied') {
         console.warn('Notification permissions denied - disabling notifications')
-        // Automatically disable notifications in the store if permission is denied
-        store.focusTimer.notificationsEnabled = false
+        this.deps.onNotificationPermissionDenied?.()
       }
     } catch (error) {
       console.error('Failed to request notification permission:', error)
