@@ -86,6 +86,15 @@ export function useDashboardLayout() {
       currentOrder.push(widgetId);
       store.dashboard.widgetOrder = currentOrder;
     },
+    isWidgetCollapsed: (widgetId: string) => {
+      return store.dashboard.widgetCollapsed?.[widgetId] === true;
+    },
+    setWidgetCollapsed: (widgetId: string, collapsed: boolean) => {
+      if (!store.dashboard.widgetCollapsed) {
+        store.dashboard.widgetCollapsed = {};
+      }
+      store.dashboard.widgetCollapsed[widgetId] = collapsed;
+    },
   };
 }
 

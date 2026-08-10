@@ -40,8 +40,8 @@ Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vit
 
 - Vitest + jsdom + Testing Library. Config: `vitest.config.ts`. Setup: `src/test/setup.ts`.
 - **`src/test/setup.ts` globally mocks `crypto.randomUUID` (→ `'test-uuid-123'`) and `Date.now` (→ `1640995200000`, 2022-01-01).** Tests that rely on unique IDs or distinct timestamps will break or give false passes; reset/override in-file when needed.
-- Existing tests concentrate on leaf pure functions (`date-utils`, `recurrence-utils`, `timetable/modelSchema`, `MiniCalendar`'s `buildCalendarMatrix`). Cross-module wiring (storage sync, timer bridge, Google sync, calendar queries, GC) is largely untested — don't assume green tests mean the feature works end-to-end.
-- `recurrence-utils.ts` (715 lines) and its 964-line test are **not wired into any production view** — recurring `ItemEvent`s currently render once on `startsAt` only.
+- Existing tests concentrate on leaf pure functions (`date-utils`, `recurrence-utils`, `timetable/modelSchema`, `MiniCalendar`'s `buildCalendarMatrix`, `calendar-queries`). Cross-module wiring (storage sync, timer bridge, Google sync, GC) is largely untested — don't assume green tests mean the feature works end-to-end.
+- `recurrence-utils.ts` (715 lines) is wired into production via `calendar-queries.ts` (`getItemsInRange`/`getItemsOnDate`). Recurring `ItemEvent`s expand into occurrences on each matching date in the visible range. See [ADR 0001](./docs/adr/0001-calendar-entry-return-shape.md).
 
 ## Architecture (read `docs/ARCHITECTURE.md` before structural changes)
 

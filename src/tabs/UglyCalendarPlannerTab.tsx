@@ -9,6 +9,7 @@ import { ItemDialog } from '@/items/base/dialog';
 import { Item } from '@/items/models';
 import { getTimetableInstancesBetween, ItemTimetable } from '@/items/timetable/modelSchema';
 import { useItemDialog } from '@/items/useItemDialog';
+import { getItemsInRange, type CalendarEntry } from '@/lib/calendar-queries';
 import { getDateString } from '@/lib/date-utils';
 import { addDays, endOfMonth, endOfWeek, format, getDay, parse, startOfMonth, startOfWeek } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -40,6 +41,54 @@ interface CalendarEvent {
   resource: Item;
   allDay?: boolean;
   type: 'task' | 'exam' | 'event' | 'timetable';
+}
+
+// Map a CalendarEntry (from the shared query) to a react-big-calendar CalendarEvent.
+// Applies the view's display filters: completed tasks and exams are hidden.
+function entryToCalendarEvent(
+  entry: CalendarEntry,
+  t: (key: string) => string
+): CalendarEvent[] {
+  const { item, startsAt, endsAt, sequence } = entry;
+
+  if (item.type === 'event') {
+    const id = sequence ? `${item.id}-${sequence}` : item.id;
+    return [{
+      id,
+      title: item.title || '',
+      start: startsAt,
+      end: endsAt || startsAt,
+      resource: item as Item,
+      allDay: (item as { isAllDay?: boolean }).isAllDay,
+      type: 'event',
+    }];
+  }
+  if (item.type === 'exam') {
+    if ((item as { isCompleted: boolean }).isCompleted) return [];
+    const endDate = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000);
+    return [{
+      id: item.id,
+      title: `${t('items:exam.title')}: ${item.title || ''}`,
+      start: startsAt,
+      end: endDate,
+      resource: item as Item,
+      allDay: false,
+      type: 'exam',
+    }];
+  }
+  if (item.type === 'task') {
+    if ((item as { isCompleted: boolean }).isCompleted) return [];
+    return [{
+      id: item.id,
+      title: `${t('items:task.title')}: ${item.title || ''}`,
+      start: startsAt,
+      end: startsAt,
+      resource: item as Item,
+      allDay: true,
+      type: 'task',
+    }];
+  }
+  return [];
 }
 
 // -----------------------------
@@ -94,80 +143,36 @@ export default function UglyCalendarPlannerTab() {
   const events = useMemo((): CalendarEvent[] => {
     const { rangeStart, rangeEnd } = getVisibleDateRange();
 
-    return items
-      .filter(item => filterCourse === 'all' || item.courseId === filterCourse)
-      .flatMap(item => {
-        // get course name
-        const courseId = item.courseId;
-        const course = courses.find(c => c.id === courseId);
-        const courseName = course ? course.title : 'No Course';
-        if (item.type === 'event') {
-          return [
-            {
-              id: item.id,
-              title: item.title || '',
-              start: item.startsAt,
-              end: item.endsAt,
-              resource: item,
-              allDay: item.isAllDay,
-              type: item.type,
-            } as CalendarEvent,
-          ];
-        }
-        if (item.type === 'exam' && !item.isCompleted) {
-          const startDate = new Date(item.startsAt);
-          const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 2-hour exam
-          return [
-            {
-              id: item.id,
-              title: `${t('items:exam.title')}: ${item.title || ''}`,
-              start: startDate,
-              end: endDate,
-              resource: item,
-              allDay: false,
-              type: item.type,
-            } as CalendarEvent,
-          ];
-        }
-        if (item.type === 'task' && !item.isCompleted) {
-          const dueDate = new Date(item.dueAt);
-          return [
-            {
-              id: item.id,
-              title: `${t('items:task.title')}: ${item.title || ''}`,
-              start: dueDate,
-              end: dueDate,
-              resource: item,
-              allDay: true,
-              type: item.type,
-            } as CalendarEvent,
-          ];
-        }
-        if (item.type === 'timetable') {
-          // Generate timetable instances for the visible date range
-          const instances = getTimetableInstancesBetween(
-            item as ItemTimetable,
-            rangeStart,
-            rangeEnd,
-            'America/Santiago'
-          );
-          return instances.map(
-            instance =>
-              ({
-                id: `${item.id}-${instance.startsAt.getTime()}`, // Unique ID for each instance
-                title: `${item.title}: ${courseName}` || '',
-                start: instance.startsAt,
-                end: instance.endsAt,
-                resource: item, // Keep reference to original timetable item
-                allDay: false,
-                type: item.type,
-              } as CalendarEvent)
-          );
-        }
-        return [];
-      })
-      .filter(Boolean);
-  }, [items, filterCourse, showMultiDayEvents, t, getVisibleDateRange]);
+    // Use the shared query for events, tasks, and exams (with recurrence expansion).
+    // Timetable items are expanded separately (different mechanism: weekday pattern + timezone).
+    const entries = getItemsInRange([...items] as Item[], rangeStart, rangeEnd, {
+      courseFilter: filterCourse,
+    });
+
+    const calendarEvents: CalendarEvent[] = entries.flatMap(entry => entryToCalendarEvent(entry, t));
+
+    // Expand timetable items inline (not handled by the shared query)
+    for (const item of items) {
+      if (item.type !== 'timetable') continue;
+      if (filterCourse !== 'all' && item.courseId !== filterCourse) continue;
+      const course = courses.find(c => c.id === item.courseId);
+      const courseName = course ? course.title : 'No Course';
+      const instances = getTimetableInstancesBetween(item as ItemTimetable, rangeStart, rangeEnd, 'America/Santiago');
+      for (const instance of instances) {
+        calendarEvents.push({
+          id: `${item.id}-${instance.startsAt.getTime()}`,
+          title: `${item.title || ''}: ${courseName}`,
+          start: instance.startsAt,
+          end: instance.endsAt,
+          resource: item as Item,
+          allDay: false,
+          type: 'timetable',
+        });
+      }
+    }
+
+    return calendarEvents;
+  }, [items, filterCourse, courses, t, getVisibleDateRange]);
 
   // Handle slot selection (creating new events)
   const handleSelectSlot = useCallback(

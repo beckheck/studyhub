@@ -58,4 +58,10 @@ _Avoid_: Self-Care, Mind & Body, Daily Check-In
 
 **Container Mode**:
 How the app is rendered — popup, sidepanel, newtab, tab, overlay, or web. Determines available dimensions and behavior.
-_Avoid_: Mode (alone), Surface, Context (collides with React), View
+_Avoid_: Mode (alone), Surface, Context (collides with React)
+
+## Calendar
+
+**Occurrence**:
+A concrete dated appearance of an item on the calendar. A one-off Task or Exam has one occurrence. A recurring Event has one occurrence per matching date in its recurrence range. A Timetable has one occurrence per matching weekday in a date range.
+_Avoid_: Instance (collides with class/component instance), View

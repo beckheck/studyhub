@@ -19,10 +19,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourseRecords, useCourses, useItems } from '@/hooks/useStore';
-import { ItemExam } from '@/items/exam/modelSchema';
-import { ItemTask } from '@/items/task/modelSchema';
-import { isSameDate } from '@/lib/date-utils';
-import { CourseRecord } from '@/types';
+import { getItemsOnDate } from '@/lib/calendar-queries';
+import { CourseRecord, Item } from '@/types';
 import {
   BookOpen,
   Calendar,
@@ -66,7 +64,6 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
   const { getCourseTitle } = useCourses();
   const { items } = useItems();
   const { courseRecords, addRecord, updateRecord, deleteRecord, getRecordsByCourseAndDate } = useCourseRecords();
-  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -77,15 +74,6 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
   const [recordType, setRecordType] = useState<CourseRecord['type']>('note');
   const [recordContent, setRecordContent] = useState('');
   const [recordMood, setRecordMood] = useState<number | undefined>(undefined);
-
-  // Get course-specific items
-  const courseTasks = items.filter(
-    item => item.type === 'task' && item.courseId === courseId && !item.isDeleted
-  ) as ItemTask[];
-  
-  const courseExams = items.filter(
-    item => item.type === 'exam' && item.courseId === courseId && !item.isDeleted
-  ) as ItemExam[];
 
   // Get records for this course
   const courseRecordsFiltered = courseRecords.filter(r => r.courseId === courseId);
@@ -129,18 +117,11 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
   // Get events for a specific date
   const getDateInfo = (date: Date) => {
     const dateStr = formatDateString(date);
-    
-    const tasks = courseTasks.filter(task => {
-      if (!task.dueAt) return false;
-      return isSameDate(new Date(task.dueAt), date);
-    });
-    
-    const exams = courseExams.filter(exam => {
-      return isSameDate(new Date(exam.startsAt), date);
-    });
-    
+    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: courseId });
+    const courseItems = entries.map(e => e.item);
+    const tasks = courseItems.filter(item => item.type === 'task');
+    const exams = courseItems.filter(item => item.type === 'exam');
     const records = courseRecordsFiltered.filter(r => r.date === dateStr);
-    
     return { tasks, exams, records };
   };
 

@@ -155,7 +155,8 @@ src/items/
 | `google-oauth.ts` | `GoogleOAuthManager`: `startOAuthFlow`/`refreshAccessToken`/`revokeToken`/`isTokenExpired` | OAuth via popup + `postMessage` handshake | 197 lines. **Hardcodes `REDIRECT_URI = 'http://localhost:5173/'`**. Web-only by construction |
 | `file-attachment-storage.ts` | `fileAttachmentStorage` singleton: `storeFile`/`getFile`/`deleteFile`/`cleanupOrphanedFiles` | File attachment LRU + metadata | 213 lines. Stores base64 in `store.fileAttachments.files` (in-memory + persisted) |
 | `site-blocking.ts` | `isSiteBlocked`/`cleanSites`/`enactSiteBlockingStrategy`/`enactSiteBlockingStrategyInTab` | Domain/path matching + tab messaging | 181 lines. Pure-ish matching + extension-only orchestration |
-| `recurrence-utils.ts` | `isRecurrenceMatch`/`generateOccurrences`/`getNextOccurrence` | Recurrence expansion (daily/weekly/monthly/yearly, count/until, byWeekday) | **715 lines, zero production imports**. Written and tested (964 lines) but never wired into any calendar view |
+| `recurrence-utils.ts` | `isRecurrenceMatch`/`generateRecurrenceOccurrences`/`getNextOccurrence` | Recurrence expansion (daily/weekly/monthly/yearly, count/until, byWeekday) | 715 lines. Wired into `calendar-queries.ts` (`generateRecurrenceOccurrences` called when `expandRecurrence` is true). Tested (964 lines) |
+| `calendar-queries.ts` | `getItemsInRange`/`getItemsOnDate`/`entriesOnDate` | Shared calendar query: returns `CalendarEntry[]` with recurrence expansion and multi-day event coverage | Tested. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md) |
 | `date-utils.ts` | `getDateString`/`isSameDate`/`isDateInRange`/`createLocalMidnightDate`/... | Date helpers | tested |
 | `notifications.ts` | `showNotification`/`requestNotificationPermission` | OS notifications (ext: `browser.notifications`, web: `Notification` API) | adapter over two notification backends |
 | `audio.ts` | `playAudio`/`playAudioNow` | Sound playback (web: `Audio`, ext: offscreen document message) | adapter over two audio backends |
@@ -245,17 +246,19 @@ The on-disk shape. Notable: `items: XItem[]` uses `number` timestamps (`dueAt: n
 <a id="calendar-planner"></a>
 ### Calendar / Planner
 
-Five calendar-shaped views, each with its own event-query logic:
+Five calendar-shaped views share one query module:
 
-| View | File | Event query |
+| View | File | Query usage |
 |---|---|---|
-| Planner (month/week) | `PlannerTab.tsx` + `PlannerMonthView.tsx` + `PlannerWeekView.tsx` | `getAllEventsForDate` at `PlannerTab.tsx:91-113` (filters timetable, completed, multi-day, course) |
-| Mini calendar | `MiniCalendar.tsx` | own `getAllEventsForDate` at `:67-92` (different filter rules) |
-| Course records | `CourseRecordCalendar.tsx` | own version |
-| Ugly calendar | `UglyCalendarPlannerTab.tsx` | own version |
-| Dashboard upcoming | `Upcoming.tsx` / `TodaySchedule.tsx` | own filtering |
+| Planner (month/week) | `PlannerTab.tsx` + `PlannerMonthView.tsx` + `PlannerWeekView.tsx` | `getItemsOnDate` + view filters (completed tasks, multi-day toggle) |
+| Mini calendar | `MiniCalendar.tsx` | `getItemsOnDate` + view filter (completed tasks on non-past dates) |
+| Course records | `CourseRecordCalendar.tsx` | `getItemsOnDate` scoped by `courseFilter` |
+| Ugly calendar | `UglyCalendarPlannerTab.tsx` | `getItemsInRange` (events/tasks/exams) + inline timetable expansion |
+| Dashboard upcoming | `Upcoming.tsx` / `TodaySchedule.tsx` | own filtering (tasks/exams only, no date-cell query) |
 
-**Recurrence is modeled but not expanded.** `recurrence-utils.ts` (715 lines, `isRecurrenceMatch`/`generateOccurrences`/`getNextOccurrence`) has **zero production imports**. Only `.examples.ts` and `.test.ts` import it. A recurring `ItemEvent` shows once, on `startsAt`. The form collects recurrence, Google sync converts it to RRule (`google-calendar-sync.ts:498-519`), but local views never expand it. A wiring step is missing, not a module. See [Candidate B](./architecture-review-candidates.md#candidate-b) in the candidates doc.
+The shared query module `src/lib/calendar-queries.ts` exports `getItemsInRange(items, start, end, opts)` and `getItemsOnDate(items, date, opts)`, both returning `CalendarEntry[]`. Each entry carries the occurrence's effective `startsAt`/`endsAt` and `sequence` alongside the source `item`. The query answers "what occurs on this date." Views apply display filters (`hideCompleted`, `showMultiDay`) themselves. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md).
+
+**Recurrence is expanded.** `recurrence-utils.ts` (715 lines, `generateRecurrenceOccurrences`/`isRecurrenceMatch`/`getNextOccurrence`) is wired into `getItemsInRange` via the `expandRecurrence` option (default `true`). A recurring `ItemEvent` produces one `CalendarEntry` per matching date in the visible range. Timetable items are excluded from the shared query (their expansion uses a weekday pattern + timezone, a different mechanism kept inline in `UglyCalendarPlannerTab`).
 
 Drag-and-drop rescheduling in `PlannerTab.tsx:136-163` branches on `item.type` and uses `as any` casts to call `updateItem` because the union narrowing is lost across the update signature.
 
@@ -289,7 +292,7 @@ Five style hooks run in `App.tsx:135-138`: `useDarkModeStyles`, `useAccentColorS
 ### Testing
 
 - **Runner:** Vitest + jsdom + Testing Library (`vitest.config.ts`).
-- **Coverage today:** `date-utils.test.ts`, `recurrence-utils.test.ts` (715-line module, 964-line test, **not wired into production**), `forms.test.ts` (exercises `createItemModelFromForm`/`updateItemModelFromForm` which the app **doesn't call**. `useItemDialog` bypasses them), `useItemDialog.test.ts` (only state transitions, never `handleSave`/`handleDeleteItem`), `ItemList.test.tsx` (fully mocks `useItemDialog`. Render smoke test), `MiniCalendar.test.ts` (only `buildCalendarMatrix`), `timetable/modelSchema.test.ts`.
+- **Coverage today:** `date-utils.test.ts`, `recurrence-utils.test.ts` (715-line module, 964-line test, wired into production via `calendar-queries.ts`), `calendar-queries.test.ts` (tests the wiring: recurrence expansion, multi-day events, filter behavior), `forms.test.ts` (exercises `createItemModelFromForm`/`updateItemModelFromForm` which the app **doesn't call**. `useItemDialog` bypasses them), `useItemDialog.test.ts` (only state transitions, never `handleSave`/`handleDeleteItem`), `ItemList.test.tsx` (fully mocks `useItemDialog`. Render smoke test), `MiniCalendar.test.ts` (only `buildCalendarMatrix`), `timetable/modelSchema.test.ts`.
 - **Pattern:** tests concentrate on **leaf pure functions**. The bugs live in **cross-module wiring** (sync, storage, timer bridge, event queries, GC), which is largely untested. The "interface is the test surface" principle is violated where the tested surface and the used surface diverge (e.g. `forms.ts` helpers tested but unused; `useItemDialog`'s risky `handleSave` untested).
 - **Untested high-risk modules:** `study-session-timer-manager.ts` (0), `hybrid-storage.ts` (0), `data-transfer.ts` (0), `google-calendar-sync.ts` (0), `google-oauth.ts` (0), `site-blocking.ts` (0), `stores/app.ts` (0), `file-attachment-storage.ts` (0), all calendar views (0).
 
@@ -323,10 +326,9 @@ These describe the **current** conventions rather than aspirations. Future work 
 Surfaces where the baseline is unresolved or where a decision is pending. These are candidates for ADRs during grilling.
 
 1. **Is Google Calendar sync intended to work in extension mode?** The OAuth `REDIRECT_URI` is hardcoded to `localhost:5173` (web). If extension sync is in scope, the `OAuthClient` needs a `chrome.identity.launchWebAuthFlow` adapter (a second adapter at the OAuth seam). If out of scope, record it as an ADR so future reviews do not re-flag it.
-2. **Is recurrence expansion in scope?** The module + tests exist but no view wires it in. Either wire it ([Candidate B](./architecture-review-candidates.md#candidate-b)) or delete the 715+964 lines and stop collecting recurrence in the form.
-3. **Should `XItem*` types in `data-transfer.ts` be derived from the zod schemas?** The parallel type system can drift. A schema-driven exchange format would close the gap.
-4. **Should file attachments live in `store` (base64) or in storage (per-file keys)?** The current design bloats every persist with all base64. Moving to per-key storage is a real seam change.
-5. **Where does `performGarbageCollection` belong?** It sits in `stores/app.ts` but knows about rich-text HTML structure. Moving it to `file-attachment-storage.ts` would co-locate file lifecycle.
+2. **Should `XItem*` types in `data-transfer.ts` be derived from the zod schemas?** The parallel type system can drift. A schema-driven exchange format would close the gap.
+3. **Should file attachments live in `store` (base64) or in storage (per-file keys)?** The current design bloats every persist with all base64. Moving to per-key storage is a real seam change.
+4. **Where does `performGarbageCollection` belong?** It sits in `stores/app.ts` but knows about rich-text HTML structure. Moving it to `file-attachment-storage.ts` would co-locate file lifecycle.
 
 ---
 

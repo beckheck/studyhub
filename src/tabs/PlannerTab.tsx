@@ -8,9 +8,9 @@ import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useItems } from '@/hooks/useStore';
 import { ItemDialogTrigger } from '@/items/ItemDialogTrigger';
 import { ItemDialog } from '@/items/base/dialog';
-import { getItemMethods } from '@/items/methods';
 import { ItemDialogOptions, useItemDialog } from '@/items/useItemDialog';
-import { getDateString, isDateInRange, isMultiDayEvent, isSameDate } from '@/lib/date-utils';
+import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries';
+import { getDateString, isMultiDayEvent } from '@/lib/date-utils';
 import { CalendarView, Item } from '@/types';
 import { CalendarDays, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -88,48 +88,28 @@ export default function PlannerTab() {
   };
 
   // Helper: get all events for a specific date
-  function getAllEventsForDate(date: Date) {
-    return items.filter(item => {
-      if (item.type === 'timetable') {
-        return false;
-      }
-      if (item.type === 'task' && item.isCompleted) {
-        return false;
-      }
-      if (item.type == 'event') {
-        const isMultiDay = isMultiDayEvent(item.startsAt, item.endsAt);
-        if (isMultiDay && !showMultiDayEvents) {
-          return false;
-        }
-        const overlapsDay = isDateInRange(date, item.startsAt, item.endsAt);
-        if (overlapsDay) {
-          return true;
-        }
-      }
-      const methods = getItemMethods(item as Item);
-      const itemDate = methods.getDate();
-      return isSameDate(itemDate, date) && (filterCourse === 'all' || item.courseId === filterCourse);
-    });
+  // Query returns occurrences (including recurrence expansion). View applies display filters.
+  function getAllEventsForDate(date: Date): Item[] {
+    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse });
+    return filterEntries(entries).map(e => e.item);
   }
 
   // Helper: get all events for tooltip (including hidden multi-day events)
-  function getAllEventsForTooltip(date: Date) {
-    return items.filter(item => {
-      if (item.type === 'timetable') {
-        return false;
+  function getAllEventsForTooltip(date: Date): Item[] {
+    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse });
+    return filterEntries(entries, true).map(e => e.item);
+  }
+
+  // Apply the view's display filters to query entries:
+  // - completed tasks always hidden
+  // - multi-day events hidden unless includeMultiDay (the showMultiDayEvents toggle)
+  function filterEntries(entries: CalendarEntry[], includeMultiDay = showMultiDayEvents): CalendarEntry[] {
+    return entries.filter(e => {
+      if (e.item.type === 'task' && (e.item as { isCompleted: boolean }).isCompleted) return false;
+      if (e.item.type === 'event' && e.endsAt) {
+        if (isMultiDayEvent(e.item.startsAt, e.item.endsAt) && !includeMultiDay) return false;
       }
-      if (item.type === 'task' && item.isCompleted) {
-        return false;
-      }
-      if (item.type == 'event') {
-        const overlapsDay = isDateInRange(date, item.startsAt, item.endsAt);
-        if (overlapsDay) {
-          return true;
-        }
-      }
-      const methods = getItemMethods(item as Item);
-      const itemDate = methods.getDate();
-      return isSameDate(itemDate, date) && (filterCourse === 'all' || item.courseId === filterCourse);
+      return true;
     });
   }
 

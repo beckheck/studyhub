@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useItems } from '@/hooks/useStore';
-import { getItemMethods } from '@/items/methods';
-import { isDateInRange, isSameDate } from '@/lib/date-utils';
-import { Item } from '@/types';
+import { getItemsOnDate } from '@/lib/calendar-queries';
+import type { Item } from '@/types';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -56,39 +55,21 @@ export default function MiniCalendar({ onTabChange, onCourseSelect, isExpanded =
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
-  // Get all items for event counting
-  const tasks = items.filter(item => item.type === 'task');
-  const exams = items.filter(item => item.type === 'exam');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   // Generate calendar matrix
   const matrix = useMemo(() => buildCalendarMatrix(currentDate), [currentDate]);
 
-  // Helper to get all events for a specific date (show all events including completed)
+  // Helper to get all items for a specific date, applying the view's display filters:
+  // - completed tasks hidden on non-past dates (show on past dates for history)
+  // - completed exams always shown (a taken exam still belongs on its date)
   const getAllEventsForDate = (date: Date) => {
-    return items.filter(item => {
-      if (item.type === 'timetable') {
-        return false;
-      }
-      // For future dates, hide completed events. For past dates, show all events
-      const isPastDate = date < today;
-      if (!isPastDate) {
-        if (item.type === 'task' && item.isCompleted) {
-          return false;
-        }
-        if (item.type === 'exam' && item.isCompleted) {
-          return false;
-        }
-      }
-      if (item.type === 'event') {
-        const overlapsDay = isDateInRange(date, item.startsAt, item.endsAt);
-        if (overlapsDay) {
-          return true;
-        }
-      }
-      const methods = getItemMethods(item as Item);
-      const itemDate = methods.getDate();
-      return isSameDate(itemDate, date);
-    });
+    const entries = getItemsOnDate([...items] as Item[], date);
+    const isPastDate = date < today;
+    return entries
+      .filter(e => isPastDate || !(e.item.type === 'task' && (e.item as { isCompleted: boolean }).isCompleted))
+      .map(e => e.item);
   };
 
   // Helper to count events for a specific date
@@ -107,9 +88,6 @@ export default function MiniCalendar({ onTabChange, onCourseSelect, isExpanded =
   const goToPlanner = () => {
     onTabChange('planner');
   };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',

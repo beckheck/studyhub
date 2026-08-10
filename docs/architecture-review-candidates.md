@@ -11,7 +11,7 @@
 | ID | Candidate | Strength |
 |---|---|---|
 | A | Item dialog copy-paste + sync inlined in dialog hook | **Strong** |
-| B | Calendar queries re-implemented 3+ times. Recurrence is 715 lines of dead code | **Strong** |
+| B | Calendar queries re-implemented 3+ times. Recurrence is 715 lines of dead code | **Strong** ✅ |
 | C | Timer manager untestable via `store` singleton import | Worth exploring | **Worth exploring** |
 | D | `fileAttachmentStorage` mutates store. GC lives in the wrong module | **Strong** |
 | E | Storage has no repository seam. `XItem*` duplicates schemas. `any`-typed proxy patcher | **Strong** (scoped) |
@@ -53,7 +53,9 @@ An `<ItemDialogProvider>` in `App.tsx` exposing `openAdd(type, initialData?, opt
 ---
 
 <a id="candidate-b"></a>
-## Candidate B: Calendar queries re-implemented 3+ times, recurrence is 715 lines of dead code
+## Candidate B: Calendar queries re-implemented 3+ times, recurrence is 715 lines of dead code  ✅ Implemented
+
+**Status:** Implemented. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md).
 
 **Files:** `PlannerTab.tsx:91-113`, `MiniCalendar.tsx:67-92`, `CourseRecordCalendar.tsx`, `UglyCalendarPlannerTab.tsx`, `src/lib/recurrence-utils.ts` (715 lines, zero production imports), `src/lib/recurrence-utils.test.ts` (964 lines), `event/modelSchema.ts:5-25`, `event/form.tsx`, `event/formSchema.ts:92-103`, `google-calendar-sync.ts:498-519`
 

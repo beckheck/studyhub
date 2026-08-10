@@ -3,6 +3,7 @@ import { DeferredInput } from '@/components/ui/deferred-input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useCourses } from '@/hooks/useStore';
+import type { Course } from '@/types';
 import { Reorder } from 'framer-motion';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -22,7 +23,7 @@ export default function CoursesSettings() {
     }
 
     if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-      const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+      const segmenter = new (Intl as any).Segmenter(undefined, { granularity: 'grapheme' });
       const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
       const first = iterator.next();
       return first.done ? '' : first.value.segment;
@@ -60,7 +61,7 @@ export default function CoursesSettings() {
   };
 
   const handleReorder = (newOrder: typeof courses) => {
-    setCourses([...newOrder]);
+    setCourses([...newOrder] as Course[]);
   };
 
   return (

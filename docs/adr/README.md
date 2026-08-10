@@ -43,7 +43,4 @@ stops future architecture reviews from re-litigating the same ground.)
 
 ## Index
 
-*(empty. Populate as decisions are made during grilling)*
-
-<!-- - [ADR 0001: Google Calendar sync is web-only](./0001-google-sync-web-only.md) -->
-<!-- - [ADR 0002: Recurrence expansion is in scope](./0002-recurrence-in-scope.md) -->
+- [ADR 0001: Calendar queries return CalendarEntry, not Item](./0001-calendar-entry-return-shape.md)
