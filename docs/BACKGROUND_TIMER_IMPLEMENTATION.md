@@ -2,9 +2,9 @@
 
 ## Overview
 
-The study timer has been updated to run in the extension's background service worker, ensuring that:
+The study timer runs in the extension's background service worker. This ensures:
 
-1. **Timer persistence**: The timer continues running even when popup/side panel is closed
+1. **Timer persistence**: The timer continues running even when the popup or side panel is closed
 2. **Cross-mode synchronization**: Timer state is synchronized between popup, side panel, and tab modes
 3. **Data persistence**: Timer state is saved in browser storage and restored on extension restart
 
@@ -25,9 +25,9 @@ The study timer has been updated to run in the extension's background service wo
 
 ### 2. Study Timer Hook Updates (`src/hooks/useStudyTimer.ts`)
 
-- Completely refactored to communicate with background script instead of managing timer locally
-- Uses message passing to communicate with background service worker
-- Listens for timer state updates from background
+- Completely refactored to communicate with the background script instead of managing the timer locally
+- Uses message passing to communicate with the background service worker
+- Listens for timer state updates from the background
 - Maintains the same API for components, ensuring no breaking changes
 
 ### 3. Component Updates (`src/components/StudyTrackerTab.tsx`)
@@ -46,9 +46,9 @@ interface BackgroundTimerState {
   technique: string;       // Study technique (e.g., "Pomodoro 25/5")
   moodStart: number;       // Starting mood (1-10)
   moodEnd: number;         // Ending mood (1-10)
-  note: string;           // Session notes
-  startTs?: number; // Start timestamp for accurate time calculation
-  courseId: string;       // Associated course ID
+  note: string;            // Session notes
+  startTs?: number;        // Start timestamp for accurate time calculation
+  courseId: string;        // Associated course ID
 }
 ```
 
@@ -65,7 +65,7 @@ The following message types are used for timer communication:
 
 ### Storage
 
-Timer state is automatically saved to `browser.storage.local` under the key `backgroundTimerState` and restored when the background script initializes.
+The timer state is automatically saved to `browser.storage.local` under the key `backgroundTimerState` and restored when the background script initializes.
 
 ## Usage
 
@@ -86,8 +86,8 @@ const { running, elapsed, technique } = studyTimer;
 
 ## Benefits
 
-1. **Persistence**: Timer continues running when popup/side panel is closed
-2. **Synchronization**: All extension views show the same timer state in real-time
+1. **Persistence**: Timer continues running when the popup or side panel is closed
+2. **Synchronization**: All extension views show the same timer state in real time
 3. **Reliability**: Timer state is preserved across browser restarts
 4. **Performance**: Centralized timer management reduces resource usage
 5. **Consistency**: Same timer experience across all extension interfaces

@@ -1,18 +1,18 @@
-# 🌍 Localization System Documentation
+# Localization System Documentation
 
 ## Overview
 
-This project uses `react-i18next` for internationalization (i18n) and localization (l10n), providing comprehensive support for English and Spanish with the ability to easily add more languages. The system features runtime language switching, TypeScript safety, and scalable architecture.
+This project uses `react-i18next` for internationalization (i18n) and localization (l10n). It provides support for English and Spanish with the ability to add more languages. The system features runtime language switching, TypeScript safety, and a scalable architecture.
 
 **Key Features:**
 
-- ✅ **Runtime Language Switching** - No page reload required
-- ✅ **TypeScript Safety** - Full autocomplete and validation
-- ✅ **Persistent Selection** - Remembers user choice in localStorage
-- ✅ **Automatic Detection** - Uses browser/system language as fallback
-- ✅ **Locale-aware Formatting** - Dates, numbers, and cultural adaptation
+- **Runtime Language Switching**. No page reload required
+- **TypeScript Safety**. Full autocomplete and validation
+- **Persistent Selection**. Remembers user choice in localStorage
+- **Automatic Detection**. Uses browser/system language as fallback
+- **Locale-aware Formatting**. Dates, numbers, and cultural adaptation
 
-## 📁 Architecture & File Structure
+## Architecture & File Structure
 
 ### Core Technologies
 
@@ -46,7 +46,7 @@ src/
     └── LanguageSelector.tsx   # Language switching component
 ```
 
-## 🔧 Advanced Features
+## Advanced Features
 
 ### Interpolation & Pluralization
 
@@ -90,7 +90,7 @@ const {
 } = useLocalization();
 ```
 
-## 🎯 Integration Examples
+## Integration Examples
 
 ### PlannerTab Integration
 
@@ -143,14 +143,14 @@ export default function CourseManagerTab() {
 }
 ```
 
-## 🌐 Supported Languages
+## Supported Languages
 
 | Language | Code | Native Name | Flag | Coverage |
 |----------|------|-------------|------|----------|
 | English  | `en` | English     | 🇺🇸  | 100% |
 | Spanish  | `es` | Español     | 🇪🇸  | 100% |  
 
-## 🔄 Adding New Languages
+## Adding New Languages
 
 ### 1. Create Translation Files
 
@@ -197,19 +197,19 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 ### 4. Update TypeScript Types
 
 ```typescript
-// The TypeScript declarations will automatically include new languages
-// once the translation files are properly imported in config.ts
+// The TypeScript declarations automatically include new languages
+// once you import the translation files properly in config.ts
 ```
 
-## 🧪 Development & Testing
+## Development & Testing
 
 ### Development Workflow
 
-1. **Extract strings** - Identify all user-facing text
-2. **Create keys** - Add to appropriate JSON files
-3. **Update components** - Replace hardcoded text with `t()` calls
-4. **Test switching** - Verify both languages work
-5. **Validate formatting** - Test date/number formatting
+1. **Extract strings**. Identify all user-facing text
+2. **Create keys**. Add to appropriate JSON files
+3. **Update components**. Replace hardcoded text with `t()` calls
+4. **Test switching**. Verify both languages work
+5. **Validate formatting**. Test date/number formatting
 
 ### Missing Translation Handling
 
@@ -225,14 +225,14 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 - Text overflow with longer translations
 - Date/number formatting accuracy
 
-## 🎨 Best Practices
+## Best Practices
 
 ### Translation Keys
 
 - Use dot notation: `section.subsection.key`
 - Be descriptive: `forms.eventTitle` not just `title`
 - Group related keys: `actions.save`, `actions.cancel`
-- Consistent naming conventions across namespaces
+- Keep consistent naming conventions across namespaces
 
 ### Translation Content
 
@@ -254,7 +254,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 - Minimal bundle size impact
 - Consider code splitting for large translation sets
 
-## � Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -282,7 +282,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 - React DevTools i18n state inspection
 - localStorage language persistence verification
 
-## � Migration Guide
+## Migration Guide
 
 To add localization to existing components:
 
@@ -318,7 +318,7 @@ To add localization to existing components:
 
 5. **Test all functionality in both languages**
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 **Advanced Features:** RTL Support, Context-aware translations, Translation management UI
 

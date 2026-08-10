@@ -47,7 +47,7 @@ A modern, interactive study portal built specifically for Generation Z students,
 
 ## 💻 System Requirements
 
-- Node.js 18.0 or later
+- Node.js 22 or later
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## 🤝 Contributing
