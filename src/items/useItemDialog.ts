@@ -6,7 +6,6 @@ import {
 } from '@/items/forms';
 import { Item } from '@/items/models';
 import { useItems, useGoogleCalendar } from '@/hooks/useStore';
-import { useCourses } from '@/hooks/useStore';
 import { useAppState } from '@/hooks/useStore';
 import { googleCalendarSync } from '@/lib/google-calendar-sync';
 import { useItemDialogState } from './useItemDialogState';
@@ -37,6 +36,14 @@ export function useItemDialog() {
   const getCourseNameById = (courseId: string) => appState.courses.find(c => c.id === courseId)?.title;
   const getProjectNameById = (projectId: string) => appState.projects.find(p => p.id === projectId)?.title;
 
+  const buildSyncCtx = (item: Item) => ({
+    accessToken: googleCalendar.accessToken,
+    calendarId: googleCalendar.calendarId,
+    syncEnabled: googleCalendar.syncEnabled,
+    courseName: item.courseId ? getCourseNameById(item.courseId) : undefined,
+    projectName: item.projectId ? getProjectNameById(item.projectId) : undefined,
+  });
+
   const handleSave = (validatedData?: ItemForm) => {
     const dataToSave = validatedData || form;
     handleSaveItem(dataToSave, editingItem);
@@ -52,83 +59,23 @@ export function useItemDialog() {
 
   const handleSaveItem = (formData: ItemForm, editingItem: Item | null) => {
     const item = convertItemFormToModel(itemType, formData, editingItem);
+    let savedItem: Item;
     if (editingItem) {
-      updateItem(editingItem.id, item);
-      syncItemToGoogle(item, true);
+      savedItem = updateItem(editingItem.id, item) ?? item;
     } else {
-      addItem(item);
-      syncItemToGoogle(item, false);
+      savedItem = addItem(item);
     }
+    syncItemToGoogle(savedItem);
   };
 
-  const syncItemToGoogle = async (item: Item, isUpdate: boolean) => {
-    console.log('syncItemToGoogle called:', { itemType: item.type, isUpdate, googleCalendarEnabled: googleCalendar.syncEnabled });
-
-    // Only sync if Google Calendar is enabled
-    if (!googleCalendar.syncEnabled) {
-      console.log('Google Calendar sync not enabled');
-      return;
-    }
-
-    if (!googleCalendar.accessToken) {
-      console.log('No access token');
-      return;
-    }
-
-    if (!googleCalendar.calendarId) {
-      console.log('No calendar selected');
-      return;
-    }
-
-    // Get course/project names for description
-    const courseName = item.courseId ? getCourseNameById(item.courseId) : undefined;
-    const projectName = item.projectId ? getProjectNameById(item.projectId) : undefined;
-
+  const syncItemToGoogle = async (item: Item) => {
+    const ctx = buildSyncCtx(item);
     try {
-      console.log('Starting Google Calendar sync for', item.type + ':', item.title);
-
-      let result;
-
-      // Handle different item types
-      if (item.type === 'event') {
-        const event = item as typeof item & { type: 'event' };
-        if (isUpdate && event.googleCalendarEventId) {
-          result = await googleCalendarSync.updateEvent(event, googleCalendar.accessToken, googleCalendar.calendarId, courseName, projectName);
-        } else {
-          result = await googleCalendarSync.syncNewEvent(event, googleCalendar.accessToken, googleCalendar.calendarId, courseName, projectName);
-          if (result.success && result.googleEventId) {
-            event.googleCalendarEventId = result.googleEventId;
-            updateItem(event.id, event);
-          }
-        }
-      } else if (item.type === 'task') {
-        const task = item as typeof item & { type: 'task' };
-        if (isUpdate && task.googleCalendarEventId) {
-          result = await googleCalendarSync.syncTaskToGoogle(task, googleCalendar.accessToken, googleCalendar.calendarId, true, courseName, projectName);
-        } else {
-          result = await googleCalendarSync.syncTaskToGoogle(task, googleCalendar.accessToken, googleCalendar.calendarId, false, courseName, projectName);
-          if (result.success && result.googleEventId) {
-            task.googleCalendarEventId = result.googleEventId;
-            updateItem(task.id, task);
-          }
-        }
-      } else if (item.type === 'exam') {
-        const exam = item as typeof item & { type: 'exam' };
-        if (isUpdate && exam.googleCalendarEventId) {
-          result = await googleCalendarSync.syncExamToGoogle(exam, googleCalendar.accessToken, googleCalendar.calendarId, true, courseName, projectName);
-        } else {
-          result = await googleCalendarSync.syncExamToGoogle(exam, googleCalendar.accessToken, googleCalendar.calendarId, false, courseName, projectName);
-          if (result.success && result.googleEventId) {
-            exam.googleCalendarEventId = result.googleEventId;
-            updateItem(exam.id, exam);
-          }
-        }
-      }
-
-      if (result && !result.success) {
+      const result = await googleCalendarSync.syncItem(item, ctx);
+      if (result.success && result.googleEventId) {
+        updateItem(item.id, { googleCalendarEventId: result.googleEventId } as Partial<Item>);
+      } else if (!result.success && !result.skipped) {
         console.error('Google Calendar sync failed:', result.error);
-      } else if (result) {
-        console.log('Google Calendar sync successful');
       }
     } catch (error) {
       console.error('Error syncing to Google Calendar:', error);
@@ -138,14 +85,10 @@ export function useItemDialog() {
   const handleDeleteItem = (item: Item) => {
     deleteItem(item.id);
 
-    if (item.type === 'event' && googleCalendar.syncEnabled && googleCalendar.accessToken && googleCalendar.calendarId) {
-      const event = item as typeof item & { type: 'event' };
-      if (event.googleCalendarEventId) {
-        googleCalendarSync.deleteEvent(event.googleCalendarEventId, googleCalendar.accessToken, googleCalendar.calendarId).catch(
-          error => console.error('Error deleting from Google Calendar:', error)
-        );
-      }
-    }
+    const ctx = buildSyncCtx(item);
+    googleCalendarSync
+      .deleteItem(item, ctx)
+      .catch(error => console.error('Error deleting from Google Calendar:', error));
   };
 
   return {
