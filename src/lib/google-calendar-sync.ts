@@ -27,6 +27,15 @@ export interface GoogleCalendarSyncResult {
   success: boolean;
   googleEventId?: string;
   error?: string;
+  skipped?: boolean;
+}
+
+export interface SyncItemContext {
+  accessToken: string;
+  calendarId: string;
+  syncEnabled: boolean;
+  courseName?: string;
+  projectName?: string;
 }
 
 export class GoogleCalendarSync {
@@ -317,6 +326,65 @@ export class GoogleCalendarSync {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  async syncItem(item: Item, ctx: SyncItemContext): Promise<GoogleCalendarSyncResult> {
+    if (!ctx.syncEnabled || !ctx.accessToken || !ctx.calendarId) {
+      return { success: false, skipped: true };
+    }
+
+    if (item.type === 'timetable') {
+      return { success: false, skipped: true };
+    }
+
+    if (item.type === 'event') {
+      const event = item as ItemEvent;
+      if (event.googleCalendarEventId) {
+        return this.updateEvent(event, ctx.accessToken, ctx.calendarId, ctx.courseName, ctx.projectName);
+      }
+      return this.syncNewEvent(event, ctx.accessToken, ctx.calendarId, ctx.courseName, ctx.projectName);
+    }
+
+    if (item.type === 'task') {
+      const task = item as ItemTask;
+      const isUpdate = !!task.googleCalendarEventId;
+      return this.syncTaskToGoogle(
+        task,
+        ctx.accessToken,
+        ctx.calendarId,
+        isUpdate,
+        ctx.courseName,
+        ctx.projectName
+      );
+    }
+
+    if (item.type === 'exam') {
+      const exam = item as ItemExam;
+      const isUpdate = !!exam.googleCalendarEventId;
+      return this.syncExamToGoogle(
+        exam,
+        ctx.accessToken,
+        ctx.calendarId,
+        isUpdate,
+        ctx.courseName,
+        ctx.projectName
+      );
+    }
+
+    return { success: false, skipped: true };
+  }
+
+  async deleteItem(item: Item, ctx: SyncItemContext): Promise<GoogleCalendarSyncResult> {
+    if (item.type !== 'event') {
+      return { success: false, skipped: true };
+    }
+
+    const event = item as ItemEvent;
+    if (!event.googleCalendarEventId) {
+      return { success: false, skipped: true };
+    }
+
+    return this.deleteEvent(event.googleCalendarEventId, ctx.accessToken, ctx.calendarId);
   }
 
   /**
