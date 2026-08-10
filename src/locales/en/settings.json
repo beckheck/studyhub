@@ -80,7 +80,7 @@
     "selectPosition": "Select position",
     "positions": {
       "dashboard": "Dashboard",
-      "floating": "Floating", 
+      "floating": "Floating",
       "minimized": "Minimized",
       "off": "Off"
     },

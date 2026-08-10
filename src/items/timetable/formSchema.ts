@@ -3,10 +3,10 @@ import {
   getBaseModelFromForm,
   getExistingItemModel,
   itemBaseFormSchema,
-} from '@/items/base/formSchema';
-import { Item } from '@/items/models';
-import { z } from 'zod';
-import { ITEM_TIMETABLE_ACTIVITY_TYPES, ItemTimetable, ItemTimetableSchema, TIME_BLOCKS } from './modelSchema';
+} from '@/items/base/formSchema'
+import { Item } from '@/items/models'
+import { z } from 'zod'
+import { ITEM_TIMETABLE_ACTIVITY_TYPES, ItemTimetable, ItemTimetableSchema, TIME_BLOCKS } from './modelSchema'
 
 export const itemTimetableFormSchema = itemBaseFormSchema.extend({
   blockId: ItemTimetableSchema.shape.blockId,
@@ -14,9 +14,9 @@ export const itemTimetableFormSchema = itemBaseFormSchema.extend({
   classroom: ItemTimetableSchema.shape.classroom,
   teacher: ItemTimetableSchema.shape.teacher,
   activityType: ItemTimetableSchema.shape.activityType,
-});
+})
 
-export type ItemTimetableForm = z.infer<typeof itemTimetableFormSchema>;
+export type ItemTimetableForm = z.infer<typeof itemTimetableFormSchema>
 
 export const DEFAULT_ITEM_TIMETABLE_FORM: ItemTimetableForm = {
   title: '',
@@ -30,14 +30,14 @@ export const DEFAULT_ITEM_TIMETABLE_FORM: ItemTimetableForm = {
   classroom: '',
   teacher: '',
   activityType: ITEM_TIMETABLE_ACTIVITY_TYPES[0],
-};
+}
 
-export type ItemFormFieldFlags = Partial<Record<keyof ItemTimetableForm, boolean>>;
-export const DEFAULT_ITEM_TIMETABLE_HIDDEN: ItemFormFieldFlags = { title: true };
-export const DEFAULT_ITEM_TIMETABLE_DISABLED: ItemFormFieldFlags = {};
+export type ItemFormFieldFlags = Partial<Record<keyof ItemTimetableForm, boolean>>
+export const DEFAULT_ITEM_TIMETABLE_HIDDEN: ItemFormFieldFlags = { title: true }
+export const DEFAULT_ITEM_TIMETABLE_DISABLED: ItemFormFieldFlags = {}
 
 export const timetableModelToFormConverter = (item: Item): ItemTimetableForm => {
-  if (item.type !== 'timetable') throw new Error('Invalid item type');
+  if (item.type !== 'timetable') throw new Error('Invalid item type')
   return {
     ...getBaseFormFromModel(item),
     blockId: item.blockId,
@@ -45,8 +45,8 @@ export const timetableModelToFormConverter = (item: Item): ItemTimetableForm => 
     classroom: item.classroom,
     teacher: item.teacher,
     activityType: item.activityType,
-  };
-};
+  }
+}
 
 export const timetableFormToModelConverter = (form: ItemTimetableForm, existingItem?: Item): ItemTimetable => {
   return {
@@ -58,5 +58,5 @@ export const timetableFormToModelConverter = (form: ItemTimetableForm, existingI
     teacher: form.teacher,
     activityType: form.activityType,
     ...getExistingItemModel(existingItem),
-  };
-};
+  }
+}

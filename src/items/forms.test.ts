@@ -15,16 +15,16 @@
  * - Edge cases and error handling
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import {
   DEFAULT_ITEM_EVENT_FORM,
   eventFormToModelConverter,
   eventModelToFormConverter,
   ItemEventForm,
-} from './event/formSchema';
-import { ItemEvent } from './event/modelSchema';
-import { DEFAULT_ITEM_EXAM_FORM, examFormToModelConverter, ItemExamForm } from './exam/formSchema';
-import { ItemExam } from './exam/modelSchema';
+} from './event/formSchema'
+import { ItemEvent } from './event/modelSchema'
+import { DEFAULT_ITEM_EXAM_FORM, examFormToModelConverter, ItemExamForm } from './exam/formSchema'
+import { ItemExam } from './exam/modelSchema'
 import {
   convertItemFormToModel,
   convertItemModelToForm,
@@ -32,27 +32,27 @@ import {
   itemFormToModelConverterMap,
   itemModelToFormConverterMap,
   updateItemModelFromForm,
-} from './forms';
-import { DEFAULT_ITEM_TASK_FORM, ItemTaskForm } from './task/formSchema';
-import { ItemTask } from './task/modelSchema';
-import { DEFAULT_ITEM_TIMETABLE_FORM, ItemTimetableForm } from './timetable/formSchema';
-import { ItemTimetable } from './timetable/modelSchema';
+} from './forms'
+import { DEFAULT_ITEM_TASK_FORM, ItemTaskForm } from './task/formSchema'
+import { ItemTask } from './task/modelSchema'
+import { DEFAULT_ITEM_TIMETABLE_FORM, ItemTimetableForm } from './timetable/formSchema'
+import { ItemTimetable } from './timetable/modelSchema'
 
 describe('Converters', () => {
-  const mockDate = new Date('2022-01-01T00:00:00.000Z');
-  const mockOldDate = new Date('2000-01-01T00:00:00.000Z');
-  const mockUUID = 'test-uuid-123';
+  const mockDate = new Date('2022-01-01T00:00:00.000Z')
+  const mockOldDate = new Date('2000-01-01T00:00:00.000Z')
+  const mockUUID = 'test-uuid-123'
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(mockDate);
+    vi.useFakeTimers()
+    vi.setSystemTime(mockDate)
 
     // Mock crypto.randomUUID
     Object.defineProperty(global, 'crypto', {
       value: { randomUUID: () => mockUUID },
       writable: true,
-    });
-  });
+    })
+  })
   describe('Form to Model Converters', () => {
     describe('Task Form Converter', () => {
       it('should convert task form to model correctly', () => {
@@ -66,9 +66,9 @@ describe('Converters', () => {
           dueAt: '2022-01-15',
           priority: 'high',
           isCompleted: true,
-        };
+        }
 
-        const result = itemFormToModelConverterMap.task(taskForm);
+        const result = itemFormToModelConverterMap.task(taskForm)
 
         expect(result).toEqual({
           title: 'Complete assignment',
@@ -80,8 +80,8 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-15'),
           priority: 'high',
           isCompleted: true,
-        });
-      });
+        })
+      })
 
       it('should handle empty optional fields', () => {
         const taskForm: ItemTaskForm = {
@@ -91,9 +91,9 @@ describe('Converters', () => {
           notes: '',
           tags: [],
           dueAt: '2022-01-10',
-        };
+        }
 
-        const result = itemFormToModelConverterMap.task(taskForm);
+        const result = itemFormToModelConverterMap.task(taskForm)
 
         expect(result).toEqual({
           title: 'Simple task',
@@ -105,8 +105,8 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-10'),
           priority: 'medium',
           isCompleted: false,
-        });
-      });
+        })
+      })
 
       it('should preserve existing item data when provided', () => {
         const existingItem: ItemTask = {
@@ -123,15 +123,15 @@ describe('Converters', () => {
           dueAt: mockDate,
           priority: 'low',
           isCompleted: false,
-        };
+        }
 
         const taskForm: ItemTaskForm = {
           ...DEFAULT_ITEM_TASK_FORM,
           title: 'Updated title',
           dueAt: '2022-01-15',
-        };
+        }
 
-        const result = itemFormToModelConverterMap.task(taskForm, existingItem);
+        const result = itemFormToModelConverterMap.task(taskForm, existingItem)
 
         expect(result).toEqual({
           title: 'Updated title',
@@ -147,9 +147,9 @@ describe('Converters', () => {
           isDeleted: false,
           createdAt: mockOldDate,
           updatedAt: mockDate,
-        });
-      });
-    });
+        })
+      })
+    })
 
     describe('Exam Form Converter', () => {
       it('should convert exam form to model correctly', () => {
@@ -161,9 +161,9 @@ describe('Converters', () => {
           startsAtTime: '14:30',
           weight: 35,
           isCompleted: true,
-        };
+        }
 
-        const result = itemFormToModelConverterMap.exam(examForm);
+        const result = itemFormToModelConverterMap.exam(examForm)
 
         expect(result).toEqual({
           title: 'Midterm Exam',
@@ -175,8 +175,8 @@ describe('Converters', () => {
           startsAt: new Date('2022-01-20T14:30'),
           weight: 35,
           isCompleted: true,
-        });
-      });
+        })
+      })
 
       it('should handle default time format', () => {
         const examForm: ItemExamForm = {
@@ -184,13 +184,13 @@ describe('Converters', () => {
           title: 'Final Exam',
           startsAt: '2022-01-25',
           startsAtTime: '09:00',
-        };
+        }
 
-        const result = examFormToModelConverter(examForm);
+        const result = examFormToModelConverter(examForm)
 
-        expect(result.startsAt).toStrictEqual(new Date('2022-01-25T09:00'));
-      });
-    });
+        expect(result.startsAt).toStrictEqual(new Date('2022-01-25T09:00'))
+      })
+    })
 
     describe('Event Form Converter', () => {
       it('should convert event form to model correctly', () => {
@@ -203,9 +203,9 @@ describe('Converters', () => {
           endsAtTime: '20:00',
           location: 'Library Room 201',
           isAllDay: false,
-        };
+        }
 
-        const result = itemFormToModelConverterMap.event(eventForm);
+        const result = itemFormToModelConverterMap.event(eventForm)
 
         expect(result).toEqual({
           title: 'Study Group',
@@ -219,8 +219,8 @@ describe('Converters', () => {
           isAllDay: false,
           location: 'Library Room 201',
           recurrence: undefined,
-        });
-      });
+        })
+      })
 
       it('should handle recurrence properly', () => {
         const eventForm: ItemEventForm = {
@@ -236,9 +236,9 @@ describe('Converters', () => {
           recurrenceByWeekday: [1, 3], // Monday and Wednesday
           recurrenceCount: 10,
           recurrenceUntil: '2022-03-15',
-        };
+        }
 
-        const result = eventFormToModelConverter(eventForm);
+        const result = eventFormToModelConverter(eventForm)
 
         expect(result.recurrence).toEqual({
           frequency: 'weekly',
@@ -246,8 +246,8 @@ describe('Converters', () => {
           byWeekday: [1, 3],
           count: 10,
           until: new Date('2022-03-15'),
-        });
-      });
+        })
+      })
 
       it('should default to 1 hour duration if end time not provided', () => {
         const eventForm: ItemEventForm = {
@@ -257,14 +257,14 @@ describe('Converters', () => {
           startsAtTime: '10:00',
           endsAt: '',
           endsAtTime: '',
-        };
+        }
 
-        const result = eventFormToModelConverter(eventForm);
-        const startTime = new Date('2022-01-20T10:00');
-        const expectedEndTime = new Date(startTime.getTime() + 60 * 60 * 1000); // +1 hour
+        const result = eventFormToModelConverter(eventForm)
+        const startTime = new Date('2022-01-20T10:00')
+        const expectedEndTime = new Date(startTime.getTime() + 60 * 60 * 1000) // +1 hour
 
-        expect(result.endsAt).toStrictEqual(expectedEndTime);
-      });
+        expect(result.endsAt).toStrictEqual(expectedEndTime)
+      })
 
       it('should not include recurrence when hasRecurrence is false', () => {
         const eventForm: ItemEventForm = {
@@ -276,13 +276,13 @@ describe('Converters', () => {
           endsAtTime: '11:00',
           hasRecurrence: false,
           recurrenceFrequency: 'weekly', // Should be ignored
-        };
+        }
 
-        const result = eventFormToModelConverter(eventForm);
+        const result = eventFormToModelConverter(eventForm)
 
-        expect(result.recurrence).toBeUndefined();
-      });
-    });
+        expect(result.recurrence).toBeUndefined()
+      })
+    })
 
     describe('Timetable Form Converter', () => {
       it('should convert timetable form to model correctly', () => {
@@ -295,9 +295,9 @@ describe('Converters', () => {
           classroom: 'Math Building 205',
           teacher: 'Dr. Smith',
           activityType: 'Lecture',
-        };
+        }
 
-        const result = itemFormToModelConverterMap.timetable(timetableForm);
+        const result = itemFormToModelConverterMap.timetable(timetableForm)
 
         expect(result).toEqual({
           title: 'Advanced Calculus',
@@ -311,9 +311,9 @@ describe('Converters', () => {
           classroom: 'Math Building 205',
           teacher: 'Dr. Smith',
           activityType: 'Lecture',
-        });
-      });
-    });
+        })
+      })
+    })
 
     describe('createItemModelFromForm', () => {
       it('should create a complete item with generated ID and timestamps', () => {
@@ -321,9 +321,9 @@ describe('Converters', () => {
           ...DEFAULT_ITEM_TASK_FORM,
           title: 'New Task',
           dueAt: '2022-01-15',
-        };
+        }
 
-        const result = createItemModelFromForm('task', taskForm);
+        const result = createItemModelFromForm('task', taskForm)
 
         expect(result).toEqual({
           id: mockUUID,
@@ -339,22 +339,22 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-15'),
           priority: 'medium',
           isCompleted: false,
-        });
-      });
+        })
+      })
 
       it('should use custom ID generator when provided', () => {
-        const customIdGenerator = () => 'custom-id-456';
+        const customIdGenerator = () => 'custom-id-456'
         const taskForm: ItemTaskForm = {
           ...DEFAULT_ITEM_TASK_FORM,
           title: 'Task with Custom ID',
           dueAt: '2022-01-15',
-        };
+        }
 
-        const result = createItemModelFromForm('task', taskForm, customIdGenerator);
+        const result = createItemModelFromForm('task', taskForm, customIdGenerator)
 
-        expect(result.id).toBe('custom-id-456');
-      });
-    });
+        expect(result.id).toBe('custom-id-456')
+      })
+    })
 
     describe('updateItemModelFromForm', () => {
       it('should update existing item with form data', () => {
@@ -372,7 +372,7 @@ describe('Converters', () => {
           dueAt: new Date(-3600000),
           priority: 'low',
           isCompleted: false,
-        };
+        }
 
         const taskForm: ItemTaskForm = {
           ...DEFAULT_ITEM_TASK_FORM,
@@ -381,9 +381,9 @@ describe('Converters', () => {
           priority: 'high',
           isCompleted: true,
           dueAt: '2022-01-20',
-        };
+        }
 
-        const result = updateItemModelFromForm('task', taskForm, existingItem);
+        const result = updateItemModelFromForm('task', taskForm, existingItem)
 
         expect(result).toEqual({
           id: 'existing-task-id',
@@ -393,15 +393,15 @@ describe('Converters', () => {
           notes: undefined,
           tags: undefined,
           isDeleted: false,
-          createdAt: new Date( - 86400000),
+          createdAt: new Date(-86400000),
           updatedAt: mockDate,
           type: 'task',
           dueAt: new Date('2022-01-20'),
           priority: 'high',
           isCompleted: true,
-        });
-      });
-    });
+        })
+      })
+    })
 
     describe('convertItemFormToModel', () => {
       it('should route to correct converter based on type', () => {
@@ -409,14 +409,14 @@ describe('Converters', () => {
           ...DEFAULT_ITEM_TASK_FORM,
           title: 'Test Task',
           dueAt: '2022-01-15',
-        };
+        }
 
-        const result = convertItemFormToModel('task', taskForm) as Partial<ItemTask>;
+        const result = convertItemFormToModel('task', taskForm) as Partial<ItemTask>
 
-        expect(result.type).toBe('task');
-        expect(result.title).toBe('Test Task');
-        expect(result.dueAt).toStrictEqual(new Date('2022-01-15'));
-      });
+        expect(result.type).toBe('task')
+        expect(result.title).toBe('Test Task')
+        expect(result.dueAt).toStrictEqual(new Date('2022-01-15'))
+      })
 
       it('should work with all item types', () => {
         // Test task
@@ -424,8 +424,8 @@ describe('Converters', () => {
           ...DEFAULT_ITEM_TASK_FORM,
           title: 'Task',
           dueAt: '2022-01-15',
-        });
-        expect(taskResult.type).toBe('task');
+        })
+        expect(taskResult.type).toBe('task')
 
         // Test exam
         const examResult = convertItemFormToModel('exam', {
@@ -433,8 +433,8 @@ describe('Converters', () => {
           title: 'Exam',
           startsAt: '2022-01-15',
           startsAtTime: '10:00',
-        });
-        expect(examResult.type).toBe('exam');
+        })
+        expect(examResult.type).toBe('exam')
 
         // Test event
         const eventResult = convertItemFormToModel('event', {
@@ -444,18 +444,18 @@ describe('Converters', () => {
           startsAtTime: '10:00',
           endsAt: '2022-01-15',
           endsAtTime: '11:00',
-        });
-        expect(eventResult.type).toBe('event');
+        })
+        expect(eventResult.type).toBe('event')
 
         // Test timetable
         const timetableResult = convertItemFormToModel('timetable', {
           ...DEFAULT_ITEM_TIMETABLE_FORM,
           title: 'Timetable',
-        });
-        expect(timetableResult.type).toBe('timetable');
-      });
-    });
-  });
+        })
+        expect(timetableResult.type).toBe('timetable')
+      })
+    })
+  })
 
   describe('Model to Form Converters', () => {
     describe('Task Model to Form Converter', () => {
@@ -474,9 +474,9 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-15'),
           priority: 'high',
           isCompleted: true,
-        };
+        }
 
-        const result = itemModelToFormConverterMap.task(taskModel);
+        const result = itemModelToFormConverterMap.task(taskModel)
 
         expect(result).toEqual({
           title: 'Complete assignment',
@@ -487,8 +487,8 @@ describe('Converters', () => {
           dueAt: '2022-01-15',
           priority: 'high',
           isCompleted: true,
-        });
-      });
+        })
+      })
 
       it('should handle empty optional fields in task model', () => {
         const taskModel: ItemTask = {
@@ -505,9 +505,9 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-10'),
           priority: 'medium',
           isCompleted: false,
-        };
+        }
 
-        const result = itemModelToFormConverterMap.task(taskModel);
+        const result = itemModelToFormConverterMap.task(taskModel)
 
         expect(result).toEqual({
           title: 'Simple task',
@@ -518,19 +518,19 @@ describe('Converters', () => {
           dueAt: '2022-01-10',
           priority: 'medium',
           isCompleted: false,
-        });
-      });
+        })
+      })
 
       it('should throw error for invalid task type', () => {
         const invalidModel = {
           id: 'invalid-123',
           title: 'Invalid',
           type: 'exam',
-        } as any;
+        } as any
 
-        expect(() => itemModelToFormConverterMap.task(invalidModel)).toThrow('Invalid item type');
-      });
-    });
+        expect(() => itemModelToFormConverterMap.task(invalidModel)).toThrow('Invalid item type')
+      })
+    })
 
     describe('Exam Model to Form Converter', () => {
       it('should convert exam model to form correctly', () => {
@@ -548,9 +548,9 @@ describe('Converters', () => {
           startsAt: new Date('2022-01-20T14:30:00'),
           weight: 35,
           isCompleted: true,
-        };
+        }
 
-        const result = itemModelToFormConverterMap.exam(examModel);
+        const result = itemModelToFormConverterMap.exam(examModel)
 
         expect(result).toEqual({
           title: 'Midterm Exam',
@@ -562,8 +562,8 @@ describe('Converters', () => {
           startsAtTime: '14:30',
           weight: 35,
           isCompleted: true,
-        });
-      });
+        })
+      })
 
       it('should handle midnight time correctly', () => {
         const examModel: ItemExam = {
@@ -580,9 +580,9 @@ describe('Converters', () => {
           startsAt: new Date('2022-01-25T00:00:00'),
           weight: 20,
           isCompleted: false,
-        };
+        }
 
-        const result = itemModelToFormConverterMap.exam(examModel);
+        const result = itemModelToFormConverterMap.exam(examModel)
 
         expect(result).toEqual({
           title: 'Early Exam',
@@ -594,19 +594,19 @@ describe('Converters', () => {
           startsAtTime: '00:00',
           weight: 20,
           isCompleted: false,
-        });
-      });
+        })
+      })
 
       it('should throw error for invalid exam type', () => {
         const invalidModel = {
           id: 'invalid-123',
           title: 'Invalid',
           type: 'task',
-        } as any;
+        } as any
 
-        expect(() => itemModelToFormConverterMap.exam(invalidModel)).toThrow('Invalid item type');
-      });
-    });
+        expect(() => itemModelToFormConverterMap.exam(invalidModel)).toThrow('Invalid item type')
+      })
+    })
 
     describe('Event Model to Form Converter', () => {
       it('should convert event model to form correctly', () => {
@@ -632,9 +632,9 @@ describe('Converters', () => {
             count: 10,
             until: new Date('2022-03-15'),
           },
-        };
+        }
 
-        const result = itemModelToFormConverterMap.event(eventModel);
+        const result = itemModelToFormConverterMap.event(eventModel)
 
         expect(result).toEqual({
           title: 'Study Group',
@@ -654,8 +654,8 @@ describe('Converters', () => {
           recurrenceByWeekday: [1, 3],
           recurrenceCount: 10,
           recurrenceUntil: '2022-03-15',
-        });
-      });
+        })
+      })
 
       it('should handle event without recurrence', () => {
         const eventModel: ItemEvent = {
@@ -674,9 +674,9 @@ describe('Converters', () => {
           isAllDay: false,
           location: undefined,
           recurrence: undefined,
-        };
+        }
 
-        const result = itemModelToFormConverterMap.event(eventModel);
+        const result = itemModelToFormConverterMap.event(eventModel)
 
         expect(result).toEqual({
           title: 'One-time Event',
@@ -696,8 +696,8 @@ describe('Converters', () => {
           recurrenceByWeekday: [],
           recurrenceCount: undefined,
           recurrenceUntil: undefined,
-        });
-      });
+        })
+      })
 
       it('should handle all-day events', () => {
         const eventModel: ItemEvent = {
@@ -716,25 +716,25 @@ describe('Converters', () => {
           isAllDay: true,
           location: 'Various',
           recurrence: undefined,
-        };
+        }
 
-        const result = eventModelToFormConverter(eventModel);
+        const result = eventModelToFormConverter(eventModel)
 
-        expect(result.isAllDay).toBe(true);
-        expect(result.startsAt).toBe('2022-01-22');
-        expect(result.endsAt).toBe('2022-01-22');
-      });
+        expect(result.isAllDay).toBe(true)
+        expect(result.startsAt).toBe('2022-01-22')
+        expect(result.endsAt).toBe('2022-01-22')
+      })
 
       it('should throw error for invalid event type', () => {
         const invalidModel = {
           id: 'invalid-123',
           title: 'Invalid',
           type: 'task',
-        } as any;
+        } as any
 
-        expect(() => itemModelToFormConverterMap.event(invalidModel)).toThrow('Invalid item type');
-      });
-    });
+        expect(() => itemModelToFormConverterMap.event(invalidModel)).toThrow('Invalid item type')
+      })
+    })
 
     describe('Timetable Model to Form Converter', () => {
       it('should convert timetable model to form correctly', () => {
@@ -754,9 +754,9 @@ describe('Converters', () => {
           classroom: 'Math Building 205',
           teacher: 'Dr. Smith',
           activityType: 'Lecture',
-        };
+        }
 
-        const result = itemModelToFormConverterMap.timetable(timetableModel);
+        const result = itemModelToFormConverterMap.timetable(timetableModel)
 
         expect(result).toEqual({
           title: 'Advanced Calculus',
@@ -769,8 +769,8 @@ describe('Converters', () => {
           classroom: 'Math Building 205',
           teacher: 'Dr. Smith',
           activityType: 'Lecture',
-        });
-      });
+        })
+      })
 
       it('should handle empty optional fields in timetable model', () => {
         const timetableModel: ItemTimetable = {
@@ -789,9 +789,9 @@ describe('Converters', () => {
           classroom: undefined,
           teacher: undefined,
           activityType: 'Seminar',
-        };
+        }
 
-        const result = itemModelToFormConverterMap.timetable(timetableModel);
+        const result = itemModelToFormConverterMap.timetable(timetableModel)
 
         expect(result).toEqual({
           title: 'Basic Course',
@@ -804,19 +804,19 @@ describe('Converters', () => {
           classroom: undefined,
           teacher: undefined,
           activityType: 'Seminar',
-        });
-      });
+        })
+      })
 
       it('should throw error for invalid timetable type', () => {
         const invalidModel = {
           id: 'invalid-123',
           title: 'Invalid',
           type: 'exam',
-        } as any;
+        } as any
 
-        expect(() => itemModelToFormConverterMap.timetable(invalidModel)).toThrow('Invalid item type');
-      });
-    });
+        expect(() => itemModelToFormConverterMap.timetable(invalidModel)).toThrow('Invalid item type')
+      })
+    })
 
     describe('convertItemModelToForm', () => {
       it('should route to correct converter based on item type', () => {
@@ -834,14 +834,14 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-15'),
           priority: 'medium',
           isCompleted: false,
-        };
+        }
 
-        const result = convertItemModelToForm(taskModel) as ItemTaskForm;
+        const result = convertItemModelToForm(taskModel) as ItemTaskForm
 
-        expect(result.title).toBe('Test Task');
-        expect(result.dueAt).toBe('2022-01-15');
-        expect(result.priority).toBe('medium');
-      });
+        expect(result.title).toBe('Test Task')
+        expect(result.dueAt).toBe('2022-01-15')
+        expect(result.priority).toBe('medium')
+      })
 
       it('should work with all item types', () => {
         // Test task
@@ -859,9 +859,9 @@ describe('Converters', () => {
           dueAt: new Date('2022-01-15'),
           priority: 'medium',
           isCompleted: false,
-        };
-        const taskResult = convertItemModelToForm(taskModel) as ItemTaskForm;
-        expect(taskResult.dueAt).toBe('2022-01-15');
+        }
+        const taskResult = convertItemModelToForm(taskModel) as ItemTaskForm
+        expect(taskResult.dueAt).toBe('2022-01-15')
 
         // Test exam
         const examModel: ItemExam = {
@@ -878,10 +878,10 @@ describe('Converters', () => {
           startsAt: new Date('2022-01-15T10:00:00'),
           weight: 20,
           isCompleted: false,
-        };
-        const examResult = convertItemModelToForm(examModel) as ItemExamForm;
-        expect(examResult.startsAt).toBe('2022-01-15');
-        expect(examResult.startsAtTime).toBe('10:00');
+        }
+        const examResult = convertItemModelToForm(examModel) as ItemExamForm
+        expect(examResult.startsAt).toBe('2022-01-15')
+        expect(examResult.startsAtTime).toBe('10:00')
 
         // Test event
         const eventModel: ItemEvent = {
@@ -900,10 +900,10 @@ describe('Converters', () => {
           isAllDay: false,
           location: undefined,
           recurrence: undefined,
-        };
-        const eventResult = convertItemModelToForm(eventModel) as ItemEventForm;
-        expect(eventResult.startsAt).toBe('2022-01-15');
-        expect(eventResult.endsAt).toBe('2022-01-15');
+        }
+        const eventResult = convertItemModelToForm(eventModel) as ItemEventForm
+        expect(eventResult.startsAt).toBe('2022-01-15')
+        expect(eventResult.endsAt).toBe('2022-01-15')
 
         // Test timetable
         const timetableModel: ItemTimetable = {
@@ -922,11 +922,11 @@ describe('Converters', () => {
           classroom: undefined,
           teacher: undefined,
           activityType: 'Lecture',
-        };
-        const timetableResult = convertItemModelToForm(timetableModel) as ItemTimetableForm;
-        expect(timetableResult.blockId).toBe('1');
-        expect(timetableResult.weekday).toBe(1);
-      });
+        }
+        const timetableResult = convertItemModelToForm(timetableModel) as ItemTimetableForm
+        expect(timetableResult.blockId).toBe('1')
+        expect(timetableResult.weekday).toBe(1)
+      })
 
       it('should handle edge cases with timezone and date formatting', () => {
         const taskModel: ItemTask = {
@@ -943,22 +943,22 @@ describe('Converters', () => {
           dueAt: new Date('2022-12-31T23:59:59.999Z'), // End of year
           priority: 'high',
           isCompleted: true,
-        };
+        }
 
-        const result = convertItemModelToForm(taskModel) as ItemTaskForm;
-        expect(result.dueAt).toBe('2022-12-31');
-      });
+        const result = convertItemModelToForm(taskModel) as ItemTaskForm
+        expect(result.dueAt).toBe('2022-12-31')
+      })
 
       it('should return default task form for unknown item type', () => {
         const invalidModel = {
           id: 'invalid-123',
           title: 'Unknown Type',
           type: 'unknown',
-        } as any;
+        } as any
 
-        const result = convertItemModelToForm(invalidModel);
-        expect(result).toEqual({ ...DEFAULT_ITEM_TASK_FORM });
-      });
-    });
-  });
-});
+        const result = convertItemModelToForm(invalidModel)
+        expect(result).toEqual({ ...DEFAULT_ITEM_TASK_FORM })
+      })
+    })
+  })
+})

@@ -1,12 +1,12 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSoundtrack } from '@/hooks/useStore';
-import { useTranslation } from 'react-i18next';
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useSoundtrack } from '@/hooks/useStore'
+import { useTranslation } from 'react-i18next'
 
 export default function SoundtrackSettings() {
-  const { t } = useTranslation('settings');
-  const { soundtrack, setSoundtrackEmbed, setSoundtrackPosition } = useSoundtrack();
+  const { t } = useTranslation('settings')
+  const { soundtrack, setSoundtrackEmbed, setSoundtrackPosition } = useSoundtrack()
 
   return (
     <div className="space-y-4">
@@ -50,5 +50,5 @@ export default function SoundtrackSettings() {
         </div>
       )}
     </div>
-  );
+  )
 }

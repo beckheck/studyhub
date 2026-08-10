@@ -1,68 +1,68 @@
-import { Button } from '@/components/ui/button';
-import { DeferredInput } from '@/components/ui/deferred-input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { useCourses } from '@/hooks/useStore';
-import type { Course } from '@/types';
-import { Reorder } from 'framer-motion';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { DeferredInput } from '@/components/ui/deferred-input'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { useCourses } from '@/hooks/useStore'
+import type { Course } from '@/types'
+import { Reorder } from 'framer-motion'
+import { GripVertical, Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function CoursesSettings() {
-  const { t } = useTranslation('settings');
-  const { t: tCommon } = useTranslation('common');
-  const { courses, renameCourse, addCourse, removeCourse, setCourses, updateCourseEmoji } = useCourses();
-  const [newCourseTitle, setNewCourseTitle] = useState('');
-  const [courseToDelete, setCourseToDelete] = useState<{ id: string; title: string } | null>(null);
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
+  const { courses, renameCourse, addCourse, removeCourse, setCourses, updateCourseEmoji } = useCourses()
+  const [newCourseTitle, setNewCourseTitle] = useState('')
+  const [courseToDelete, setCourseToDelete] = useState<{ id: string; title: string } | null>(null)
 
   const getFirstGrapheme = (value: string): string => {
-    const trimmed = value.trim();
+    const trimmed = value.trim()
     if (!trimmed) {
-      return '';
+      return ''
     }
 
     if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-      const segmenter = new (Intl as any).Segmenter(undefined, { granularity: 'grapheme' });
-      const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
-      const first = iterator.next();
-      return first.done ? '' : first.value.segment;
+      const segmenter = new (Intl as any).Segmenter(undefined, { granularity: 'grapheme' })
+      const iterator = segmenter.segment(trimmed)[Symbol.iterator]()
+      const first = iterator.next()
+      return first.done ? '' : first.value.segment
     }
 
-    return Array.from(trimmed)[0] || '';
-  };
+    return Array.from(trimmed)[0] || ''
+  }
 
   const handleAddCourse = () => {
     if (newCourseTitle.trim()) {
-      addCourse(newCourseTitle.trim());
-      setNewCourseTitle('');
+      addCourse(newCourseTitle.trim())
+      setNewCourseTitle('')
     }
-  };
+  }
 
   const handleRemoveCourse = (courseId: string) => {
-    const courseToRemove = courses.find(c => c.id === courseId);
-    if (!courseToRemove) return;
+    const courseToRemove = courses.find(c => c.id === courseId)
+    if (!courseToRemove) return
 
     if (courses.length <= 1) {
       // Could show a toast or notification here
-      alert(t('courses.cannotRemoveLastCourse'));
-      return;
+      alert(t('courses.cannotRemoveLastCourse'))
+      return
     }
 
     // Show confirmation dialog
-    setCourseToDelete(courseToRemove);
-  };
+    setCourseToDelete(courseToRemove)
+  }
 
   const confirmRemoveCourse = () => {
     if (courseToDelete) {
-      removeCourse(courseToDelete.id);
-      setCourseToDelete(null);
+      removeCourse(courseToDelete.id)
+      setCourseToDelete(null)
     }
-  };
+  }
 
   const handleReorder = (newOrder: typeof courses) => {
-    setCourses([...newOrder] as Course[]);
-  };
+    setCourses([...newOrder] as Course[])
+  }
 
   return (
     <>
@@ -76,7 +76,7 @@ export default function CoursesSettings() {
             className="rounded-xl"
             onKeyDown={e => {
               if (e.key === 'Enter') {
-                handleAddCourse();
+                handleAddCourse()
               }
             }}
           />
@@ -118,7 +118,9 @@ export default function CoursesSettings() {
                     aria-label={t('courses.emojiLabel')}
                     className="w-16 h-8 text-center rounded-lg"
                   />
-                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-none">{t('courses.emojiHint')}</span>
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-none">
+                    {t('courses.emojiHint')}
+                  </span>
                 </div>
 
                 {/* Remove button */}
@@ -178,5 +180,5 @@ export default function CoursesSettings() {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

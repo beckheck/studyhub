@@ -1,24 +1,24 @@
-import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useWellness } from '@/hooks/useStore';
-import { CalendarView, MonthlyMood, MoodEmoji, DailyHydration } from '@/types';
-import { motion } from 'framer-motion';
-import { Settings } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useWellness } from '@/hooks/useStore'
+import { CalendarView, MonthlyMood, MoodEmoji, DailyHydration } from '@/types'
+import { motion } from 'framer-motion'
+import { Settings } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function WellnessTab() {
   // Translation hooks
-  const { t } = useTranslation('wellness');
-  const { formatDate } = useLocalization();
-  const { openDialog: openSettingsDialog } = useSettingsDialogContext();
+  const { t } = useTranslation('wellness')
+  const { formatDate } = useLocalization()
+  const { openDialog: openSettingsDialog } = useSettingsDialogContext()
 
   const {
     wellness,
@@ -29,27 +29,35 @@ export default function WellnessTab() {
     setMonthlyMoods,
     setShowWords,
     setMoodEmojis,
-    setHydrationSettings,
     setDailyHydration,
-  } = useWellness();
+  } = useWellness()
 
-  const { water, gratitude, moodPercentages, hasInteracted, monthlyMoods, showWords, moodEmojis, hydrationSettings, dailyHydration } =
-    wellness;
-  const [breathing, setBreathing] = useState<boolean>(false);
+  const {
+    water,
+    gratitude,
+    moodPercentages,
+    hasInteracted,
+    monthlyMoods,
+    showWords,
+    moodEmojis,
+    hydrationSettings,
+    dailyHydration,
+  } = wellness
+  const [breathing, setBreathing] = useState<boolean>(false)
 
   // Ensure dailyHydration is always defined
-  const safeDailyHydration = dailyHydration || {};
+  const safeDailyHydration = dailyHydration || {}
 
   // Local state for UI only (not persisted)
-  const [customizeDialogOpen, setCustomizeDialogOpen] = useState<boolean>(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null); // Track which mood is showing emoji picker
+  const [customizeDialogOpen, setCustomizeDialogOpen] = useState<boolean>(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null) // Track which mood is showing emoji picker
 
   // Save current water intake as daily hydration data
   useEffect(() => {
     if (water >= 0) {
-      saveDailyHydration(water);
+      saveDailyHydration(water)
     }
-  }, [water]); // Only trigger when water changes
+  }, [water]) // Only trigger when water changes
 
   // Emoji library for picker
   const emojiLibrary: string[] = [
@@ -103,10 +111,10 @@ export default function WellnessTab() {
     '🤢',
     '🤮',
     '🥴', // Other
-  ];
+  ]
 
   // Color palette for picker
-  const colorPalette: string[] = [
+  const _colorPalette: string[] = [
     '#ff6b6b',
     '#ff9f43',
     '#f7dc6f',
@@ -137,141 +145,141 @@ export default function WellnessTab() {
     '#95a5a6',
     '#e67e22',
     '#16a085',
-  ];
+  ]
 
   // Get today's date string
   const getTodayDateString = (): string => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  }
 
   // Calendar state for mood tracking
   const [calendarView, setCalendarView] = useState<CalendarView>(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() };
-  });
+    const now = new Date()
+    return { year: now.getFullYear(), month: now.getMonth() }
+  })
 
   // Generate calendar matrix for mood calendar
   const generateCalendarMatrix = (year: number, month: number): (number | null)[][] => {
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Monday = 0
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7 // Monday = 0
 
-    const matrix: (number | null)[][] = [];
-    let currentDate = 1;
+    const matrix: (number | null)[][] = []
+    let currentDate = 1
 
     // Generate 6 weeks (42 days)
     for (let week = 0; week < 6; week++) {
-      const weekDays: (number | null)[] = [];
+      const weekDays: (number | null)[] = []
       for (let day = 0; day < 7; day++) {
-        const dayIndex = week * 7 + day;
+        const dayIndex = week * 7 + day
         if (dayIndex < startingDayOfWeek || currentDate > daysInMonth) {
-          weekDays.push(null);
+          weekDays.push(null)
         } else {
-          weekDays.push(currentDate);
-          currentDate++;
+          weekDays.push(currentDate)
+          currentDate++
         }
       }
-      matrix.push(weekDays);
+      matrix.push(weekDays)
     }
 
-    return matrix;
-  };
+    return matrix
+  }
 
   // Navigate calendar months
   const navigateMonth = (delta: number): void => {
     setCalendarView(prev => {
-      const newDate = new Date(prev.year, prev.month + delta, 1);
-      return { year: newDate.getFullYear(), month: newDate.getMonth() };
-    });
-  };
+      const newDate = new Date(prev.year, prev.month + delta, 1)
+      return { year: newDate.getFullYear(), month: newDate.getMonth() }
+    })
+  }
 
   // Get mood for specific date
   const getMoodForDate = (dateString: string): MonthlyMood | null => {
-    return monthlyMoods[dateString] || null;
-  };
+    return monthlyMoods[dateString] || null
+  }
 
   // Calculate total mood percentage
-  const totalMoodPercentage = Object.values(moodPercentages).reduce((sum, percentage) => sum + percentage, 0);
+  const totalMoodPercentage = Object.values(moodPercentages).reduce((sum, percentage) => sum + percentage, 0)
 
   // Build progressive gradient from mood percentages (like Present Goals)
   const buildMoodGradient = (): string => {
     const activeMoods = Object.entries(moodPercentages)
       .filter(([_, percentage]) => percentage > 0)
-      .sort(([a], [b]) => a.localeCompare(b)); // Sort for consistency
+      .sort(([a], [b]) => a.localeCompare(b)) // Sort for consistency
 
     if (activeMoods.length === 0) {
-      return 'transparent';
+      return 'transparent'
     }
 
     if (activeMoods.length === 1) {
       // Single color for first mood
-      return moodEmojis[activeMoods[0][0]].color;
+      return moodEmojis[activeMoods[0][0]].color
     }
 
     // Multiple moods - create progressive gradient like Present Goals
-    const colors = activeMoods.map(([moodKey, _]) => moodEmojis[moodKey].color);
-    const step = 100 / (colors.length - 1);
-    const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ');
+    const colors = activeMoods.map(([moodKey, _]) => moodEmojis[moodKey].color)
+    const step = 100 / (colors.length - 1)
+    const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ')
 
-    return `linear-gradient(180deg, ${gradientStops})`;
-  };
+    return `linear-gradient(180deg, ${gradientStops})`
+  }
 
   // Get border color from first active mood
   const getBorderColor = (): string => {
     const firstActiveMood = Object.entries(moodPercentages)
       .filter(([_, percentage]) => percentage > 0)
-      .sort(([a], [b]) => a.localeCompare(b))[0];
+      .sort(([a], [b]) => a.localeCompare(b))[0]
 
     if (firstActiveMood) {
-      return moodEmojis[firstActiveMood[0]].color + '40'; // Add transparency
+      return moodEmojis[firstActiveMood[0]].color + '40' // Add transparency
     }
-    return '#e5e7eb'; // Default gray border
-  };
+    return '#e5e7eb' // Default gray border
+  }
 
   // Handle mood selection (add 20% each click)
   const handleMoodSelect = (moodKey: string): void => {
-    setHasInteracted(true);
-    const currentPercentage = moodPercentages[moodKey] || 0;
-    const newPercentage = Math.min(100, currentPercentage + 20);
+    setHasInteracted(true)
+    const currentPercentage = moodPercentages[moodKey] || 0
+    const newPercentage = Math.min(100, currentPercentage + 20)
 
     // Calculate if total would exceed 100%
     const otherMoodsTotal = Object.entries(moodPercentages)
       .filter(([key]) => key !== moodKey)
-      .reduce((sum, [_, percentage]) => sum + percentage, 0);
+      .reduce((sum, [_, percentage]) => sum + percentage, 0)
 
     if (otherMoodsTotal + newPercentage > 100) {
       // Cap at remaining percentage
       const updatedMoods = {
         ...moodPercentages,
         [moodKey]: Math.max(0, 100 - otherMoodsTotal),
-      };
-      setMoodPercentages(updatedMoods);
+      }
+      setMoodPercentages(updatedMoods)
     } else {
       const updatedMoods = {
         ...moodPercentages,
         [moodKey]: newPercentage,
-      };
-      setMoodPercentages(updatedMoods);
+      }
+      setMoodPercentages(updatedMoods)
 
       // Save to monthly moods immediately
-      const today = getTodayDateString();
-      const totalPerc = Object.values(updatedMoods).reduce((sum, percentage) => sum + percentage, 0);
+      const today = getTodayDateString()
+      const totalPerc = Object.values(updatedMoods).reduce((sum, percentage) => sum + percentage, 0)
 
       if (totalPerc > 0) {
         const activeMoods = Object.entries(updatedMoods)
           .filter(([_, percentage]) => percentage > 0)
-          .sort(([a], [b]) => a.localeCompare(b));
+          .sort(([a], [b]) => a.localeCompare(b))
 
-        let gradient = 'transparent';
+        let gradient = 'transparent'
         if (activeMoods.length === 1) {
-          gradient = moodEmojis[activeMoods[0][0]].color;
+          gradient = moodEmojis[activeMoods[0][0]].color
         } else if (activeMoods.length > 1) {
-          const colors = activeMoods.map(([moodKey, _]) => moodEmojis[moodKey].color);
-          const step = 100 / (colors.length - 1);
-          const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ');
-          gradient = `linear-gradient(180deg, ${gradientStops})`;
+          const colors = activeMoods.map(([moodKey, _]) => moodEmojis[moodKey].color)
+          const step = 100 / (colors.length - 1)
+          const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ')
+          gradient = `linear-gradient(180deg, ${gradientStops})`
         }
 
         const newMonthlyMoods = {
@@ -282,17 +290,17 @@ export default function WellnessTab() {
             totalPercentage: totalPerc,
             savedAt: Date.now(),
           },
-        };
-        setMonthlyMoods(newMonthlyMoods);
+        }
+        setMonthlyMoods(newMonthlyMoods)
       }
     }
-  };
+  }
 
   // Reset mood
   const resetMood = (): void => {
-    setMoodPercentages({});
-    setHasInteracted(false);
-  };
+    setMoodPercentages({})
+    setHasInteracted(false)
+  }
 
   // Handle emoji/color customization
   const updateMoodCustomization = (moodKey: string, field: keyof MoodEmoji, value: string): void => {
@@ -302,15 +310,15 @@ export default function WellnessTab() {
         ...moodEmojis[moodKey],
         [field]: value,
       },
-    };
-    setMoodEmojis(updatedMoodEmojis);
-  };
+    }
+    setMoodEmojis(updatedMoodEmojis)
+  }
 
   // Handle emoji selection from library
   const selectEmoji = (moodKey: string, emoji: string): void => {
-    updateMoodCustomization(moodKey, 'emoji', emoji);
-    setShowEmojiPicker(null);
-  };
+    updateMoodCustomization(moodKey, 'emoji', emoji)
+    setShowEmojiPicker(null)
+  }
 
   // Hydration helper functions
   const getDisplayGoal = (): string => {
@@ -318,49 +326,49 @@ export default function WellnessTab() {
       const cupsNeeded =
         hydrationSettings.unit === 'metric'
           ? Math.ceil(hydrationSettings.dailyGoalML / hydrationSettings.cupSizeML)
-          : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ);
-      return `${cupsNeeded} cups`;
+          : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)
+      return `${cupsNeeded} cups`
     } else {
       return hydrationSettings.unit === 'metric'
         ? `${hydrationSettings.dailyGoalML}mL`
-        : `${hydrationSettings.dailyGoalOZ}oz`;
+        : `${hydrationSettings.dailyGoalOZ}oz`
     }
-  };
+  }
 
   const getMaxWaterValue = (): number => {
     if (hydrationSettings.useCups) {
       return hydrationSettings.unit === 'metric'
         ? Math.ceil(hydrationSettings.dailyGoalML / hydrationSettings.cupSizeML)
-        : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ);
+        : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)
     } else {
-      return hydrationSettings.unit === 'metric' ? hydrationSettings.dailyGoalML : hydrationSettings.dailyGoalOZ;
+      return hydrationSettings.unit === 'metric' ? hydrationSettings.dailyGoalML : hydrationSettings.dailyGoalOZ
     }
-  };
+  }
 
   const getCurrentProgress = (): number => {
     if (hydrationSettings.useCups) {
       const totalGoalCups =
         hydrationSettings.unit === 'metric'
           ? Math.ceil(hydrationSettings.dailyGoalML / hydrationSettings.cupSizeML)
-          : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ);
-      return (water / totalGoalCups) * 100;
+          : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)
+      return (water / totalGoalCups) * 100
     } else {
       const totalGoal =
-        hydrationSettings.unit === 'metric' ? hydrationSettings.dailyGoalML : hydrationSettings.dailyGoalOZ;
-      return (water / totalGoal) * 100;
+        hydrationSettings.unit === 'metric' ? hydrationSettings.dailyGoalML : hydrationSettings.dailyGoalOZ
+      return (water / totalGoal) * 100
     }
-  };
+  }
 
   // Save daily hydration data
   const saveDailyHydration = (waterIntake: number): void => {
-    const today = getTodayDateString();
+    const today = getTodayDateString()
     const goal = hydrationSettings.useCups
       ? hydrationSettings.unit === 'metric'
         ? Math.ceil(hydrationSettings.dailyGoalML / hydrationSettings.cupSizeML)
         : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)
       : hydrationSettings.unit === 'metric'
-      ? hydrationSettings.dailyGoalML
-      : hydrationSettings.dailyGoalOZ;
+        ? hydrationSettings.dailyGoalML
+        : hydrationSettings.dailyGoalOZ
 
     const newDailyHydration = {
       ...safeDailyHydration,
@@ -371,14 +379,14 @@ export default function WellnessTab() {
         useCups: hydrationSettings.useCups,
         savedAt: Date.now(),
       },
-    };
-    setDailyHydration(newDailyHydration);
-  };
+    }
+    setDailyHydration(newDailyHydration)
+  }
 
   // Get hydration data for specific date
   const getHydrationForDate = (dateString: string): DailyHydration | null => {
-    return safeDailyHydration[dateString] || null;
-  };
+    return safeDailyHydration[dateString] || null
+  }
 
   return (
     <div className="space-y-6">
@@ -464,9 +472,9 @@ export default function WellnessTab() {
                   const decrement = hydrationSettings.useCups
                     ? 1
                     : hydrationSettings.unit === 'metric'
-                    ? hydrationSettings.cupSizeML
-                    : hydrationSettings.cupSizeOZ;
-                  setWater(Math.max(0, water - decrement));
+                      ? hydrationSettings.cupSizeML
+                      : hydrationSettings.cupSizeOZ
+                  setWater(Math.max(0, water - decrement))
                 }}
               >
                 -
@@ -480,8 +488,8 @@ export default function WellnessTab() {
                 {hydrationSettings.useCups
                   ? `${water}/${getMaxWaterValue()}`
                   : hydrationSettings.unit === 'metric'
-                  ? `${water}mL`
-                  : `${water}oz`}
+                    ? `${water}mL`
+                    : `${water}oz`}
               </div>
               <Button
                 className="rounded-xl"
@@ -489,9 +497,9 @@ export default function WellnessTab() {
                   const increment = hydrationSettings.useCups
                     ? 1
                     : hydrationSettings.unit === 'metric'
-                    ? hydrationSettings.cupSizeML
-                    : hydrationSettings.cupSizeOZ;
-                  setWater(water + increment);
+                      ? hydrationSettings.cupSizeML
+                      : hydrationSettings.cupSizeOZ
+                  setWater(water + increment)
                 }}
               >
                 +
@@ -648,8 +656,8 @@ export default function WellnessTab() {
                 {/* Mood Selection Circles */}
                 <div className="flex justify-center gap-3 mt-4">
                   {Object.entries(moodEmojis).map(([key, mood]) => {
-                    const currentPercentage = moodPercentages[key] || 0;
-                    const isActive = currentPercentage > 0;
+                    const currentPercentage = moodPercentages[key] || 0
+                    const isActive = currentPercentage > 0
 
                     return (
                       <div key={key} className="flex flex-col items-center gap-1">
@@ -687,7 +695,7 @@ export default function WellnessTab() {
                           </div>
                         )}
                       </div>
-                    );
+                    )
                   })}
                 </div>
 
@@ -751,16 +759,16 @@ export default function WellnessTab() {
                     .flat()
                     .map((day, index) => {
                       if (!day) {
-                        return <div key={index} className="h-8" />;
+                        return <div key={index} className="h-8" />
                       }
 
                       const dateString = `${calendarView.year}-${String(calendarView.month + 1).padStart(
                         2,
-                        '0'
-                      )}-${String(day).padStart(2, '0')}`;
-                      const dayMood = getMoodForDate(dateString);
-                      const dayHydration = getHydrationForDate(dateString);
-                      const isToday = dateString === getTodayDateString();
+                        '0',
+                      )}-${String(day).padStart(2, '0')}`
+                      const dayMood = getMoodForDate(dateString)
+                      const dayHydration = getHydrationForDate(dateString)
+                      const isToday = dateString === getTodayDateString()
 
                       return (
                         <div
@@ -774,10 +782,10 @@ export default function WellnessTab() {
                           }}
                         >
                           {day}
-                          
+
                           {/* Hydration indicator */}
                           {dayHydration && (
-                            <div 
+                            <div
                               className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-zinc-800"
                               style={{
                                 backgroundColor: dayHydration.intake >= dayHydration.goal ? '#10b981' : '#60a5fa',
@@ -795,13 +803,13 @@ export default function WellnessTab() {
                                   {formatDate(
                                     new Date(
                                       `${calendarView.year}-${String(calendarView.month + 1).padStart(2, '0')}-${String(
-                                        day
-                                      ).padStart(2, '0')}`
+                                        day,
+                                      ).padStart(2, '0')}`,
                                     ),
                                     {
                                       month: 'short',
                                       day: 'numeric',
-                                    }
+                                    },
                                   )}
                                 </div>
 
@@ -826,7 +834,7 @@ export default function WellnessTab() {
                                             emoji: '😐',
                                             word: moodKey,
                                             color: '#6b7280',
-                                          };
+                                          }
                                           return (
                                             <div key={moodKey} className="flex items-center justify-between">
                                               <div className="flex items-center gap-2">
@@ -845,7 +853,7 @@ export default function WellnessTab() {
                                                 </span>
                                               </div>
                                             </div>
-                                          );
+                                          )
                                         })}
                                     </div>
                                   </div>
@@ -853,14 +861,16 @@ export default function WellnessTab() {
 
                                 {/* Hydration Section */}
                                 {(() => {
-                                  const dayHydration = getHydrationForDate(dateString);
-                                  if (!dayHydration) return null;
+                                  const dayHydration = getHydrationForDate(dateString)
+                                  if (!dayHydration) return null
 
-                                  const hydrationProgress = (dayHydration.intake / dayHydration.goal) * 100;
-                                  const isOverGoal = hydrationProgress > 100;
+                                  const hydrationProgress = (dayHydration.intake / dayHydration.goal) * 100
+                                  const isOverGoal = hydrationProgress > 100
 
                                   return (
-                                    <div className={dayMood ? 'border-t border-zinc-200 dark:border-zinc-600 pt-3' : ''}>
+                                    <div
+                                      className={dayMood ? 'border-t border-zinc-200 dark:border-zinc-600 pt-3' : ''}
+                                    >
                                       {/* Hydration Header */}
                                       <div className="flex items-center gap-2 mb-3">
                                         <span className="text-sm">💧</span>
@@ -910,8 +920,8 @@ export default function WellnessTab() {
                                               isOverGoal
                                                 ? 'text-green-600 dark:text-green-400'
                                                 : hydrationProgress >= 80
-                                                ? 'text-blue-600 dark:text-blue-400'
-                                                : 'text-zinc-700 dark:text-zinc-300'
+                                                  ? 'text-blue-600 dark:text-blue-400'
+                                                  : 'text-zinc-700 dark:text-zinc-300'
                                             }`}
                                           >
                                             {Math.round(hydrationProgress)}%
@@ -929,7 +939,7 @@ export default function WellnessTab() {
                                         )}
                                       </div>
                                     </div>
-                                  );
+                                  )
                                 })()}
 
                                 {/* Tooltip Arrow */}
@@ -940,7 +950,7 @@ export default function WellnessTab() {
                             </div>
                           )}
                         </div>
-                      );
+                      )
                     })}
                 </div>
 
@@ -1039,8 +1049,8 @@ export default function WellnessTab() {
             ))}
             <Button
               onClick={() => {
-                setCustomizeDialogOpen(false);
-                setShowEmojiPicker(null);
+                setCustomizeDialogOpen(false)
+                setShowEmojiPicker(null)
               }}
               className="w-full rounded-xl mt-4"
             >
@@ -1050,5 +1060,5 @@ export default function WellnessTab() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

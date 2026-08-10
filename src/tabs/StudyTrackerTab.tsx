@@ -1,45 +1,45 @@
-import LevelsSlider from '@/components/LevelsSlider';
-import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses, useFocusTimer, useStudySessions } from '@/hooks/useStore';
-import useStudyTimer from '@/hooks/useStudyTimer';
+import LevelsSlider from '@/components/LevelsSlider'
+import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses, useFocusTimer, useStudySessions } from '@/hooks/useStore'
+import useStudyTimer from '@/hooks/useStudyTimer'
 import {
   getPhaseDurationSeconds,
   getPhaseEmoji,
   getTechniqueConfig,
   STUDY_TECHNIQUES,
   TechniqueConfig,
-} from '@/lib/technique-utils';
-import { StudySession } from '@/types';
-import { Edit, Flame, HeartHandshake, ListTodo, Plus, Settings, Timer, TimerReset, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+} from '@/lib/technique-utils'
+import { StudySession } from '@/types'
+import { Edit, Flame, HeartHandshake, ListTodo, Plus, Settings, Timer, TimerReset, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function StudyTrackerTab() {
   // Translation hooks
-  const { t } = useTranslation('tracker');
-  const { t: tCommon } = useTranslation('common');
-  const { formatDate, formatTime, formatDurationSeconds, formatDurationMinutes } = useLocalization();
+  const { t } = useTranslation('tracker')
+  const { t: tCommon } = useTranslation('common')
+  const { formatDate, formatTime, formatDurationSeconds, formatDurationMinutes } = useLocalization()
 
   // Settings dialog context
-  const { openDialog } = useSettingsDialogContext();
+  const { openDialog } = useSettingsDialogContext()
 
   // Mood levels configuration
-  const moodLabels = ['💀', '😕', '😐', '🙂', '🔥'];
+  const moodLabels = ['💀', '😕', '😐', '🙂', '🔥']
 
   // Helper function to get mood emoji
   const getMoodEmoji = (moodValue: number): string => {
-    return moodLabels[moodValue - 1] || '😐';
-  };
+    return moodLabels[moodValue - 1] || '😐'
+  }
 
-  const { courses, selectedCourseId, getCourseTitle, setSelectedCourse } = useCourses();
+  const { courses, selectedCourseId, getCourseTitle, setSelectedCourse } = useCourses()
   const {
     sessions,
     sessionTasks,
@@ -50,46 +50,46 @@ export default function StudyTrackerTab() {
     toggleSessionTask,
     deleteSessionTask,
     clearCompletedSessionTasks,
-  } = useStudySessions();
+  } = useStudySessions()
 
   // Study timer with session completion callback
   const studyTimer = useStudyTimer(session => {
-    addSession(session);
-  }, selectedCourseId);
-  const { timerState } = studyTimer;
+    addSession(session)
+  }, selectedCourseId)
+  const { timerState } = studyTimer
 
-  const { focusTimer, setShowCountdown } = useFocusTimer();
+  const { focusTimer, setShowCountdown } = useFocusTimer()
 
   // Update timer's course ID when selected course changes during running session
   useEffect(() => {
     if (timerState.running && timerState.courseId !== selectedCourseId) {
-      studyTimer.setCourseId(selectedCourseId);
+      studyTimer.setCourseId(selectedCourseId)
     }
-  }, [selectedCourseId, timerState.running, timerState.courseId, studyTimer]);
+  }, [selectedCourseId, timerState.running, timerState.courseId, studyTimer])
 
   // Get phase duration for progress indication
-  const phaseDurationSeconds = getPhaseDurationSeconds(timerState.technique, timerState.phase);
-  const statusEmoji = !timerState.running ? '' : getPhaseEmoji(timerState.technique, timerState.phase);
+  const phaseDurationSeconds = getPhaseDurationSeconds(timerState.technique, timerState.phase)
+  const statusEmoji = !timerState.running ? '' : getPhaseEmoji(timerState.technique, timerState.phase)
 
   // Calculate progress with a buffer to ensure it reaches 100%
   const phaseProgress =
-    phaseDurationSeconds === Infinity ? 0 : (timerState.phaseElapsed / (phaseDurationSeconds - 1)) * 100;
+    phaseDurationSeconds === Infinity ? 0 : (timerState.phaseElapsed / (phaseDurationSeconds - 1)) * 100
 
   // Get technique configuration for goal time display
-  const techniqueConfig = getTechniqueConfig(timerState.technique);
+  const techniqueConfig = getTechniqueConfig(timerState.technique)
   const phaseGoalMinutes =
     timerState.phase === 'focus'
       ? techniqueConfig.studyMinutes
       : timerState.phase === 'break'
-      ? techniqueConfig.breakMinutes
-      : techniqueConfig.longBreakMinutes;
+        ? techniqueConfig.breakMinutes
+        : techniqueConfig.longBreakMinutes
 
   // Session-only tasks
-  const [sessionTaskTitle, setSessionTaskTitle] = useState<string>('');
+  const [sessionTaskTitle, setSessionTaskTitle] = useState<string>('')
 
   // Edit session dialog state
-  const [editSessionDialog, setEditSessionDialog] = useState<boolean>(false);
-  const [editingSession, setEditingSession] = useState<StudySession | null>(null);
+  const [editSessionDialog, setEditSessionDialog] = useState<boolean>(false)
+  const [editingSession, setEditingSession] = useState<StudySession | null>(null)
   const [editForm, setEditForm] = useState({
     courseId: '',
     technique: '',
@@ -97,68 +97,66 @@ export default function StudyTrackerTab() {
     moodStart: 3,
     moodEnd: 3,
     durationMin: 0,
-  });
+  })
 
   // Calculate display time (use phase time for techniques with breaks, total time for flow)
-  const displayElapsed = techniqueConfig.breakMinutes === 0 ? timerState.elapsed : timerState.phaseElapsed;
+  const displayElapsed = techniqueConfig.breakMinutes === 0 ? timerState.elapsed : timerState.phaseElapsed
 
   // Calculate countdown time (time remaining in current phase)
   const phaseRemainingSeconds =
-    phaseDurationSeconds === Infinity ? 0 : Math.max(0, phaseDurationSeconds - timerState.phaseElapsed);
+    phaseDurationSeconds === Infinity ? 0 : Math.max(0, phaseDurationSeconds - timerState.phaseElapsed)
 
   // Determine what time to show based on mode and conditions
   const timeToShow =
     focusTimer.showCountdown && phaseDurationSeconds !== Infinity && timerState.running
       ? phaseRemainingSeconds
-      : displayElapsed;
+      : displayElapsed
 
   const elapsedMin = Math.floor(timeToShow / 60)
     .toString()
-    .padStart(2, '0');
-  const elapsedSec = (timeToShow % 60).toString().padStart(2, '0');
+    .padStart(2, '0')
+  const elapsedSec = (timeToShow % 60).toString().padStart(2, '0')
   const elapsedMinSec =
     focusTimer.showCountdown && phaseDurationSeconds !== Infinity && timerState.running
       ? `-${elapsedMin}:${elapsedSec}`
-      : `${elapsedMin}:${elapsedSec}`;
+      : `${elapsedMin}:${elapsedSec}`
 
   // Calculate total session time for display
-  const totalMinSec = formatDurationSeconds(timerState.elapsed);
+  const totalMinSec = formatDurationSeconds(timerState.elapsed)
 
   /**
    * Add a new session task
    */
   const addSessionTaskAndClearInput = useCallback((): void => {
-    const title = sessionTaskTitle.trim();
-    if (!title) return;
-    addSessionTask(title);
-    setSessionTaskTitle('');
-  }, [sessionTaskTitle, addSessionTask]);
+    const title = sessionTaskTitle.trim()
+    if (!title) return
+    addSessionTask(title)
+    setSessionTaskTitle('')
+  }, [sessionTaskTitle, addSessionTask])
 
   /**
    * Get localized technique name
    */
   const getTechniqueDisplayName = useCallback(
     (techniqueConfig: TechniqueConfig): string => {
-      const focusEmoji = getPhaseEmoji(techniqueConfig.id, 'focus');
-      const breakEmoji = getPhaseEmoji(techniqueConfig.id, 'break');
-      const longBreakEmoji = getPhaseEmoji(techniqueConfig.id, 'longBreak');
+      const focusEmoji = getPhaseEmoji(techniqueConfig.id, 'focus')
+      const breakEmoji = getPhaseEmoji(techniqueConfig.id, 'break')
+      const longBreakEmoji = getPhaseEmoji(techniqueConfig.id, 'longBreak')
       return t(techniqueConfig.name, {
-        studyMinutes: `${focusEmoji}${
-          techniqueConfig.studyMinutes === Infinity ? '∞' : techniqueConfig.studyMinutes
-        }`,
+        studyMinutes: `${focusEmoji}${techniqueConfig.studyMinutes === Infinity ? '∞' : techniqueConfig.studyMinutes}`,
         breakMinutes: `${breakEmoji}${techniqueConfig.breakMinutes}`,
         longBreakMinutes: `${longBreakEmoji}${techniqueConfig.longBreakMinutes}`,
         longBreakInterval: techniqueConfig.longBreakInterval,
-      });
+      })
     },
-    [t]
-  );
+    [t],
+  )
 
   /**
    * Open edit session dialog
    */
   const openEditSession = useCallback((session: StudySession): void => {
-    setEditingSession(session);
+    setEditingSession(session)
     setEditForm({
       courseId: session.courseId,
       technique: session.technique,
@@ -166,15 +164,15 @@ export default function StudyTrackerTab() {
       moodStart: session.moodStart || 3,
       moodEnd: session.moodEnd || 3,
       durationMin: session.durationMin,
-    });
-    setEditSessionDialog(true);
-  }, []);
+    })
+    setEditSessionDialog(true)
+  }, [])
 
   /**
    * Save edited session
    */
   const saveEditedSession = useCallback((): void => {
-    if (!editingSession) return;
+    if (!editingSession) return
 
     updateSession(editingSession.id, {
       courseId: editForm.courseId,
@@ -183,19 +181,19 @@ export default function StudyTrackerTab() {
       moodStart: editForm.moodStart,
       moodEnd: editForm.moodEnd,
       durationMin: editForm.durationMin,
-    });
+    })
 
-    setEditSessionDialog(false);
-    setEditingSession(null);
-  }, [editingSession, editForm, updateSession]);
+    setEditSessionDialog(false)
+    setEditingSession(null)
+  }, [editingSession, editForm, updateSession])
 
   /**
    * Cancel editing session
    */
   const cancelEditSession = useCallback((): void => {
-    setEditSessionDialog(false);
-    setEditingSession(null);
-  }, []);
+    setEditSessionDialog(false)
+    setEditingSession(null)
+  }, [])
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -249,8 +247,8 @@ export default function StudyTrackerTab() {
                       timerState.phase === 'focus'
                         ? 'text-orange-500'
                         : timerState.phase === 'break'
-                        ? 'text-green-500'
-                        : 'text-blue-500'
+                          ? 'text-green-500'
+                          : 'text-blue-500'
                     }`}
                     strokeDasharray={`${2 * Math.PI * 90}`}
                     strokeDashoffset={`${2 * Math.PI * 90 * (1 - phaseProgress / 100)}`}
@@ -267,22 +265,22 @@ export default function StudyTrackerTab() {
               {
                 <div className="mb-2">
                   {(() => {
-                    const maxEmojisToShow = 4;
-                    const completedPhases = timerState.studyPhasesCompleted;
+                    const maxEmojisToShow = 4
+                    const completedPhases = timerState.studyPhasesCompleted
                     const studyEmojis = Array(Math.min(completedPhases || 0, maxEmojisToShow))
                       .fill(getPhaseEmoji(timerState.technique, 'focus'))
-                      .join(' ');
+                      .join(' ')
 
                     if (completedPhases == 0) {
-                      return <div className="text-center text-lg">&nbsp;</div>;
+                      return <div className="text-center text-lg">&nbsp;</div>
                     } else if (completedPhases <= maxEmojisToShow) {
-                      return <div className="text-center text-lg">{studyEmojis}</div>;
+                      return <div className="text-center text-lg">{studyEmojis}</div>
                     } else {
                       return (
                         <div className="text-center text-lg">
                           {studyEmojis} +{completedPhases - maxEmojisToShow}
                         </div>
-                      );
+                      )
                     }
                   })()}
                 </div>
@@ -534,22 +532,22 @@ export default function StudyTrackerTab() {
                   </div>
                   <div className="text-xs text-zinc-500">
                     {(() => {
-                      const startDate = new Date(session.startTs);
-                      const endDate = new Date(session.endTs);
-                      const startDateStr = formatDate(startDate);
-                      const endDateStr = formatDate(endDate);
-                      const startTimeStr = formatTime(startDate, { hour: '2-digit', minute: '2-digit' });
-                      const endTimeStr = formatTime(endDate, { hour: '2-digit', minute: '2-digit' });
+                      const startDate = new Date(session.startTs)
+                      const endDate = new Date(session.endTs)
+                      const startDateStr = formatDate(startDate)
+                      const endDateStr = formatDate(endDate)
+                      const startTimeStr = formatTime(startDate, { hour: '2-digit', minute: '2-digit' })
+                      const endTimeStr = formatTime(endDate, { hour: '2-digit', minute: '2-digit' })
 
                       // Get mood emojis
-                      const startMoodEmoji = getMoodEmoji(session.moodStart || 3);
-                      const endMoodEmoji = getMoodEmoji(session.moodEnd || 3);
+                      const startMoodEmoji = getMoodEmoji(session.moodStart || 3)
+                      const endMoodEmoji = getMoodEmoji(session.moodEnd || 3)
 
                       // If same day, show: "date 😐time1 → 🙂time2"
                       // If different days, show: "😐date1 time1 → 🙂date2 time2"
                       return startDateStr === endDateStr
                         ? `${startDateStr} ${startMoodEmoji} ${startTimeStr} → ${endMoodEmoji} ${endTimeStr}`
-                        : `${startMoodEmoji} ${startDateStr} ${startTimeStr} → ${endMoodEmoji} ${endDateStr} ${endTimeStr}`;
+                        : `${startMoodEmoji} ${startDateStr} ${startTimeStr} → ${endMoodEmoji} ${endDateStr} ${endTimeStr}`
                     })()}
                   </div>
                   <div className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
@@ -558,10 +556,10 @@ export default function StudyTrackerTab() {
                   {session.note && <div className="text-sm mt-1 whitespace-pre-wrap">{session.note}</div>}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="rounded-xl" 
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-xl"
                     onClick={() => openEditSession(session)}
                     title={t('sessionLog.editSession.buttons.edit')}
                   >
@@ -595,9 +593,9 @@ export default function StudyTrackerTab() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit-course">{t('focusTimer.course')}</Label>
-                  <Select 
-                    value={editForm.courseId} 
-                    onValueChange={(value) => setEditForm(prev => ({ ...prev, courseId: value }))}
+                  <Select
+                    value={editForm.courseId}
+                    onValueChange={value => setEditForm(prev => ({ ...prev, courseId: value }))}
                   >
                     <SelectTrigger className="rounded-xl">
                       <SelectValue />
@@ -613,9 +611,9 @@ export default function StudyTrackerTab() {
                 </div>
                 <div>
                   <Label htmlFor="edit-technique">{t('focusTimer.technique')}</Label>
-                  <Select 
-                    value={editForm.technique} 
-                    onValueChange={(value) => setEditForm(prev => ({ ...prev, technique: value }))}
+                  <Select
+                    value={editForm.technique}
+                    onValueChange={value => setEditForm(prev => ({ ...prev, technique: value }))}
                   >
                     <SelectTrigger className="rounded-xl">
                       <SelectValue />
@@ -639,7 +637,7 @@ export default function StudyTrackerTab() {
                   min="1"
                   max="480"
                   value={editForm.durationMin}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, durationMin: parseInt(e.target.value) || 0 }))}
+                  onChange={e => setEditForm(prev => ({ ...prev, durationMin: parseInt(e.target.value) || 0 }))}
                   className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
                 />
               </div>
@@ -649,13 +647,13 @@ export default function StudyTrackerTab() {
                   label={t('focusTimer.moodStart')}
                   labels={moodLabels}
                   value={editForm.moodStart}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, moodStart: value }))}
+                  onChange={value => setEditForm(prev => ({ ...prev, moodStart: value }))}
                 />
                 <LevelsSlider
                   label={t('focusTimer.moodEnd')}
                   labels={moodLabels}
                   value={editForm.moodEnd}
-                  onChange={(value) => setEditForm(prev => ({ ...prev, moodEnd: value }))}
+                  onChange={value => setEditForm(prev => ({ ...prev, moodEnd: value }))}
                 />
               </div>
 
@@ -664,7 +662,7 @@ export default function StudyTrackerTab() {
                 <Textarea
                   id="edit-note"
                   value={editForm.note}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, note: e.target.value }))}
+                  onChange={e => setEditForm(prev => ({ ...prev, note: e.target.value }))}
                   className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
                   placeholder={t('focusTimer.notesPlaceholder')}
                 />
@@ -690,5 +688,5 @@ export default function StudyTrackerTab() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import { t } from '@/i18n/config';
-import { z } from 'zod';
-import { ItemBase, ItemBaseSchema } from '../base/modelSchema';
+import { t } from '@/i18n/config'
+import { z } from 'zod'
+import { ItemBase, ItemBaseSchema } from '../base/modelSchema'
 
 export const ItemExamSchema = z.object({
   type: z.literal('exam'),
@@ -11,8 +11,8 @@ export const ItemExamSchema = z.object({
     .max(100, { message: t('items:exam.validation.weightMax') }),
   isCompleted: z.boolean({ message: t('items:exam.validation.isCompletedRequired') }),
   googleCalendarEventId: z.string().optional(),
-});
+})
 
-export const ItemExamCompleteSchema = ItemBaseSchema.extend(ItemExamSchema.shape);
-export type ItemExamSpecific = z.infer<typeof ItemExamSchema>;
-export type ItemExam = ItemBase & ItemExamSpecific;
+export const ItemExamCompleteSchema = ItemBaseSchema.extend(ItemExamSchema.shape)
+export type ItemExamSpecific = z.infer<typeof ItemExamSchema>
+export type ItemExam = ItemBase & ItemExamSpecific

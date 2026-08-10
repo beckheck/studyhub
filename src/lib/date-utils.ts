@@ -21,8 +21,8 @@
  * This ensures consistent date representation regardless of timezone
  */
 export function getDateString(date: Date | number): string {
-  const d = typeof date === 'number' ? new Date(date) : date;
-  return d.toISOString().split('T')[0];
+  const d = typeof date === 'number' ? new Date(date) : date
+  return d.toISOString().split('T')[0]
 }
 
 /**
@@ -30,7 +30,7 @@ export function getDateString(date: Date | number): string {
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isSameDate(date1: Date | number, date2: Date | number): boolean {
-  return getDateString(date1) === getDateString(date2);
+  return getDateString(date1) === getDateString(date2)
 }
 
 /**
@@ -38,11 +38,11 @@ export function isSameDate(date1: Date | number, date2: Date | number): boolean 
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isDateInRange(date: Date | number, startDate: Date | number, endDate: Date | number): boolean {
-  const dateStr = getDateString(date);
-  const startStr = getDateString(startDate);
-  const endStr = getDateString(endDate);
+  const dateStr = getDateString(date)
+  const startStr = getDateString(startDate)
+  const endStr = getDateString(endDate)
 
-  return dateStr >= startStr && dateStr <= endStr;
+  return dateStr >= startStr && dateStr <= endStr
 }
 
 /**
@@ -50,7 +50,7 @@ export function isDateInRange(date: Date | number, startDate: Date | number, end
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isMultiDayEvent(startDate: Date | number, endDate: Date | number): boolean {
-  return getDateString(startDate) !== getDateString(endDate);
+  return getDateString(startDate) !== getDateString(endDate)
 }
 
 /**
@@ -58,7 +58,7 @@ export function isMultiDayEvent(startDate: Date | number, endDate: Date | number
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isDateBefore(date1: Date | number, date2: Date | number): boolean {
-  return getDateString(date1) < getDateString(date2);
+  return getDateString(date1) < getDateString(date2)
 }
 
 /**
@@ -66,7 +66,7 @@ export function isDateBefore(date1: Date | number, date2: Date | number): boolea
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isDateAfter(date1: Date | number, date2: Date | number): boolean {
-  return getDateString(date1) > getDateString(date2);
+  return getDateString(date1) > getDateString(date2)
 }
 
 /**
@@ -74,7 +74,7 @@ export function isDateAfter(date1: Date | number, date2: Date | number): boolean
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isDateBeforeOrEqual(date1: Date | number, date2: Date | number): boolean {
-  return getDateString(date1) <= getDateString(date2);
+  return getDateString(date1) <= getDateString(date2)
 }
 
 /**
@@ -82,7 +82,7 @@ export function isDateBeforeOrEqual(date1: Date | number, date2: Date | number):
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isDateAfterOrEqual(date1: Date | number, date2: Date | number): boolean {
-  return getDateString(date1) >= getDateString(date2);
+  return getDateString(date1) >= getDateString(date2)
 }
 
 /**
@@ -91,14 +91,14 @@ export function isDateAfterOrEqual(date1: Date | number, date2: Date | number): 
  * Returns positive number if date2 is after date1, negative if before
  */
 export function getDaysDifference(date1: Date | number, date2: Date | number): number {
-  const date1Str = getDateString(date1);
-  const date2Str = getDateString(date2);
+  const date1Str = getDateString(date1)
+  const date2Str = getDateString(date2)
 
-  const timestamp1 = new Date(date1Str).getTime();
-  const timestamp2 = new Date(date2Str).getTime();
+  const timestamp1 = new Date(date1Str).getTime()
+  const timestamp2 = new Date(date2Str).getTime()
 
-  const diffTime = timestamp2 - timestamp1;
-  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = timestamp2 - timestamp1
+  return Math.round(diffTime / (1000 * 60 * 60 * 24))
 }
 
 /**
@@ -106,7 +106,7 @@ export function getDaysDifference(date1: Date | number, date2: Date | number): n
  * Useful for consistent "today" comparisons
  */
 export function getTodayDateString(): string {
-  return getDateString(new Date());
+  return getDateString(new Date())
 }
 
 /**
@@ -114,7 +114,7 @@ export function getTodayDateString(): string {
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isToday(date: Date | number): boolean {
-  return getDateString(date) === getTodayDateString();
+  return getDateString(date) === getTodayDateString()
 }
 
 /**
@@ -122,7 +122,7 @@ export function isToday(date: Date | number): boolean {
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isPastDate(date: Date | number): boolean {
-  return isDateBefore(date, new Date());
+  return isDateBefore(date, new Date())
 }
 
 /**
@@ -130,7 +130,7 @@ export function isPastDate(date: Date | number): boolean {
  * Uses UTC date strings for comparison to avoid timezone issues
  */
 export function isFutureDate(date: Date | number): boolean {
-  return isDateAfter(date, new Date());
+  return isDateAfter(date, new Date())
 }
 
 /**
@@ -138,16 +138,16 @@ export function isFutureDate(date: Date | number): boolean {
  * Uses timezone-safe date comparison
  */
 export function calculateDDay(targetDate: Date | number | string): string | null {
-  if (!targetDate) return null;
+  if (!targetDate) return null
 
-  const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
-  const today = new Date();
+  const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate
+  const today = new Date()
 
-  const diffDays = getDaysDifference(today, target);
+  const diffDays = getDaysDifference(today, target)
 
-  if (diffDays === 0) return 'D-Day';
-  if (diffDays > 0) return `D-${diffDays}`;
-  return `D+${Math.abs(diffDays)}`;
+  if (diffDays === 0) return 'D-Day'
+  if (diffDays > 0) return `D-${diffDays}`
+  return `D+${Math.abs(diffDays)}`
 }
 
 /**
@@ -156,9 +156,9 @@ export function calculateDDay(targetDate: Date | number | string): string | null
  * Returns negative if date1 < date2, positive if date1 > date2, zero if equal
  */
 export function compareDates(date1: Date | null | undefined, date2: Date | null | undefined): number {
-  const time1 = date1 ? date1.getTime() : 0;
-  const time2 = date2 ? date2.getTime() : 0;
-  return time1 - time2;
+  const time1 = date1 ? date1.getTime() : 0
+  const time2 = date2 ? date2.getTime() : 0
+  return time1 - time2
 }
 
 /**
@@ -169,21 +169,21 @@ export function compareDates(date1: Date | null | undefined, date2: Date | null 
 export function createLocalMidnightDate(dateString: string): Date {
   // Parse the date string and create a date at midnight local time
   // This avoids timezone conversion issues that can occur with new Date(dateString)
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day, 0, 0, 0, 0);
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day, 0, 0, 0, 0)
 }
 
 // Import timezone-aware utilities for date handling
 type DateComponents = {
-  year: number;
-  month: number;
-  date: number;
-  day: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  milliseconds: number;
-};
+  year: number
+  month: number
+  date: number
+  day: number
+  hours: number
+  minutes: number
+  seconds: number
+  milliseconds: number
+}
 
 /**
  * Helper function to get date components in a specific timezone
@@ -199,7 +199,7 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
       minutes: date.getMinutes(),
       seconds: date.getSeconds(),
       milliseconds: date.getMilliseconds(),
-    };
+    }
   }
 
   // Use Intl.DateTimeFormat to get components in the specified timezone
@@ -213,13 +213,16 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
-  });
+  })
 
-  const parts = formatter.formatToParts(date);
-  const partsMap = parts.reduce((acc, part) => {
-    acc[part.type] = part.value;
-    return acc;
-  }, {} as Record<string, string>);
+  const parts = formatter.formatToParts(date)
+  const partsMap = parts.reduce(
+    (acc, part) => {
+      acc[part.type] = part.value
+      return acc
+    },
+    {} as Record<string, string>,
+  )
 
   // Map weekday names to numbers (Sunday = 0)
   const weekdayMap: Record<string, number> = {
@@ -230,7 +233,7 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
     Thu: 4,
     Fri: 5,
     Sat: 6,
-  };
+  }
 
   return {
     year: parseInt(partsMap.year),
@@ -241,7 +244,7 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
     minutes: parseInt(partsMap.minute),
     seconds: parseInt(partsMap.second),
     milliseconds: 0, // Not available from formatter
-  };
+  }
 }
 
 /**
@@ -249,7 +252,7 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
  */
 export function addDaysToComponents(components: DateComponents, daysToAdd: number): DateComponents {
   // Create a date and add days - JavaScript automatically handles overflow
-  const date = new Date(components.year, components.month, components.date + daysToAdd);
+  const date = new Date(components.year, components.month, components.date + daysToAdd)
 
   return {
     year: date.getFullYear(),
@@ -260,7 +263,7 @@ export function addDaysToComponents(components: DateComponents, daysToAdd: numbe
     minutes: components.minutes,
     seconds: components.seconds,
     milliseconds: components.milliseconds,
-  };
+  }
 }
 
 /**
@@ -274,22 +277,22 @@ export function createDateInTimezone(
   minutes: number = 0,
   seconds: number = 0,
   milliseconds: number = 0,
-  timezone?: string
+  timezone?: string,
 ): Date {
   if (!timezone) {
-    return new Date(year, month, date, hours, minutes, seconds, milliseconds);
+    return new Date(year, month, date, hours, minutes, seconds, milliseconds)
   }
 
   // Create an ISO string that represents the local time in the target timezone
   const isoString = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}T${String(
-    hours
+    hours,
   ).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(
-    milliseconds
-  ).padStart(3, '0')}`;
+    milliseconds,
+  ).padStart(3, '0')}`
 
   try {
     // Create a temporary date to find what UTC time corresponds to this local time in the target timezone
-    const tempDate = new Date(isoString + 'Z'); // Treat as UTC first
+    const tempDate = new Date(isoString + 'Z') // Treat as UTC first
 
     // Format this date in the target timezone to see what local time it represents
     const formatter = new Intl.DateTimeFormat('sv-SE', {
@@ -302,28 +305,28 @@ export function createDateInTimezone(
       minute: '2-digit',
       second: '2-digit',
       hour12: false,
-    });
+    })
 
-    const formatted = formatter.format(tempDate).replace(' ', 'T');
+    const formatted = formatter.format(tempDate).replace(' ', 'T')
 
     // Calculate the difference between what we want and what we got
-    const wantedLocal = isoString;
-    const actualLocal = formatted;
+    const wantedLocal = isoString
+    const actualLocal = formatted
 
     // If they're the same, we found the right UTC time
     if (wantedLocal.startsWith(actualLocal)) {
-      return tempDate;
+      return tempDate
     }
 
     // If not, we need to adjust
-    const wantedDate = new Date(wantedLocal + 'Z');
-    const actualDate = new Date(actualLocal + 'Z');
-    const diff = wantedDate.getTime() - actualDate.getTime();
+    const wantedDate = new Date(wantedLocal + 'Z')
+    const actualDate = new Date(actualLocal + 'Z')
+    const diff = wantedDate.getTime() - actualDate.getTime()
 
-    return new Date(tempDate.getTime() + diff);
+    return new Date(tempDate.getTime() + diff)
   } catch (error) {
     // Fallback to UTC if timezone handling fails
-    console.warn(`Failed to handle timezone ${timezone}, falling back to UTC:`, error);
-    return new Date(year, month, date, hours, minutes, seconds, milliseconds);
+    console.warn(`Failed to handle timezone ${timezone}, falling back to UTC:`, error)
+    return new Date(year, month, date, hours, minutes, seconds, milliseconds)
   }
 }

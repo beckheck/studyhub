@@ -1,4 +1,4 @@
-import type { FocusTimerConfig, MoodEmojis } from '@/types';
+import type { FocusTimerConfig, MoodEmojis } from '@/types'
 
 export const DEFAULT_MOOD_EMOJIS: MoodEmojis = {
   angry: { emoji: '😠', color: '#ff6b6b', word: 'Angry' },
@@ -6,7 +6,7 @@ export const DEFAULT_MOOD_EMOJIS: MoodEmojis = {
   neutral: { emoji: '😐', color: '#f7dc6f', word: 'Neutral' },
   happy: { emoji: '🙂', color: '#45b7d1', word: 'Happy' },
   excited: { emoji: '😁', color: '#10ac84', word: 'Excited' },
-};
+}
 
 export const DEFAULT_HYDRATION_SETTINGS = {
   useCups: true,
@@ -15,7 +15,7 @@ export const DEFAULT_HYDRATION_SETTINGS = {
   dailyGoalML: 2000,
   dailyGoalOZ: 67.6,
   unit: 'metric' as const,
-};
+}
 
 export const DEFAULT_FOCUS_TIMER_CONFIG: FocusTimerConfig = {
   audioEnabled: true,
@@ -43,4 +43,4 @@ export const DEFAULT_FOCUS_TIMER_CONFIG: FocusTimerConfig = {
     'x.com',
     'youtube.com',
   ].join('\n'),
-};
+}

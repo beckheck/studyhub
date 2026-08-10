@@ -1,54 +1,54 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useItems } from '@/hooks/useStore';
-import { t } from '@/i18n/config';
-import { Item } from '@/items/models';
-import { useItemDialog } from '@/items/ItemDialogProvider';
-import { cn } from '@/lib/utils';
-import { Plus, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { getItemMethods } from './methods';
-import { compareDates } from '@/lib/date-utils';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useItems } from '@/hooks/useStore'
+import { t } from '@/i18n/config'
+import { Item } from '@/items/models'
+import { useItemDialog } from '@/items/ItemDialogProvider'
+import { cn } from '@/lib/utils'
+import { Plus, Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { getItemMethods } from './methods'
+import { compareDates } from '@/lib/date-utils'
 
 interface ItemListProps {
-  className?: string;
+  className?: string
 }
 
 const getTimestamp = (item: Item) => {
-  return getItemMethods(item).getDate();
-};
+  return getItemMethods(item).getDate()
+}
 
 export function ItemList({ className }: ItemListProps) {
   // Use the unified items hook instead of local state
-  const { items } = useItems();
-  const [filterText, setFilterText] = useState('');
+  const { items } = useItems()
+  const [filterText, setFilterText] = useState('')
 
   // Use the item dialog hook
-  const itemDialog = useItemDialog();
+  const itemDialog = useItemDialog()
 
   // Sort items by startsAt or dueAt
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
-      const aTime = getTimestamp(a as Item);
-      const bTime = getTimestamp(b as Item);
-      return compareDates(aTime, bTime);
-    });
-  }, [items]);
+      const aTime = getTimestamp(a as Item)
+      const bTime = getTimestamp(b as Item)
+      return compareDates(aTime, bTime)
+    })
+  }, [items])
 
   // Filter items by title
   const filteredItems = useMemo(() => {
-    if (!filterText.trim()) return sortedItems;
-    const searchTerm = filterText.toLowerCase().trim();
-    return sortedItems.filter(item => item.title.toLowerCase().includes(searchTerm));
-  }, [sortedItems, filterText]);
+    if (!filterText.trim()) return sortedItems
+    const searchTerm = filterText.toLowerCase().trim()
+    return sortedItems.filter(item => (item.title ?? '').toLowerCase().includes(searchTerm))
+  }, [sortedItems, filterText])
 
   // Get completion status display
   const getCompletionStatus = (item: Item) => {
-    const hasCompletion = ['task', 'exam'].includes(item.type) && (item as any).isCompleted;
+    const hasCompletion = ['task', 'exam'].includes(item.type) && (item as any).isCompleted
     return hasCompletion ? (
       <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ {t('common:common.completed')}</span>
-    ) : null;
-  };
+    ) : null
+  }
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -101,7 +101,7 @@ export function ItemList({ className }: ItemListProps) {
           </div>
         ) : (
           filteredItems.map(item => {
-            const itemMethods = getItemMethods(item as Item);
+            const itemMethods = getItemMethods(item as Item)
             return (
               <div
                 key={item.id}
@@ -110,7 +110,7 @@ export function ItemList({ className }: ItemListProps) {
                   'p-4 bg-white dark:bg-gray-800 rounded-r-xl',
                   'border border-gray-200 dark:border-gray-600',
                   'hover:shadow-md transition-shadow cursor-pointer',
-                  itemMethods.getPriorityColorClass()
+                  itemMethods.getPriorityColorClass(),
                 )}
                 style={{ borderLeftColor: item.color }}
               >
@@ -131,10 +131,10 @@ export function ItemList({ className }: ItemListProps) {
                   </div>
                 </div>
               </div>
-            );
+            )
           })
         )}
       </div>
     </div>
-  );
+  )
 }

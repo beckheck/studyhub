@@ -1,6 +1,6 @@
-import type { Item } from '@/types';
-import { createLocalMidnightDate } from '@/lib/date-utils';
-import type { ExchangeFormatV2 } from '@/lib/data-transfer';
+import type { Item } from '@/types'
+import { createLocalMidnightDate } from '@/lib/date-utils'
+import type { ExchangeFormatV2 } from '@/lib/data-transfer'
 
 function convertLegacyExams(data: ExchangeFormatV2): Item[] {
   return (data.exams || []).map(exam => ({
@@ -17,16 +17,16 @@ function convertLegacyExams(data: ExchangeFormatV2): Item[] {
     startsAt: createLocalMidnightDate(exam.date),
     weight: exam.weight,
     isCompleted: false,
-  }));
+  }))
 }
 
 function convertLegacyTasks(data: ExchangeFormatV2): Item[] {
   return (data.tasks || []).map(task => {
-    let priority: 'low' | 'medium' | 'high' = 'medium';
+    let priority: 'low' | 'medium' | 'high' = 'medium'
     if (task.priority) {
-      const normalizedPriority = task.priority.toLowerCase();
+      const normalizedPriority = task.priority.toLowerCase()
       if (normalizedPriority === 'low' || normalizedPriority === 'high') {
-        priority = normalizedPriority;
+        priority = normalizedPriority
       }
     }
     return {
@@ -43,8 +43,8 @@ function convertLegacyTasks(data: ExchangeFormatV2): Item[] {
       dueAt: createLocalMidnightDate(task.due),
       priority,
       isCompleted: task.done,
-    };
-  });
+    }
+  })
 }
 
 function convertLegacyRegularEvents(data: ExchangeFormatV2): Item[] {
@@ -64,7 +64,7 @@ function convertLegacyRegularEvents(data: ExchangeFormatV2): Item[] {
     isAllDay: true,
     location: event.location || undefined,
     recurrence: undefined,
-  }));
+  }))
 }
 
 function convertLegacyTimetableEvents(data: ExchangeFormatV2): Item[] {
@@ -73,7 +73,7 @@ function convertLegacyTimetableEvents(data: ExchangeFormatV2): Item[] {
     Ayudantia: 'tutorial',
     Taller: 'workshop',
     Laboratorio: 'lab',
-  };
+  }
 
   const dayToWeekdayMap: Record<string, number> = {
     Sunday: 0,
@@ -83,11 +83,11 @@ function convertLegacyTimetableEvents(data: ExchangeFormatV2): Item[] {
     Thursday: 4,
     Friday: 5,
     Saturday: 6,
-  };
+  }
 
   return (data.timetableEvents || []).map(timetableEvent => {
-    const activityType = eventTypeMap[timetableEvent.eventType] || timetableEvent.eventType.toLowerCase();
-    const weekday = dayToWeekdayMap[timetableEvent.day] ?? 1;
+    const activityType = eventTypeMap[timetableEvent.eventType] || timetableEvent.eventType.toLowerCase()
+    const weekday = dayToWeekdayMap[timetableEvent.day] ?? 1
 
     return {
       id: timetableEvent.id,
@@ -105,8 +105,8 @@ function convertLegacyTimetableEvents(data: ExchangeFormatV2): Item[] {
       classroom: timetableEvent.classroom || undefined,
       teacher: timetableEvent.teacher || undefined,
       activityType,
-    };
-  });
+    }
+  })
 }
 
 export function migrateV1ToV2(data: ExchangeFormatV2): ExchangeFormatV2 {
@@ -114,10 +114,10 @@ export function migrateV1ToV2(data: ExchangeFormatV2): ExchangeFormatV2 {
     (data.exams && data.exams.length > 0) ||
     (data.tasks && data.tasks.length > 0) ||
     (data.regularEvents && data.regularEvents.length > 0) ||
-    (data.timetableEvents && data.timetableEvents.length > 0);
+    (data.timetableEvents && data.timetableEvents.length > 0)
 
   if (!hasLegacyData) {
-    return data;
+    return data
   }
 
   const legacyItems = [
@@ -125,13 +125,19 @@ export function migrateV1ToV2(data: ExchangeFormatV2): ExchangeFormatV2 {
     ...convertLegacyTasks(data),
     ...convertLegacyRegularEvents(data),
     ...convertLegacyTimetableEvents(data),
-  ];
+  ]
 
-  const existingItems: any[] = data.items || [];
-  const { exams, tasks, regularEvents, timetableEvents, ...rest } = data;
+  const existingItems: any[] = data.items || []
+  const {
+    exams: _exams,
+    tasks: _tasks,
+    regularEvents: _regularEvents,
+    timetableEvents: _timetableEvents,
+    ...rest
+  } = data
 
   return {
     ...rest,
     items: [...existingItems, ...legacyItems],
-  };
+  }
 }

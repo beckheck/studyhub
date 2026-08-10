@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { t } from '@/i18n/config';
-import { ItemBaseSchema, ItemBase } from '@/items/base/modelSchema';
+import { z } from 'zod'
+import { t } from '@/i18n/config'
+import { ItemBaseSchema, ItemBase } from '@/items/base/modelSchema'
 
-export const ITEM_TASK_PRIORITIES = ['low', 'medium', 'high'] as const;
+export const ITEM_TASK_PRIORITIES = ['low', 'medium', 'high'] as const
 
 export const ItemTaskSchema = z.object({
   type: z.literal('task'),
@@ -10,9 +10,9 @@ export const ItemTaskSchema = z.object({
   priority: z.enum(ITEM_TASK_PRIORITIES, { message: t('items:task.validation.priorityRequired') }),
   isCompleted: z.boolean({ message: t('items:task.validation.isCompletedRequired') }),
   googleCalendarEventId: z.string().optional(),
-});
+})
 
-export const ItemTaskCompleteSchema = ItemBaseSchema.extend(ItemTaskSchema.shape);
-export type ItemTaskSpecific = z.infer<typeof ItemTaskSchema>;
-export type ItemTask = ItemBase & ItemTaskSpecific;
-export type ItemTaskPriority = ItemTask['priority'];
+export const ItemTaskCompleteSchema = ItemBaseSchema.extend(ItemTaskSchema.shape)
+export type ItemTaskSpecific = z.infer<typeof ItemTaskSchema>
+export type ItemTask = ItemBase & ItemTaskSpecific
+export type ItemTaskPriority = ItemTask['priority']

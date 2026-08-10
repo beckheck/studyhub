@@ -41,14 +41,14 @@ The study timer runs in the extension's background service worker. This ensures:
 
 ```typescript
 interface BackgroundTimerState {
-  running: boolean;        // Whether timer is currently running
-  elapsed: number;         // Elapsed seconds
-  technique: string;       // Study technique (e.g., "Pomodoro 25/5")
-  moodStart: number;       // Starting mood (1-10)
-  moodEnd: number;         // Ending mood (1-10)
-  note: string;            // Session notes
-  startTs?: number;        // Start timestamp for accurate time calculation
-  courseId: string;        // Associated course ID
+  running: boolean // Whether timer is currently running
+  elapsed: number // Elapsed seconds
+  technique: string // Study technique (e.g., "Pomodoro 25/5")
+  moodStart: number // Starting mood (1-10)
+  moodEnd: number // Ending mood (1-10)
+  note: string // Session notes
+  startTs?: number // Start timestamp for accurate time calculation
+  courseId: string // Associated course ID
 }
 ```
 
@@ -72,16 +72,16 @@ The timer state is automatically saved to `browser.storage.local` under the key 
 The timer usage remains exactly the same from the component perspective:
 
 ```typescript
-const studyTimer = useStudyTimer(onSessionComplete, selectedCourseId);
+const studyTimer = useStudyTimer(onSessionComplete, selectedCourseId)
 
 // Start timer
-studyTimer.startTimer();
+studyTimer.startTimer()
 
 // Stop timer
-studyTimer.stopTimer(courseId);
+studyTimer.stopTimer(courseId)
 
 // Access timer state
-const { running, elapsed, technique } = studyTimer;
+const { running, elapsed, technique } = studyTimer
 ```
 
 ## Benefits

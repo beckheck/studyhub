@@ -1,26 +1,13 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourseRecords, useCourses, useItems } from '@/hooks/useStore';
-import { getItemsOnDate } from '@/lib/calendar-queries';
-import { CourseRecord, Item } from '@/types';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourseRecords, useCourses, useItems } from '@/hooks/useStore'
+import { getItemsOnDate } from '@/lib/calendar-queries'
+import { CourseRecord, Item } from '@/types'
 import {
   BookOpen,
   Calendar,
@@ -33,9 +20,9 @@ import {
   Plus,
   Trash2,
   Users,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const RECORD_TYPES = [
   { value: 'note', label: 'Note', icon: FileText },
@@ -44,7 +31,7 @@ const RECORD_TYPES = [
   { value: 'lecture', label: 'Lecture', icon: BookOpen },
   { value: 'lab', label: 'Lab', icon: FlaskConical },
   { value: 'other', label: 'Other', icon: GraduationCap },
-] as const;
+] as const
 
 const MOOD_OPTIONS = [
   { value: 1, emoji: '😫', label: 'Terrible' },
@@ -52,114 +39,114 @@ const MOOD_OPTIONS = [
   { value: 3, emoji: '😐', label: 'Okay' },
   { value: 4, emoji: '🙂', label: 'Good' },
   { value: 5, emoji: '😊', label: 'Great' },
-];
+]
 
 interface CourseRecordCalendarProps {
-  courseId: string;
+  courseId: string
 }
 
 export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarProps) {
-  const { t } = useTranslation('common');
-  const { getShortDayNames, formatDateDDMMYYYY } = useLocalization();
-  const { getCourseTitle } = useCourses();
-  const { items } = useItems();
-  const { courseRecords, addRecord, updateRecord, deleteRecord, getRecordsByCourseAndDate } = useCourseRecords();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<CourseRecord | null>(null);
-  
+  const { t } = useTranslation('common')
+  const { getShortDayNames, formatDateDDMMYYYY } = useLocalization()
+  const { getCourseTitle } = useCourses()
+  const { items } = useItems()
+  const { courseRecords, addRecord, updateRecord, deleteRecord } = useCourseRecords()
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingRecord, setEditingRecord] = useState<CourseRecord | null>(null)
+
   // Form state
-  const [recordType, setRecordType] = useState<CourseRecord['type']>('note');
-  const [recordContent, setRecordContent] = useState('');
-  const [recordMood, setRecordMood] = useState<number | undefined>(undefined);
+  const [recordType, setRecordType] = useState<CourseRecord['type']>('note')
+  const [recordContent, setRecordContent] = useState('')
+  const [recordMood, setRecordMood] = useState<number | undefined>(undefined)
 
   // Get records for this course
-  const courseRecordsFiltered = courseRecords.filter(r => r.courseId === courseId);
+  const courseRecordsFiltered = courseRecords.filter(r => r.courseId === courseId)
 
   // Generate calendar matrix
   const matrix = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    const startDay = firstDay.getDay();
-    const adjustedStartDay = startDay === 0 ? 6 : startDay - 1;
-    
-    const daysInMonth = lastDay.getDate();
-    const matrix: Date[] = [];
-    
-    for (let i = adjustedStartDay - 1; i >= 0; i--) {
-      matrix.push(new Date(year, month, -i));
-    }
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      matrix.push(new Date(year, month, day));
-    }
-    
-    const remainingDays = 42 - matrix.length;
-    for (let day = 1; day <= remainingDays; day++) {
-      matrix.push(new Date(year, month + 1, day));
-    }
-    
-    return matrix;
-  }, [currentDate]);
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    const startDay = firstDay.getDay()
+    const adjustedStartDay = startDay === 0 ? 6 : startDay - 1
+
+    const daysInMonth = lastDay.getDate()
+    const matrix: Date[] = []
+
+    for (let i = adjustedStartDay - 1; i >= 0; i--) {
+      matrix.push(new Date(year, month, -i))
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      matrix.push(new Date(year, month, day))
+    }
+
+    const remainingDays = 42 - matrix.length
+    for (let day = 1; day <= remainingDays; day++) {
+      matrix.push(new Date(year, month + 1, day))
+    }
+
+    return matrix
+  }, [currentDate])
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
   const formatDateString = (date: Date): string => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
 
   // Get events for a specific date
   const getDateInfo = (date: Date) => {
-    const dateStr = formatDateString(date);
-    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: courseId });
-    const courseItems = entries.map(e => e.item);
-    const tasks = courseItems.filter(item => item.type === 'task');
-    const exams = courseItems.filter(item => item.type === 'exam');
-    const records = courseRecordsFiltered.filter(r => r.date === dateStr);
-    return { tasks, exams, records };
-  };
+    const dateStr = formatDateString(date)
+    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: courseId })
+    const courseItems = entries.map(e => e.item)
+    const tasks = courseItems.filter(item => item.type === 'task')
+    const exams = courseItems.filter(item => item.type === 'exam')
+    const records = courseRecordsFiltered.filter(r => r.date === dateStr)
+    return { tasks, exams, records }
+  }
 
   const goToPreviousMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-  };
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+  }
 
   const goToNextMonth = () => {
-    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-  };
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+  }
 
   const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    setDialogOpen(true);
-    setEditingRecord(null);
-    setRecordType('note');
-    setRecordContent('');
-    setRecordMood(undefined);
-  };
+    setSelectedDate(date)
+    setDialogOpen(true)
+    setEditingRecord(null)
+    setRecordType('note')
+    setRecordContent('')
+    setRecordMood(undefined)
+  }
 
   const handleEditRecord = (record: CourseRecord) => {
-    setEditingRecord(record);
-    setRecordType(record.type);
-    setRecordContent(record.content);
-    setRecordMood(record.mood);
-  };
+    setEditingRecord(record)
+    setRecordType(record.type)
+    setRecordContent(record.content)
+    setRecordMood(record.mood)
+  }
 
   const handleSaveRecord = () => {
-    if (!selectedDate || !recordContent.trim()) return;
-    
-    const dateStr = formatDateString(selectedDate);
-    
+    if (!selectedDate || !recordContent.trim()) return
+
+    const dateStr = formatDateString(selectedDate)
+
     if (editingRecord) {
       updateRecord(editingRecord.id, {
         content: recordContent.trim(),
         type: recordType,
         mood: recordMood,
-      });
+      })
     } else {
       addRecord({
         courseId,
@@ -167,34 +154,44 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
         content: recordContent.trim(),
         type: recordType,
         mood: recordMood,
-      });
+      })
     }
-    
-    setEditingRecord(null);
-    setRecordContent('');
-    setRecordType('note');
-    setRecordMood(undefined);
-  };
+
+    setEditingRecord(null)
+    setRecordContent('')
+    setRecordType('note')
+    setRecordMood(undefined)
+  }
 
   const handleDeleteRecord = (recordId: string) => {
-    deleteRecord(recordId);
+    deleteRecord(recordId)
     if (editingRecord?.id === recordId) {
-      setEditingRecord(null);
-      setRecordContent('');
-      setRecordType('note');
-      setRecordMood(undefined);
+      setEditingRecord(null)
+      setRecordContent('')
+      setRecordType('note')
+      setRecordMood(undefined)
     }
-  };
+  }
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ]
 
   const getRecordTypeIcon = (type: CourseRecord['type']) => {
-    const recordType = RECORD_TYPES.find(rt => rt.value === type);
-    return recordType?.icon || FileText;
-  };
+    const recordType = RECORD_TYPES.find(rt => rt.value === type)
+    return recordType?.icon || FileText
+  }
 
   return (
     <>
@@ -207,33 +204,23 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
           <CardDescription>
             {t('courseManager.courseRecord.description', 'Track daily activities, notes, and attendance')}
           </CardDescription>
-          
+
           {/* Month navigation */}
           <div className="flex items-center justify-between pt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToPreviousMonth}
-              className="h-8 w-8 p-0 hover:bg-white/20"
-            >
+            <Button variant="ghost" size="sm" onClick={goToPreviousMonth} className="h-8 w-8 p-0 hover:bg-white/20">
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            
+
             <div className="text-sm font-medium">
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </div>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToNextMonth}
-              className="h-8 w-8 p-0 hover:bg-white/20"
-            >
+
+            <Button variant="ghost" size="sm" onClick={goToNextMonth} className="h-8 w-8 p-0 hover:bg-white/20">
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-3">
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1">
@@ -247,13 +234,13 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
           {/* Calendar grid */}
           <div className="grid grid-cols-7 gap-1">
             {matrix.slice(0, 35).map((date, i) => {
-              const inMonth = date.getMonth() === currentDate.getMonth();
-              const isToday = date.toDateString() === today.toDateString();
-              const { tasks, exams, records } = getDateInfo(date);
-              const hasContent = tasks.length > 0 || exams.length > 0 || records.length > 0;
-              const isHovered = hoveredDate?.toDateString() === date.toDateString();
-              const row = Math.floor(i / 7);
-              const showTooltipBelow = row < 2; // First 2 rows show tooltip below
+              const inMonth = date.getMonth() === currentDate.getMonth()
+              const isToday = date.toDateString() === today.toDateString()
+              const { tasks, exams, records } = getDateInfo(date)
+              const hasContent = tasks.length > 0 || exams.length > 0 || records.length > 0
+              const isHovered = hoveredDate?.toDateString() === date.toDateString()
+              const row = Math.floor(i / 7)
+              const showTooltipBelow = row < 2 // First 2 rows show tooltip below
 
               return (
                 <div key={i} className="relative">
@@ -261,66 +248,68 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                     role="gridcell"
                     tabIndex={0}
                     onClick={() => handleDateClick(date)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleDateClick(date)}
-                    onMouseEnter={() => hasContent ? setHoveredDate(date) : setHoveredDate(null)}
+                    onKeyDown={e => e.key === 'Enter' && handleDateClick(date)}
+                    onMouseEnter={() => (hasContent ? setHoveredDate(date) : setHoveredDate(null))}
                     onMouseLeave={() => setHoveredDate(null)}
                     className={`
                       relative flex flex-col items-center justify-start p-1 text-xs rounded-lg w-full
                       transition-all cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:scale-105
                       min-h-[3.5rem]
-                      ${isToday 
-                        ? 'bg-zinc-200 dark:bg-zinc-700 ring-2 ring-zinc-400 dark:ring-zinc-500' 
-                        : inMonth 
-                          ? 'bg-white dark:bg-zinc-800' 
-                          : 'bg-zinc-50 dark:bg-zinc-900 opacity-40'
+                      ${
+                        isToday
+                          ? 'bg-zinc-200 dark:bg-zinc-700 ring-2 ring-zinc-400 dark:ring-zinc-500'
+                          : inMonth
+                            ? 'bg-white dark:bg-zinc-800'
+                            : 'bg-zinc-50 dark:bg-zinc-900 opacity-40'
                       }
                     `}
                   >
-                    <span className={`
+                    <span
+                      className={`
                       text-xs font-medium mb-1
-                      ${isToday 
-                        ? 'text-zinc-900 dark:text-zinc-100 font-semibold' 
-                        : inMonth 
-                          ? 'text-zinc-800 dark:text-zinc-200' 
-                          : 'text-zinc-400 dark:text-zinc-600'
+                      ${
+                        isToday
+                          ? 'text-zinc-900 dark:text-zinc-100 font-semibold'
+                          : inMonth
+                            ? 'text-zinc-800 dark:text-zinc-200'
+                            : 'text-zinc-400 dark:text-zinc-600'
                       }
-                    `}>
+                    `}
+                    >
                       {date.getDate()}
                     </span>
-                    
+
                     {/* Indicators */}
                     {hasContent && (
                       <div className="flex flex-wrap justify-center gap-0.5">
-                        {exams.length > 0 && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        )}
-                        {tasks.length > 0 && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        )}
-                        {records.length > 0 && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                        )}
+                        {exams.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-red-500" />}
+                        {tasks.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                        {records.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                       </div>
                     )}
                   </div>
 
                   {/* Hover Preview Tooltip */}
                   {isHovered && hasContent && (
-                    <div 
+                    <div
                       className={`absolute z-50 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg shadow-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs pointer-events-none ${
                         showTooltipBelow ? 'top-full mt-2' : 'bottom-full mb-2'
                       }`}
                       style={{ minWidth: '180px' }}
                     >
                       {/* Arrow */}
-                      <div className={`absolute left-1/2 -translate-x-1/2 ${
-                        showTooltipBelow ? 'bottom-full mb-px' : 'top-full -mt-px'
-                      }`}>
-                        <div className={`w-2 h-2 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 transform rotate-45 ${
-                          showTooltipBelow ? 'border-t border-l' : 'border-r border-b'
-                        }`} />
+                      <div
+                        className={`absolute left-1/2 -translate-x-1/2 ${
+                          showTooltipBelow ? 'bottom-full mb-px' : 'top-full -mt-px'
+                        }`}
+                      >
+                        <div
+                          className={`w-2 h-2 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 transform rotate-45 ${
+                            showTooltipBelow ? 'border-t border-l' : 'border-r border-b'
+                          }`}
+                        />
                       </div>
-                      
+
                       <div className="space-y-1.5">
                         {/* Exams */}
                         {exams.length > 0 && (
@@ -334,12 +323,10 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                                 • {exam.title}
                               </div>
                             ))}
-                            {exams.length > 2 && (
-                              <div className="text-zinc-400 pl-4">+{exams.length - 2} more</div>
-                            )}
+                            {exams.length > 2 && <div className="text-zinc-400 pl-4">+{exams.length - 2} more</div>}
                           </div>
                         )}
-                        
+
                         {/* Tasks */}
                         {tasks.length > 0 && (
                           <div>
@@ -348,17 +335,18 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                               <span>Tasks Due</span>
                             </div>
                             {tasks.slice(0, 2).map(task => (
-                              <div key={task.id} className="text-zinc-600 dark:text-zinc-300 truncate pl-4 flex items-center gap-1">
+                              <div
+                                key={task.id}
+                                className="text-zinc-600 dark:text-zinc-300 truncate pl-4 flex items-center gap-1"
+                              >
                                 • {task.title}
                                 {task.isCompleted && <span className="text-green-500">✓</span>}
                               </div>
                             ))}
-                            {tasks.length > 2 && (
-                              <div className="text-zinc-400 pl-4">+{tasks.length - 2} more</div>
-                            )}
+                            {tasks.length > 2 && <div className="text-zinc-400 pl-4">+{tasks.length - 2} more</div>}
                           </div>
                         )}
-                        
+
                         {/* Records */}
                         {records.length > 0 && (
                           <div>
@@ -367,24 +355,28 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                               <span>Records</span>
                             </div>
                             {records.slice(0, 2).map(record => {
-                              const TypeIcon = RECORD_TYPES.find(rt => rt.value === record.type)?.icon || FileText;
+                              const TypeIcon = RECORD_TYPES.find(rt => rt.value === record.type)?.icon || FileText
                               return (
-                                <div key={record.id} className="text-zinc-600 dark:text-zinc-300 truncate pl-4 flex items-center gap-1">
+                                <div
+                                  key={record.id}
+                                  className="text-zinc-600 dark:text-zinc-300 truncate pl-4 flex items-center gap-1"
+                                >
                                   <TypeIcon className="w-2.5 h-2.5 shrink-0" />
-                                  <span className="truncate">{record.content.slice(0, 30)}{record.content.length > 30 ? '...' : ''}</span>
+                                  <span className="truncate">
+                                    {record.content.slice(0, 30)}
+                                    {record.content.length > 30 ? '...' : ''}
+                                  </span>
                                 </div>
-                              );
+                              )
                             })}
-                            {records.length > 2 && (
-                              <div className="text-zinc-400 pl-4">+{records.length - 2} more</div>
-                            )}
+                            {records.length > 2 && <div className="text-zinc-400 pl-4">+{records.length - 2} more</div>}
                           </div>
                         )}
                       </div>
                     </div>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
 
@@ -414,17 +406,15 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
               <Calendar className="w-5 h-5" />
               {selectedDate && formatDateDDMMYYYY(formatDateString(selectedDate))}
             </DialogTitle>
-            <DialogDescription>
-              {getCourseTitle(courseId)} - View and add records for this day
-            </DialogDescription>
+            <DialogDescription>{getCourseTitle(courseId)} - View and add records for this day</DialogDescription>
           </DialogHeader>
 
           {selectedDate && (
             <div className="space-y-4 max-h-[60vh] overflow-y-auto">
               {/* Exams for this day */}
               {(() => {
-                const { exams } = getDateInfo(selectedDate);
-                if (exams.length === 0) return null;
+                const { exams } = getDateInfo(selectedDate)
+                if (exams.length === 0) return null
                 return (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-red-600 dark:text-red-400 flex items-center gap-2">
@@ -441,13 +431,13 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                       </div>
                     ))}
                   </div>
-                );
+                )
               })()}
 
               {/* Tasks for this day */}
               {(() => {
-                const { tasks } = getDateInfo(selectedDate);
-                if (tasks.length === 0) return null;
+                const { tasks } = getDateInfo(selectedDate)
+                if (tasks.length === 0) return null
                 return (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-amber-600 dark:text-amber-400 flex items-center gap-2">
@@ -470,13 +460,13 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                       </div>
                     ))}
                   </div>
-                );
+                )
               })()}
 
               {/* Existing Records */}
               {(() => {
-                const { records } = getDateInfo(selectedDate);
-                if (records.length === 0) return null;
+                const { records } = getDateInfo(selectedDate)
+                if (records.length === 0) return null
                 return (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-2">
@@ -484,8 +474,8 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                       Records
                     </h4>
                     {records.map(record => {
-                      const TypeIcon = getRecordTypeIcon(record.type);
-                      const isEditing = editingRecord?.id === record.id;
+                      const TypeIcon = getRecordTypeIcon(record.type)
+                      const isEditing = editingRecord?.id === record.id
                       return (
                         <div
                           key={record.id}
@@ -501,16 +491,18 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                                 {record.type}
                               </span>
                               {record.mood && (
-                                <span className="text-xs">{MOOD_OPTIONS.find(m => m.value === record.mood)?.emoji}</span>
+                                <span className="text-xs">
+                                  {MOOD_OPTIONS.find(m => m.value === record.mood)?.emoji}
+                                </span>
                               )}
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteRecord(record.id);
+                              onClick={e => {
+                                e.stopPropagation()
+                                handleDeleteRecord(record.id)
                               }}
                             >
                               <Trash2 className="w-3 h-3" />
@@ -518,10 +510,10 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                           </div>
                           <p className="text-sm mt-1 whitespace-pre-wrap">{record.content}</p>
                         </div>
-                      );
+                      )
                     })}
                   </div>
-                );
+                )
               })()}
 
               {/* Add/Edit Record Form */}
@@ -534,7 +526,7 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Type</Label>
-                    <Select value={recordType} onValueChange={(v) => setRecordType(v as CourseRecord['type'])}>
+                    <Select value={recordType} onValueChange={v => setRecordType(v as CourseRecord['type'])}>
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -553,9 +545,9 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
 
                   <div className="space-y-1">
                     <Label className="text-xs">Mood (optional)</Label>
-                    <Select 
-                      value={recordMood?.toString() || 'none'} 
-                      onValueChange={(v) => setRecordMood(v === 'none' ? undefined : parseInt(v))}
+                    <Select
+                      value={recordMood?.toString() || 'none'}
+                      onValueChange={v => setRecordMood(v === 'none' ? undefined : parseInt(v))}
                     >
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue placeholder="Select mood" />
@@ -578,7 +570,7 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                   <Label className="text-xs">Notes</Label>
                   <Textarea
                     value={recordContent}
-                    onChange={(e) => setRecordContent(e.target.value)}
+                    onChange={e => setRecordContent(e.target.value)}
                     placeholder="What happened in class today? Any notes or observations..."
                     className="min-h-[80px] text-sm resize-none"
                   />
@@ -590,10 +582,10 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setEditingRecord(null);
-                        setRecordContent('');
-                        setRecordType('note');
-                        setRecordMood(undefined);
+                        setEditingRecord(null)
+                        setRecordContent('')
+                        setRecordType('note')
+                        setRecordMood(undefined)
                       }}
                       className="flex-1"
                     >
@@ -619,59 +611,59 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
 
 // Export a simpler version for quick recording from Dashboard
 export interface QuickRecordDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  courseId: string;
-  courseName: string;
-  date?: Date;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  courseId: string
+  courseName: string
+  date?: Date
 }
 
-export function QuickRecordDialog({ 
-  open, 
-  onOpenChange, 
-  courseId, 
+export function QuickRecordDialog({
+  open,
+  onOpenChange,
+  courseId,
   courseName,
-  date = new Date() 
+  date = new Date(),
 }: QuickRecordDialogProps) {
-  const { addRecord } = useCourseRecords();
-  const { formatDateDDMMYYYY } = useLocalization();
-  
-  const [recordType, setRecordType] = useState<CourseRecord['type']>('note');
-  const [recordContent, setRecordContent] = useState('');
-  const [recordMood, setRecordMood] = useState<number | undefined>(undefined);
+  const { addRecord } = useCourseRecords()
+  const { formatDateDDMMYYYY } = useLocalization()
+
+  const [recordType, setRecordType] = useState<CourseRecord['type']>('note')
+  const [recordContent, setRecordContent] = useState('')
+  const [recordMood, setRecordMood] = useState<number | undefined>(undefined)
 
   const formatDateString = (d: Date): string => {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
 
   const handleSave = () => {
-    if (!recordContent.trim()) return;
-    
+    if (!recordContent.trim()) return
+
     addRecord({
       courseId,
       date: formatDateString(date),
       content: recordContent.trim(),
       type: recordType,
       mood: recordMood,
-    });
-    
-    setRecordContent('');
-    setRecordType('note');
-    setRecordMood(undefined);
-    onOpenChange(false);
-  };
+    })
+
+    setRecordContent('')
+    setRecordType('note')
+    setRecordMood(undefined)
+    onOpenChange(false)
+  }
 
   const handleClose = () => {
-    setRecordContent('');
-    setRecordType('note');
-    setRecordMood(undefined);
-    onOpenChange(false);
-  };
+    setRecordContent('')
+    setRecordType('note')
+    setRecordMood(undefined)
+    onOpenChange(false)
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -690,7 +682,7 @@ export function QuickRecordDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Type</Label>
-              <Select value={recordType} onValueChange={(v) => setRecordType(v as CourseRecord['type'])}>
+              <Select value={recordType} onValueChange={v => setRecordType(v as CourseRecord['type'])}>
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
@@ -709,9 +701,9 @@ export function QuickRecordDialog({
 
             <div className="space-y-1">
               <Label className="text-xs">How was it?</Label>
-              <Select 
-                value={recordMood?.toString() || 'none'} 
-                onValueChange={(v) => setRecordMood(v === 'none' ? undefined : parseInt(v))}
+              <Select
+                value={recordMood?.toString() || 'none'}
+                onValueChange={v => setRecordMood(v === 'none' ? undefined : parseInt(v))}
               >
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Mood" />
@@ -732,7 +724,7 @@ export function QuickRecordDialog({
             <Label className="text-xs">What happened?</Label>
             <Textarea
               value={recordContent}
-              onChange={(e) => setRecordContent(e.target.value)}
+              onChange={e => setRecordContent(e.target.value)}
               placeholder="Topics covered, notes, thoughts..."
               className="min-h-[100px] resize-none"
               autoFocus
@@ -758,5 +750,5 @@ export function QuickRecordDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

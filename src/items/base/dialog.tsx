@@ -1,34 +1,34 @@
-import { Button } from '@/components/ui/button';
-import ColorPicker from '@/components/ui/color-picker';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FormError } from '@/components/ui/form-error';
-import { Input } from '@/components/ui/input';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { SimpleSelect, SimpleSelectOption } from '@/components/ui/simple-select';
-import { useCourses, useProjects } from '@/hooks/useStore';
-import { t } from '@/i18n/config';
-import { ItemForm, itemFormSchemaMap } from '@/items/forms';
-import { ITEM_TYPES, ItemType, Item } from '@/items/models';
-import { ItemFormFieldFlags } from '@/items/useItemDialog';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { getItemStaticMethods } from '../methods';
-import { LabelWithRequiredIndicator, isFieldRequired } from './LabelWithRequiredIndicator';
+import { Button } from '@/components/ui/button'
+import ColorPicker from '@/components/ui/color-picker'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { FormError } from '@/components/ui/form-error'
+import { Input } from '@/components/ui/input'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { SimpleSelect, SimpleSelectOption } from '@/components/ui/simple-select'
+import { useCourses, useProjects } from '@/hooks/useStore'
+import { t } from '@/i18n/config'
+import { ItemForm, itemFormSchemaMap } from '@/items/forms'
+import { ITEM_TYPES, ItemType, Item } from '@/items/models'
+import { ItemFormFieldFlags } from '@/items/useItemDialog'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { ChevronDown, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { FormProvider, useForm } from 'react-hook-form'
+import { getItemStaticMethods } from '../methods'
+import { LabelWithRequiredIndicator, isFieldRequired } from './LabelWithRequiredIndicator'
 
 export interface ItemDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  editingItem: Item | null;
-  itemType: ItemType;
-  form: ItemForm;
-  hidden: ItemFormFieldFlags;
-  disabled: ItemFormFieldFlags;
-  availableItemTypes?: ItemType[];
-  onTypeChange?: (newType: ItemType, currentFormData?: ItemForm) => void;
-  onSave: (data: ItemForm) => void;
-  onDelete: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  editingItem: Item | null
+  itemType: ItemType
+  form: ItemForm
+  hidden: ItemFormFieldFlags
+  disabled: ItemFormFieldFlags
+  availableItemTypes?: ItemType[]
+  onTypeChange?: (newType: ItemType, currentFormData?: ItemForm) => void
+  onSave: (data: ItemForm) => void
+  onDelete: () => void
 }
 
 export function ItemDialog({
@@ -44,94 +44,94 @@ export function ItemDialog({
   onSave,
   onDelete,
 }: ItemDialogProps) {
-  const { courses } = useCourses();
-  const { projects } = useProjects();
-  const [showScrollHint, setShowScrollHint] = useState(false);
-  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
+  const { courses } = useCourses()
+  const { projects } = useProjects()
+  const [showScrollHint, setShowScrollHint] = useState(false)
+  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null)
 
   // Callback ref to ensure we capture the element when it's actually mounted
   const scrollContainerCallbackRef = useCallback((node: HTMLDivElement | null) => {
-    setScrollContainer(node);
-  }, []);
+    setScrollContainer(node)
+  }, [])
 
-  const getSchema = () => itemFormSchemaMap[itemType];
+  const getSchema = () => itemFormSchemaMap[itemType]
 
   // Initialize React Hook Form with appropriate schema
   const methods = useForm({
     resolver: zodResolver(getSchema()),
     defaultValues: form,
-  });
+  })
 
   const {
     handleSubmit,
     reset,
     watch,
     formState: { errors },
-  } = methods;
+  } = methods
 
-  const currentSchema = getSchema();
+  const currentSchema = getSchema()
 
-  const watchedNotes = watch('notes');
+  const watchedNotes = watch('notes')
 
   // Only reset when dialog opens or item type changes (not on every form change)
   useEffect(() => {
     if (open) {
-      reset(form);
+      reset(form)
     }
-  }, [open, itemType, reset]);
+  }, [open, itemType, reset])
 
   // Check if content is scrollable
   useEffect(() => {
     if (!open) {
-      setShowScrollHint(false);
-      return;
+      setShowScrollHint(false)
+      return
     }
 
     if (!scrollContainer) {
-      return;
+      return
     }
 
     const checkScrollable = () => {
-      const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight;
+      const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight
       const isAtBottom =
-        Math.abs(scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) < 1;
+        Math.abs(scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) < 1
 
-      setShowScrollHint(isScrollable && !isAtBottom);
-    };
+      setShowScrollHint(isScrollable && !isAtBottom)
+    }
 
-    checkScrollable();
+    checkScrollable()
 
-    scrollContainer.addEventListener('scroll', checkScrollable, { passive: true });
+    scrollContainer.addEventListener('scroll', checkScrollable, { passive: true })
 
-    const resizeObserver = new ResizeObserver(checkScrollable);
-    resizeObserver.observe(scrollContainer);
+    const resizeObserver = new ResizeObserver(checkScrollable)
+    resizeObserver.observe(scrollContainer)
 
     return () => {
-      scrollContainer.removeEventListener('scroll', checkScrollable);
-      resizeObserver.disconnect();
-    };
-  }, [open, scrollContainer]);
+      scrollContainer.removeEventListener('scroll', checkScrollable)
+      resizeObserver.disconnect()
+    }
+  }, [open, scrollContainer])
 
   const onSubmit = (data: ItemForm) => {
-    onSave(data);
-  };
+    onSave(data)
+  }
 
   const getDialogTitle = () => {
-    const action = editingItem ? 'edit' : 'add';
-    return t(`items:${itemType}.actions.${action}`);
-  };
+    const action = editingItem ? 'edit' : 'add'
+    return t(`items:${itemType}.actions.${action}`)
+  }
 
   const getDialogDescription = () => {
-    const action = editingItem ? 'edit' : 'add';
-    return t(`items:${itemType}.descriptions.${action}`);
-  };
+    const action = editingItem ? 'edit' : 'add'
+    return t(`items:${itemType}.descriptions.${action}`)
+  }
 
-  const ItemStaticMethods = getItemStaticMethods(itemType);
+  const ItemStaticMethods = getItemStaticMethods(itemType)
 
   const itemTypeOptions: SimpleSelectOption[] = (availableItemTypes || ITEM_TYPES).map(value => ({
     value,
     label: t(`items:${value}.title`),
-  }));
+  }))
   if (itemTypeOptions.length > 1) {
     itemTypeOptions.push({
       value: '__warning__',
@@ -141,7 +141,7 @@ export function ItemDialog({
           <p className="text-sm text-amber-700 dark:text-amber-300">{t('items:common.warnings.typeChangeWarning')}</p>
         </div>
       ),
-    });
+    })
   }
 
   return (
@@ -178,8 +178,8 @@ export function ItemDialog({
                             onValueChange={(newType: string) => {
                               if (onTypeChange && newType !== itemType) {
                                 // Get current form data from react-hook-form and pass it to onTypeChange
-                                const currentFormData = methods.getValues() as ItemForm;
-                                onTypeChange(newType as ItemType, currentFormData);
+                                const currentFormData = methods.getValues() as ItemForm
+                                onTypeChange(newType as ItemType, currentFormData)
                               }
                             }}
                             placeholder={t('items:common.fields.type')}
@@ -220,8 +220,8 @@ export function ItemDialog({
                           <SimpleSelect
                             value={methods.watch('courseId') || 'none'}
                             onValueChange={value => {
-                              const courseId = value === 'none' ? '' : value;
-                              methods.setValue('courseId', courseId);
+                              const courseId = value === 'none' ? '' : value
+                              methods.setValue('courseId', courseId)
                             }}
                             placeholder={t('items:common.fields.course')}
                             className="rounded-xl"
@@ -249,8 +249,8 @@ export function ItemDialog({
                           <SimpleSelect
                             value={methods.watch('projectId') || 'none'}
                             onValueChange={value => {
-                              const projectId = value === 'none' ? '' : value;
-                              methods.setValue('projectId', projectId);
+                              const projectId = value === 'none' ? '' : value
+                              methods.setValue('projectId', projectId)
                             }}
                             placeholder={t('items:common.fields.project')}
                             className="rounded-xl"
@@ -282,7 +282,7 @@ export function ItemDialog({
                             label=""
                             value={methods.watch('color') || '#3b82f6'}
                             onChange={color => {
-                              methods.setValue('color', color);
+                              methods.setValue('color', color)
                             }}
                           />
                           <FormError message={errors.color?.message} />
@@ -303,7 +303,7 @@ export function ItemDialog({
                           <RichTextEditor
                             content={methods.watch('notes') || ''}
                             onChange={content => {
-                              methods.setValue('notes', content);
+                              methods.setValue('notes', content)
                             }}
                             placeholder={t(`items:${itemType}.placeholders.notes`)}
                             className="mt-1"
@@ -344,5 +344,5 @@ export function ItemDialog({
         </FormProvider>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

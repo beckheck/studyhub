@@ -16,7 +16,7 @@
     "totalMood": "ánimo total",
     "moodEmojis": {
       "happy": "feliz",
-      "sad": "triste", 
+      "sad": "triste",
       "angry": "enojado",
       "excited": "emocionado",
       "neutral": "neutral"
@@ -30,7 +30,7 @@
   },
   "gratitude": {
     "title": "Gratitud",
-    "note": "Nota de gratitud", 
+    "note": "Nota de gratitud",
     "placeholder": "Una cosa por la que estás agradecido/a hoy…",
     "protectVibe": "Protege tu energía 💖",
     "dailyReflection": "Reflexión diaria"

@@ -2,15 +2,15 @@
  * Utility functions for handling study techniques and phase management
  */
 
-import { TimerPhase } from '../types';
+import { TimerPhase } from '../types'
 
 export interface TechniqueConfig {
-  id: string;
-  name: string; // Translation key
-  studyMinutes: number;
-  breakMinutes: number;
-  longBreakMinutes?: number; // Optional long break duration
-  longBreakInterval?: number; // Number of study phases before long break
+  id: string
+  name: string // Translation key
+  studyMinutes: number
+  breakMinutes: number
+  longBreakMinutes?: number // Optional long break duration
+  longBreakInterval?: number // Number of study phases before long break
 }
 
 /**
@@ -37,7 +37,7 @@ export const STUDY_TECHNIQUES: TechniqueConfig[] = [
     studyMinutes: Infinity,
     breakMinutes: 0,
   },
-];
+]
 
 // if in dev environment, add test technique
 if (import.meta.env.DEV) {
@@ -48,7 +48,7 @@ if (import.meta.env.DEV) {
     breakMinutes: 0.2,
     longBreakMinutes: 0.3,
     longBreakInterval: 4,
-  });
+  })
 }
 
 /**
@@ -57,14 +57,14 @@ if (import.meta.env.DEV) {
  * @returns Configuration object with study/break durations
  */
 export function getTechniqueConfig(techniqueId: string): TechniqueConfig {
-  const technique = STUDY_TECHNIQUES.find(t => t.id === techniqueId);
+  const technique = STUDY_TECHNIQUES.find(t => t.id === techniqueId)
 
   if (!technique) {
     // Fallback to flow technique for unknown IDs
-    return STUDY_TECHNIQUES.find(t => t.id === 'flow')!;
+    return STUDY_TECHNIQUES.find(t => t.id === 'flow')!
   }
 
-  return technique;
+  return technique
 }
 
 /**
@@ -74,30 +74,30 @@ export function getTechniqueConfig(techniqueId: string): TechniqueConfig {
  * @returns Duration in seconds, or Infinity for continuous flow
  */
 export function getPhaseDurationSeconds(techniqueId: string, phase: TimerPhase): number {
-  const config = getTechniqueConfig(techniqueId);
+  const config = getTechniqueConfig(techniqueId)
 
   if (config.breakMinutes === 0) {
-    return Infinity; // Flow technique - no time limit
+    return Infinity // Flow technique - no time limit
   }
 
-  let minutes: number;
+  let minutes: number
   if (phase === 'focus') {
-    minutes = config.studyMinutes;
+    minutes = config.studyMinutes
   } else if (phase === 'longBreak') {
-    minutes = config.longBreakMinutes || config.breakMinutes;
+    minutes = config.longBreakMinutes || config.breakMinutes
   } else {
-    minutes = config.breakMinutes;
+    minutes = config.breakMinutes
   }
 
-  return minutes * 60; // Convert to seconds
+  return minutes * 60 // Convert to seconds
 }
 
 export function getPhaseEmoji(techniqueId: string, phase: TimerPhase): string {
-  const config = getTechniqueConfig(techniqueId);
+  const config = getTechniqueConfig(techniqueId)
   if (config.breakMinutes === 0) {
-    return '⏰';
+    return '⏰'
   }
-  return phase === 'focus' ? '📚' : phase === 'longBreak' ? '💤' : '🧘🏻'; //🧘🏻🪷💅
+  return phase === 'focus' ? '📚' : phase === 'longBreak' ? '💤' : '🧘🏻' //🧘🏻🪷💅
 }
 
 /**
@@ -108,14 +108,14 @@ export function getPhaseEmoji(techniqueId: string, phase: TimerPhase): string {
  * @returns Whether the phase should transition
  */
 export function shouldTransitionPhase(techniqueId: string, phase: TimerPhase, phaseElapsed: number): boolean {
-  const config = getTechniqueConfig(techniqueId);
+  const config = getTechniqueConfig(techniqueId)
 
   if (config.breakMinutes === 0) {
-    return false; // Flow technique never auto-transitions
+    return false // Flow technique never auto-transitions
   }
 
-  const phaseDuration = getPhaseDurationSeconds(techniqueId, phase);
-  return phaseElapsed >= phaseDuration;
+  const phaseDuration = getPhaseDurationSeconds(techniqueId, phase)
+  return phaseElapsed >= phaseDuration
 }
 
 /**
@@ -126,19 +126,19 @@ export function shouldTransitionPhase(techniqueId: string, phase: TimerPhase, ph
  * @returns Next phase
  */
 export function getNextPhase(currentPhase: TimerPhase, techniqueId: string, studyPhasesCompleted: number): TimerPhase {
-  const config = getTechniqueConfig(techniqueId);
+  const config = getTechniqueConfig(techniqueId)
 
   if (currentPhase === 'focus') {
     // After focus, determine if it's time for a long break
     if (config.longBreakInterval && config.longBreakMinutes) {
-      const completedAfterThis = studyPhasesCompleted + 1;
+      const completedAfterThis = studyPhasesCompleted + 1
       if (completedAfterThis % config.longBreakInterval === 0) {
-        return 'longBreak';
+        return 'longBreak'
       }
     }
-    return 'break';
+    return 'break'
   }
 
   // After any break (short or long), return to focus
-  return 'focus';
+  return 'focus'
 }

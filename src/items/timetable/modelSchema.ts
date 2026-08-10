@@ -1,11 +1,11 @@
-import { t } from '@/i18n/config';
-import { addDaysToComponents, createDateInTimezone, getDateComponentsInTimezone } from '@/lib/date-utils';
-import { z } from 'zod';
-import { ItemBase, ItemBaseSchema } from '../base/modelSchema';
+import { t } from '@/i18n/config'
+import { addDaysToComponents, createDateInTimezone, getDateComponentsInTimezone } from '@/lib/date-utils'
+import { z } from 'zod'
+import { ItemBase, ItemBaseSchema } from '../base/modelSchema'
 
-export const ITEM_TIMETABLE_ACTIVITY_TYPES = ['lecture', 'tutorial', 'workshop', 'lab'] as const;
+export const ITEM_TIMETABLE_ACTIVITY_TYPES = ['lecture', 'tutorial', 'workshop', 'lab'] as const
 
-export type ItemTimetableActivityType = (typeof ITEM_TIMETABLE_ACTIVITY_TYPES)[number];
+export type ItemTimetableActivityType = (typeof ITEM_TIMETABLE_ACTIVITY_TYPES)[number]
 
 export const TIME_BLOCKS = [
   { id: '1', startsAt: '08:20', endsAt: '09:30' },
@@ -16,7 +16,7 @@ export const TIME_BLOCKS = [
   { id: '6', startsAt: '16:10', endsAt: '17:20' },
   { id: '7', startsAt: '17:30', endsAt: '18:40' },
   { id: '8', startsAt: '18:50', endsAt: '20:00' },
-];
+]
 
 export const TimetableBlockSchema = z.object({
   id: z.string({ message: t('items:timetable.validation.idRequired') }),
@@ -26,7 +26,7 @@ export const TimetableBlockSchema = z.object({
   endsAt: z
     .string({ message: t('items:timetable.validation.endsAtRequired') })
     .regex(/^\d{1,2}:\d{2}$/, { message: t('items:timetable.validation.timeFormat') }),
-});
+})
 // {weekday, blockId} can be later converted to {startsAt, endsAt, recurrence}.
 
 export const ItemTimetableSchema = z.object({
@@ -47,24 +47,24 @@ export const ItemTimetableSchema = z.object({
   activityType: z
     .string({ message: t('items:timetable.validation.activityTypeRequired') })
     .min(1, { message: t('items:timetable.validation.activityTypeMinLength') }),
-});
+})
 
-export const ItemTimetableCompleteSchema = ItemBaseSchema.extend(ItemTimetableSchema.shape);
-export type TimetableBlock = z.infer<typeof TimetableBlockSchema>;
-export type ItemTimetableSpecific = z.infer<typeof ItemTimetableSchema>;
-export type ItemTimetable = ItemBase & ItemTimetableSpecific;
+export const ItemTimetableCompleteSchema = ItemBaseSchema.extend(ItemTimetableSchema.shape)
+export type TimetableBlock = z.infer<typeof TimetableBlockSchema>
+export type ItemTimetableSpecific = z.infer<typeof ItemTimetableSchema>
+export type ItemTimetable = ItemBase & ItemTimetableSpecific
 
 // Derived type that replaces weekday and blockId with actual time properties
 export type ItemTimetableInstance = Omit<ItemTimetable, 'weekday' | 'blockId'> & {
-  startsAt: Date;
-  endsAt: Date;
-};
+  startsAt: Date
+  endsAt: Date
+}
 
 /**
  * Helper function to find a time block by its ID
  */
 function getTimeBlockById(blockId: string): TimetableBlock | undefined {
-  return TIME_BLOCKS.find(block => block.id === blockId);
+  return TIME_BLOCKS.find(block => block.id === blockId)
 }
 
 /**
@@ -75,17 +75,17 @@ function getTimeBlockById(blockId: string): TimetableBlock | undefined {
  * @returns The next date that falls on the target weekday
  */
 function getNextWeekdayOccurrence(fromDate: Date, targetWeekday: number, timezone?: string): Date {
-  const components = getDateComponentsInTimezone(fromDate, timezone);
-  const currentWeekday = components.day;
+  const components = getDateComponentsInTimezone(fromDate, timezone)
+  const currentWeekday = components.day
 
-  let daysToAdd = targetWeekday - currentWeekday;
+  let daysToAdd = targetWeekday - currentWeekday
 
   // If the target weekday is today or in the past this week, move to next week
   if (daysToAdd <= 0) {
-    daysToAdd += 7;
+    daysToAdd += 7
   }
 
-  const nextComponents = addDaysToComponents(components, daysToAdd);
+  const nextComponents = addDaysToComponents(components, daysToAdd)
   return createDateInTimezone(
     nextComponents.year,
     nextComponents.month,
@@ -94,30 +94,30 @@ function getNextWeekdayOccurrence(fromDate: Date, targetWeekday: number, timezon
     0,
     0,
     0,
-    timezone
-  );
+    timezone,
+  )
 }
 
 /**
  * Helper function to create a timetable instance from a base item and a specific date
  */
 function createTimetableInstance(timetableItem: ItemTimetable, date: Date, timezone?: string): ItemTimetableInstance {
-  const block = getTimeBlockById(timetableItem.blockId);
+  const block = getTimeBlockById(timetableItem.blockId)
   if (!block) {
-    throw new Error(`Invalid blockId: ${timetableItem.blockId}`);
+    throw new Error(`Invalid blockId: ${timetableItem.blockId}`)
   }
 
-  const { weekday, blockId, ...baseItem } = timetableItem;
+  const { weekday: _weekday, blockId: _blockId, ...baseItem } = timetableItem
 
   // Parse time strings and create Date objects for the given date
-  const [startHours, startMinutes] = block.startsAt.split(':').map(Number);
-  const [endHours, endMinutes] = block.endsAt.split(':').map(Number);
+  const [startHours, startMinutes] = block.startsAt.split(':').map(Number)
+  const [endHours, endMinutes] = block.endsAt.split(':').map(Number)
 
   // Get date components in the specified timezone
-  const dateComponents = getDateComponentsInTimezone(date, timezone);
+  const dateComponents = getDateComponentsInTimezone(date, timezone)
 
   // Create timezone-aware Date objects, defaulting to UTC if no timezone specified
-  const targetTimezone = timezone || 'UTC';
+  const targetTimezone = timezone || 'UTC'
 
   const startsAt = createDateInTimezone(
     dateComponents.year,
@@ -127,8 +127,8 @@ function createTimetableInstance(timetableItem: ItemTimetable, date: Date, timez
     startMinutes,
     0,
     0,
-    targetTimezone
-  );
+    targetTimezone,
+  )
 
   const endsAt = createDateInTimezone(
     dateComponents.year,
@@ -138,14 +138,14 @@ function createTimetableInstance(timetableItem: ItemTimetable, date: Date, timez
     endMinutes,
     0,
     0,
-    targetTimezone
-  );
+    targetTimezone,
+  )
 
   return {
     ...baseItem,
     startsAt,
     endsAt,
-  };
+  }
 }
 
 /**
@@ -158,17 +158,17 @@ function createTimetableInstance(timetableItem: ItemTimetable, date: Date, timez
 export function getNextTimetableInstance(
   timetableItem: ItemTimetable,
   fromDate: Date = new Date(),
-  timezone?: string
+  timezone?: string,
 ): ItemTimetableInstance | undefined {
   try {
     // Find the next occurrence of the target weekday
-    const nextDate = getNextWeekdayOccurrence(fromDate, timetableItem.weekday, timezone);
+    const nextDate = getNextWeekdayOccurrence(fromDate, timetableItem.weekday, timezone)
 
     // Create and return the instance
-    return createTimetableInstance(timetableItem, nextDate, timezone);
+    return createTimetableInstance(timetableItem, nextDate, timezone)
   } catch (error) {
-    console.error('Error creating next timetable instance:', error);
-    return undefined;
+    console.error('Error creating next timetable instance:', error)
+    return undefined
   }
 }
 
@@ -184,37 +184,37 @@ export function getTimetableInstancesBetween(
   timetableItem: ItemTimetable,
   startDate: Date,
   endDate: Date,
-  timezone?: string
+  timezone?: string,
 ): ItemTimetableInstance[] {
-  const instances: ItemTimetableInstance[] = [];
+  const instances: ItemTimetableInstance[] = []
 
   try {
     // Validate the time block exists
     if (!getTimeBlockById(timetableItem.blockId)) {
-      console.error(`Invalid blockId: ${timetableItem.blockId}`);
-      return instances;
+      console.error(`Invalid blockId: ${timetableItem.blockId}`)
+      return instances
     }
 
     // Validate date range
     if (startDate >= endDate) {
-      return instances;
+      return instances
     }
 
     // Get date components in the specified timezone
-    const startComponents = getDateComponentsInTimezone(startDate, timezone);
+    const startComponents = getDateComponentsInTimezone(startDate, timezone)
 
     // Find the first occurrence on or after startDate
-    const targetWeekday = timetableItem.weekday;
-    const currentWeekday = startComponents.day;
+    const targetWeekday = timetableItem.weekday
+    const currentWeekday = startComponents.day
 
     // Calculate days to the first occurrence
-    let daysToAdd = targetWeekday - currentWeekday;
+    let daysToAdd = targetWeekday - currentWeekday
     if (daysToAdd < 0) {
-      daysToAdd += 7;
+      daysToAdd += 7
     }
 
     // Start from the first occurrence
-    let currentComponents = addDaysToComponents(startComponents, daysToAdd);
+    let currentComponents = addDaysToComponents(startComponents, daysToAdd)
 
     // Generate instances for each week until we exceed the end date
     while (true) {
@@ -226,26 +226,26 @@ export function getTimetableInstancesBetween(
         0,
         0,
         0,
-        timezone
-      );
+        timezone,
+      )
 
       // Check if we've exceeded the end date (exclusive)
       if (currentDate >= endDate) {
-        break;
+        break
       }
 
       // Only add if this occurrence is on or after the start date
       if (currentDate >= startDate) {
-        instances.push(createTimetableInstance(timetableItem, currentDate, timezone));
+        instances.push(createTimetableInstance(timetableItem, currentDate, timezone))
       }
 
       // Move to next week
-      currentComponents = addDaysToComponents(currentComponents, 7);
+      currentComponents = addDaysToComponents(currentComponents, 7)
     }
 
-    return instances;
+    return instances
   } catch (error) {
-    console.error('Error generating timetable instances:', error);
-    return instances;
+    console.error('Error generating timetable instances:', error)
+    return instances
   }
 }

@@ -1,12 +1,11 @@
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 
 interface ColorPickerProps {
-  label?: string;
-  value: string;
-  onChange: (color: string) => void;
-  htmlFor?: string;
+  label?: string
+  value: string
+  onChange: (color: string) => void
+  htmlFor?: string
 }
 
 const predefinedColors = [
@@ -20,7 +19,7 @@ const predefinedColors = [
   '#3b82f6',
   '#6366f1',
   '#8b5cf6',
-];
+]
 
 export default function ColorPicker({ label = 'Color', value, onChange, htmlFor }: ColorPickerProps) {
   const generateRandomColor = (): string => {
@@ -29,12 +28,12 @@ export default function ColorPicker({ label = 'Color', value, onChange, htmlFor 
       Math.floor(Math.random() * 16777215)
         .toString(16)
         .padStart(6, '0')
-    );
-  };
+    )
+  }
 
   const handleRandomColor = () => {
-    onChange(generateRandomColor());
-  };
+    onChange(generateRandomColor())
+  }
 
   return (
     <div>
@@ -77,5 +76,5 @@ export default function ColorPicker({ label = 'Color', value, onChange, htmlFor 
         </div>
       </div>
     </div>
-  );
+  )
 }

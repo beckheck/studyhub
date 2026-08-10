@@ -1,6 +1,6 @@
-import { ItemList } from '@/items/ItemList';
-import { ItemDialogExample } from '@/items/ItemDialogExample';
-import { Card } from '@/components/ui/card';
+import { ItemList } from '@/items/ItemList'
+import { ItemDialogExample } from '@/items/ItemDialogExample'
+import { Card } from '@/components/ui/card'
 
 export default function TestTab() {
   return (
@@ -20,5 +20,5 @@ export default function TestTab() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

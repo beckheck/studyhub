@@ -1,58 +1,76 @@
-import CurrentDateTime from '@/components/CurrentDateTime';
-import SoundtrackCard from '@/components/SoundtrackCard';
-import TipsRow from '@/components/TipsRow';
-import TodaySchedule from '@/components/TodaySchedule';
-import Upcoming from '@/components/Upcoming';
-import WeatherWidget from '@/components/WeatherWidget';
-import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } from '@/hooks/useStore';
-import { ItemExam } from '@/items/exam/modelSchema';
-import { ItemTask } from '@/items/task/modelSchema';
-import { compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils';
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronRight, ExternalLink, GripVertical, Pencil, Plus, X } from 'lucide-react';
-import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import CurrentDateTime from '@/components/CurrentDateTime'
+import SoundtrackCard from '@/components/SoundtrackCard'
+import TipsRow from '@/components/TipsRow'
+import TodaySchedule from '@/components/TodaySchedule'
+import Upcoming from '@/components/Upcoming'
+import WeatherWidget from '@/components/WeatherWidget'
+import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } from '@/hooks/useStore'
+import { ItemExam } from '@/items/exam/modelSchema'
+import { ItemTask } from '@/items/task/modelSchema'
+import { compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils'
+import {
+  AlertTriangle,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  GripVertical,
+  Pencil,
+  Plus,
+  X,
+} from 'lucide-react'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface DashboardTabProps {
-  onTabChange: (tab: string) => void;
-  isWidgetEditMode: boolean;
+  onTabChange: (tab: string) => void
+  isWidgetEditMode: boolean
 }
 
-type DashboardWidgetId = 'weather' | 'datetime' | 'schedule' | 'nextUp' | 'soundtrack' | 'tips' | 'scratchpad' | 'mytasks';
+type DashboardWidgetId =
+  | 'weather'
+  | 'datetime'
+  | 'schedule'
+  | 'nextUp'
+  | 'soundtrack'
+  | 'tips'
+  | 'scratchpad'
+  | 'mytasks'
 
-const DEFAULT_WIDGET_ORDER: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp', 'mytasks', 'soundtrack', 'tips'];
+const DEFAULT_WIDGET_ORDER: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp', 'mytasks', 'soundtrack', 'tips']
 
 interface DashboardWidgetFrameProps {
-  id: DashboardWidgetId;
-  title: string;
-  description: string;
-  isEditMode: boolean;
-  isVisible: boolean;
-  isDraggable?: boolean;
-  isDragging?: boolean;
-  isDropTarget?: boolean;
-  onAdd: (id: DashboardWidgetId) => void;
-  onRemove: (id: DashboardWidgetId) => void;
-  onDragStart?: (id: DashboardWidgetId) => void;
-  onDragEnd?: () => void;
-  onDrop?: (id: DashboardWidgetId) => void;
-  onDragOver?: (id: DashboardWidgetId) => void;
-  className?: string;
-  children: ReactNode;
+  id: DashboardWidgetId
+  title: string
+  description: string
+  isEditMode: boolean
+  isVisible: boolean
+  isDraggable?: boolean
+  isDragging?: boolean
+  isDropTarget?: boolean
+  onAdd: (id: DashboardWidgetId) => void
+  onRemove: (id: DashboardWidgetId) => void
+  onDragStart?: (id: DashboardWidgetId) => void
+  onDragEnd?: () => void
+  onDrop?: (id: DashboardWidgetId) => void
+  onDragOver?: (id: DashboardWidgetId) => void
+  className?: string
+  children: ReactNode
 }
 
 interface DashboardBareWidgetFrameProps {
-  id: DashboardWidgetId;
-  title: string;
-  description: string;
-  isEditMode: boolean;
-  isVisible: boolean;
-  onAdd: (id: DashboardWidgetId) => void;
-  onRemove: (id: DashboardWidgetId) => void;
-  children: ReactNode;
+  id: DashboardWidgetId
+  title: string
+  description: string
+  isEditMode: boolean
+  isVisible: boolean
+  onAdd: (id: DashboardWidgetId) => void
+  onRemove: (id: DashboardWidgetId) => void
+  children: ReactNode
 }
 
 function DashboardWidgetFrame({
@@ -75,7 +93,7 @@ function DashboardWidgetFrame({
 }: DashboardWidgetFrameProps) {
   if (!isVisible) {
     if (!isEditMode) {
-      return null;
+      return null
     }
 
     return (
@@ -98,7 +116,7 @@ function DashboardWidgetFrame({
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -107,14 +125,14 @@ function DashboardWidgetFrame({
         isDropTarget ? 'scale-[1.01] ring-2 ring-amber-400/70 ring-offset-2 ring-offset-transparent' : ''
       }`}
       onDragOver={event => {
-        if (!isEditMode || !isDraggable) return;
-        event.preventDefault();
-        onDragOver?.(id);
+        if (!isEditMode || !isDraggable) return
+        event.preventDefault()
+        onDragOver?.(id)
       }}
       onDrop={event => {
-        if (!isEditMode || !isDraggable) return;
-        event.preventDefault();
-        onDrop?.(id);
+        if (!isEditMode || !isDraggable) return
+        event.preventDefault()
+        onDrop?.(id)
       }}
     >
       {isEditMode && (
@@ -124,9 +142,9 @@ function DashboardWidgetFrame({
               type="button"
               draggable
               onDragStart={event => {
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', id);
-                onDragStart?.(id);
+                event.dataTransfer.effectAllowed = 'move'
+                event.dataTransfer.setData('text/plain', id)
+                onDragStart?.(id)
               }}
               onDragEnd={() => onDragEnd?.()}
               aria-label={`Drag ${title}`}
@@ -152,7 +170,7 @@ function DashboardWidgetFrame({
       )}
       {children}
     </div>
-  );
+  )
 }
 
 function DashboardBareWidgetFrame({
@@ -167,7 +185,7 @@ function DashboardBareWidgetFrame({
 }: DashboardBareWidgetFrameProps) {
   if (!isVisible) {
     if (!isEditMode) {
-      return null;
+      return null
     }
 
     return (
@@ -185,7 +203,7 @@ function DashboardBareWidgetFrame({
           Add
         </div>
       </button>
-    );
+    )
   }
 
   return (
@@ -204,16 +222,16 @@ function DashboardBareWidgetFrame({
       )}
       {children}
     </div>
-  );
+  )
 }
 
 /**
  * Dashboard Tab Component
  */
 export default function DashboardTab({ onTabChange, isWidgetEditMode }: DashboardTabProps) {
-  const { t } = useTranslation('common');
-  const { setSelectedCourse } = useCourses();
-  const { getItemsByType, updateItem } = useItems();
+  const { t } = useTranslation('common')
+  const { setSelectedCourse } = useCourses()
+  const { getItemsByType, updateItem } = useItems()
   const {
     dashboard,
     missionText,
@@ -222,120 +240,126 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
     setWidgetVisibility,
     moveWidgetBefore,
     moveWidgetToEnd,
-  } = useDashboardLayout();
+  } = useDashboardLayout()
 
-  const tasks = getItemsByType('task') as ItemTask[];
-  const exams = getItemsByType('exam') as ItemExam[];
+  const tasks = getItemsByType('task') as ItemTask[]
+  const exams = getItemsByType('exam') as ItemExam[]
 
-  const { weather } = useWeather();
-  const { soundtrack, setSoundtrackPosition } = useSoundtrack();
-  const { openDialog } = useSettingsDialogContext();
-  const normalizedMissionLink = missionLink.trim();
+  const { weather } = useWeather()
+  const { soundtrack, setSoundtrackPosition } = useSoundtrack()
+  const { openDialog } = useSettingsDialogContext()
+  const normalizedMissionLink = missionLink.trim()
   const missionLinkHref = normalizedMissionLink
     ? /^https?:\/\//i.test(normalizedMissionLink)
       ? normalizedMissionLink
       : `https://${normalizedMissionLink}`
-    : '';
+    : ''
 
-  const [nextUpExpanded, setNextUpExpanded] = useState<number>(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [hidePending, setHidePending] = useState(false);
-  const [pendingExpanded, setPendingExpanded] = useState(false);
-  const [draggedWidgetId, setDraggedWidgetId] = useState<DashboardWidgetId | null>(null);
-  const [dropTargetWidgetId, setDropTargetWidgetId] = useState<DashboardWidgetId | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [nextUpExpanded, setNextUpExpanded] = useState<number>(0)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [hidePending, setHidePending] = useState(false)
+  const [pendingExpanded, setPendingExpanded] = useState(false)
+  const [draggedWidgetId, setDraggedWidgetId] = useState<DashboardWidgetId | null>(null)
+  const [dropTargetWidgetId, setDropTargetWidgetId] = useState<DashboardWidgetId | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const widgetOrder = (() => {
-    if (!dashboard.widgetOrder?.length) return DEFAULT_WIDGET_ORDER;
-    const validWidgetIds = new Set<DashboardWidgetId>(DEFAULT_WIDGET_ORDER);
-    const stored = (dashboard.widgetOrder as string[]).filter((widgetId): widgetId is DashboardWidgetId => validWidgetIds.has(widgetId as DashboardWidgetId));
-    const pinnedOrder: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp'];
+    if (!dashboard.widgetOrder?.length) return DEFAULT_WIDGET_ORDER
+    const validWidgetIds = new Set<DashboardWidgetId>(DEFAULT_WIDGET_ORDER)
+    const stored = (dashboard.widgetOrder as string[]).filter((widgetId): widgetId is DashboardWidgetId =>
+      validWidgetIds.has(widgetId as DashboardWidgetId),
+    )
+    const pinnedOrder: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp']
 
     // Keep the schedule, mission, and next-up widgets locked together at the top.
-    const pinnedWidgets = pinnedOrder.filter(widgetId => stored.includes(widgetId) || DEFAULT_WIDGET_ORDER.includes(widgetId));
-    const remainingWidgets = stored.filter(widgetId => !pinnedOrder.includes(widgetId));
-    const missingWidgets = DEFAULT_WIDGET_ORDER.filter(widgetId => !pinnedWidgets.includes(widgetId) && !remainingWidgets.includes(widgetId));
+    const pinnedWidgets = pinnedOrder.filter(
+      widgetId => stored.includes(widgetId) || DEFAULT_WIDGET_ORDER.includes(widgetId),
+    )
+    const remainingWidgets = stored.filter(widgetId => !pinnedOrder.includes(widgetId))
+    const missingWidgets = DEFAULT_WIDGET_ORDER.filter(
+      widgetId => !pinnedWidgets.includes(widgetId) && !remainingWidgets.includes(widgetId),
+    )
 
-    return [...pinnedWidgets, ...remainingWidgets, ...missingWidgets];
-  })();
+    return [...pinnedWidgets, ...remainingWidgets, ...missingWidgets]
+  })()
 
   useEffect(() => {
     if (!isWidgetEditMode) {
-      setDraggedWidgetId(null);
-      setDropTargetWidgetId(null);
+      setDraggedWidgetId(null)
+      setDropTargetWidgetId(null)
     }
-  }, [isWidgetEditMode]);
+  }, [isWidgetEditMode])
 
   const toggleTask = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find(t => t.id === taskId)
     if (task) {
-      updateItem(taskId, { isCompleted: !task.isCompleted } as any);
+      updateItem(taskId, { isCompleted: !task.isCompleted } as any)
     }
-  };
+  }
 
   const toggleExamComplete = (examId: string) => {
-    const exam = exams.find(e => e.id === examId);
+    const exam = exams.find(e => e.id === examId)
     if (exam) {
-      updateItem(examId, { isCompleted: !exam.isCompleted } as any);
+      updateItem(examId, { isCompleted: !exam.isCompleted } as any)
     }
-  };
+  }
 
   const animateToExpanded = (newValue: number) => {
-    setIsAnimating(true);
+    setIsAnimating(true)
     setTimeout(() => {
-      setNextUpExpanded(newValue);
-      setTimeout(() => setIsAnimating(false), 300);
-    }, 50);
-  };
+      setNextUpExpanded(newValue)
+      setTimeout(() => setIsAnimating(false), 300)
+    }, 50)
+  }
 
   const animateToCollapsed = () => {
-    setIsAnimating(true);
+    setIsAnimating(true)
     setTimeout(() => {
-      setNextUpExpanded(0);
-      setTimeout(() => setIsAnimating(false), 300);
-    }, 50);
-  };
+      setNextUpExpanded(0)
+      setTimeout(() => setIsAnimating(false), 300)
+    }, 50)
+  }
 
-  const isWidgetVisible = (widgetId: DashboardWidgetId) => dashboard.widgetVisibility[widgetId] !== false;
+  const isWidgetVisible = (widgetId: DashboardWidgetId) => dashboard.widgetVisibility[widgetId] !== false
 
   const setWidgetVisible = (widgetId: DashboardWidgetId, visible: boolean) => {
-    setWidgetVisibility(widgetId, visible);
+    setWidgetVisibility(widgetId, visible)
     if (widgetId === 'soundtrack' && !visible) {
-      setSoundtrackPosition('off');
+      setSoundtrackPosition('off')
     }
     if (widgetId === 'soundtrack' && visible) {
-      setSoundtrackPosition('dashboard');
+      setSoundtrackPosition('dashboard')
     }
-  };
+  }
 
   const handleDragStart = (widgetId: DashboardWidgetId) => {
-    setDraggedWidgetId(widgetId);
-    setDropTargetWidgetId(widgetId);
-  };
+    setDraggedWidgetId(widgetId)
+    setDropTargetWidgetId(widgetId)
+  }
 
   const handleDragEnd = () => {
-    setDraggedWidgetId(null);
-    setDropTargetWidgetId(null);
-  };
+    setDraggedWidgetId(null)
+    setDropTargetWidgetId(null)
+  }
 
   const handleDropOnWidget = (targetWidgetId: DashboardWidgetId) => {
     if (!draggedWidgetId || draggedWidgetId === targetWidgetId) {
-      handleDragEnd();
-      return;
+      handleDragEnd()
+      return
     }
 
-    moveWidgetBefore(draggedWidgetId, targetWidgetId);
-    handleDragEnd();
-  };
+    moveWidgetBefore(draggedWidgetId, targetWidgetId)
+    handleDragEnd()
+  }
 
   const handleDropOnBoard = () => {
     if (!draggedWidgetId) {
-      return;
+      return
     }
 
-    moveWidgetToEnd(draggedWidgetId);
-    handleDragEnd();
-  };
+    moveWidgetToEnd(draggedWidgetId)
+    handleDragEnd()
+  }
 
   const renderOrderableWidget = (widgetId: DashboardWidgetId) => {
     const draggableWidgetProps = {
@@ -346,7 +370,7 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
       onDragEnd: handleDragEnd,
       onDrop: handleDropOnWidget,
       onDragOver: (targetWidgetId: DashboardWidgetId) => setDropTargetWidgetId(targetWidgetId),
-    };
+    }
 
     switch (widgetId) {
       case 'schedule':
@@ -363,11 +387,11 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
             className="xl:col-span-12"
             {...draggableWidgetProps}
           >
-            <TodaySchedule onTabChange={onTabChange} />
+            <TodaySchedule />
           </DashboardWidgetFrame>
-        );
+        )
       case 'nextUp':
-        return <Fragment key={widgetId}>{renderNextUpWidget()}</Fragment>;
+        return <Fragment key={widgetId}>{renderNextUpWidget()}</Fragment>
       case 'soundtrack':
         return (
           <DashboardWidgetFrame
@@ -389,7 +413,7 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
               onPositionChange={setSoundtrackPosition}
             />
           </DashboardWidgetFrame>
-        );
+        )
       case 'tips':
         return (
           <DashboardWidgetFrame
@@ -406,7 +430,7 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
           >
             <TipsRow />
           </DashboardWidgetFrame>
-        );
+        )
       case 'scratchpad':
         return (
           <DashboardWidgetFrame
@@ -453,7 +477,7 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
               </CardContent>
             </Card>
           </DashboardWidgetFrame>
-        );
+        )
       case 'mytasks':
         return (
           <DashboardWidgetFrame
@@ -476,7 +500,10 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
                     .sort((a, b) => compareDates(a.dueAt, b.dueAt))
                     .slice(0, 10)
                     .map(task => (
-                      <div key={task.id} className="flex items-start gap-3 pb-3 border-b border-zinc-200/50 dark:border-zinc-700/50 last:border-b-0">
+                      <div
+                        key={task.id}
+                        className="flex items-start gap-3 pb-3 border-b border-zinc-200/50 dark:border-zinc-700/50 last:border-b-0"
+                      >
                         <input
                           type="checkbox"
                           checked={task.isCompleted}
@@ -496,47 +523,45 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
                       </div>
                     ))}
                   {tasks.filter(t => !t.isCompleted).length === 0 && (
-                    <div className="text-sm text-zinc-500 dark:text-zinc-400 text-center py-6">
-                      No pending tasks
-                    </div>
+                    <div className="text-sm text-zinc-500 dark:text-zinc-400 text-center py-6">No pending tasks</div>
                   )}
                 </div>
               </CardContent>
             </Card>
           </DashboardWidgetFrame>
-        );
+        )
     }
-  };
+  }
 
   const renderNextUpWidget = () => {
-    const today = new Date();
+    const today = new Date()
 
-    let filteredExams = exams.slice().filter(e => !e.isCompleted);
-    let filteredTasks = tasks.slice().filter(t => !t.isCompleted);
+    let filteredExams = exams.slice().filter(e => !e.isCompleted)
+    let filteredTasks = tasks.slice().filter(t => !t.isCompleted)
 
     if (hidePending) {
       filteredExams = filteredExams.filter(e => {
-        const examDate = new Date(e.startsAt);
-        return isDateAfterOrEqual(examDate, today);
-      });
+        const examDate = new Date(e.startsAt)
+        return isDateAfterOrEqual(examDate, today)
+      })
 
       filteredTasks = filteredTasks.filter(t => {
-        if (!t.dueAt) return true;
-        const taskDate = new Date(t.dueAt);
-        return isDateAfterOrEqual(taskDate, today);
-      });
+        if (!t.dueAt) return true
+        const taskDate = new Date(t.dueAt)
+        return isDateAfterOrEqual(taskDate, today)
+      })
     }
 
-    const allExams = filteredExams.sort((a, b) => compareDates(a.startsAt, b.startsAt));
-    const allTasks = filteredTasks.sort((a, b) => compareDates(a.dueAt, b.dueAt));
+    const allExams = filteredExams.sort((a, b) => compareDates(a.startsAt, b.startsAt))
+    const allTasks = filteredTasks.sort((a, b) => compareDates(a.dueAt, b.dueAt))
 
-    const currentExamCount = 5 + nextUpExpanded * 3;
-    const currentTaskCount = 5 + nextUpExpanded * 3;
+    const currentExamCount = 5 + nextUpExpanded * 3
+    const currentTaskCount = 5 + nextUpExpanded * 3
 
-    const hasMoreExams = allExams.length > currentExamCount;
-    const hasMoreTasks = allTasks.length > currentTaskCount;
-    const hasMore = hasMoreExams || hasMoreTasks;
-    const showButton = hasMore || nextUpExpanded > 0;
+    const hasMoreExams = allExams.length > currentExamCount
+    const hasMoreTasks = allTasks.length > currentTaskCount
+    const hasMore = hasMoreExams || hasMoreTasks
+    const showButton = hasMore || nextUpExpanded > 0
 
     return (
       <DashboardWidgetFrame
@@ -569,7 +594,11 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
               <div className="flex items-center gap-2 text-sm">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
                 <span className="text-zinc-600 dark:text-zinc-400">Hide Pending</span>
-                <Switch checked={hidePending} onCheckedChange={setHidePending} className="data-[state=checked]:bg-amber-600" />
+                <Switch
+                  checked={hidePending}
+                  onCheckedChange={setHidePending}
+                  className="data-[state=checked]:bg-amber-600"
+                />
               </div>
             </div>
           </CardHeader>
@@ -588,21 +617,21 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
                     <span className="ml-2 text-xs text-zinc-500">
                       (
                       {(() => {
-                        const today = new Date();
+                        const today = new Date()
 
                         const overdueExams = exams.filter(e => {
-                          if (e.isCompleted) return false;
-                          const examDate = new Date(e.startsAt);
-                          return isDateBefore(examDate, today);
-                        }).length;
+                          if (e.isCompleted) return false
+                          const examDate = new Date(e.startsAt)
+                          return isDateBefore(examDate, today)
+                        }).length
 
                         const overdueTasks = tasks.filter(t => {
-                          if (t.isCompleted || !t.dueAt) return false;
-                          const taskDate = new Date(t.dueAt);
-                          return isDateBefore(taskDate, today);
-                        }).length;
+                          if (t.isCompleted || !t.dueAt) return false
+                          const taskDate = new Date(t.dueAt)
+                          return isDateBefore(taskDate, today)
+                        }).length
 
-                        return overdueExams + overdueTasks;
+                        return overdueExams + overdueTasks
                       })()}
                       )
                     </span>
@@ -620,8 +649,8 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
                       onTabChange={onTabChange}
                       onCourseSelect={setSelectedCourse}
                       onTaskClick={task => {
-                        setSelectedCourse(task.courseId);
-                        onTabChange('courses');
+                        setSelectedCourse(task.courseId)
+                        onTabChange('courses')
                       }}
                     />
                   </div>
@@ -645,8 +674,8 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
                 onTabChange={onTabChange}
                 onCourseSelect={setSelectedCourse}
                 onTaskClick={task => {
-                  setSelectedCourse(task.courseId);
-                  onTabChange('courses');
+                  setSelectedCourse(task.courseId)
+                  onTabChange('courses')
                 }}
               />
             </div>
@@ -690,10 +719,10 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
           )}
         </Card>
       </DashboardWidgetFrame>
-    );
-  };
+    )
+  }
 
-  const soundtrackVisible = isWidgetVisible('soundtrack') && soundtrack.position === 'dashboard';
+  const _soundtrackVisible = isWidgetVisible('soundtrack') && soundtrack.position === 'dashboard'
 
   return (
     <div className="space-y-6">
@@ -727,7 +756,11 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
             onAdd={widgetId => setWidgetVisible(widgetId, true)}
             onRemove={widgetId => setWidgetVisible(widgetId, false)}
           >
-            <WeatherWidget apiKey={weather.apiKey} location={weather.location} onWeatherClick={() => openDialog('weatherApi')} />
+            <WeatherWidget
+              apiKey={weather.apiKey}
+              location={weather.location}
+              onWeatherClick={() => openDialog('weatherApi')}
+            />
           </DashboardBareWidgetFrame>
 
           <DashboardBareWidgetFrame
@@ -747,18 +780,18 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
       <div
         className="grid grid-cols-1 gap-6 xl:grid-cols-12"
         onDragOver={event => {
-          if (!isWidgetEditMode || !draggedWidgetId) return;
-          event.preventDefault();
-          setDropTargetWidgetId(null);
+          if (!isWidgetEditMode || !draggedWidgetId) return
+          event.preventDefault()
+          setDropTargetWidgetId(null)
         }}
         onDrop={event => {
-          if (!isWidgetEditMode || !draggedWidgetId) return;
-          event.preventDefault();
-          handleDropOnBoard();
+          if (!isWidgetEditMode || !draggedWidgetId) return
+          event.preventDefault()
+          handleDropOnBoard()
         }}
       >
         {widgetOrder.map(widgetId => renderOrderableWidget(widgetId))}
       </div>
     </div>
-  );
+  )
 }

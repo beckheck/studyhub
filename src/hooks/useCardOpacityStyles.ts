@@ -1,17 +1,17 @@
-import { useLayoutEffect } from 'react';
-import { useTheme } from './useStore';
+import { useLayoutEffect } from 'react'
+import { useTheme } from './useStore'
 
 export default function useCardOpacityStyles(): void {
-  const { theme } = useTheme();
-  const { cardOpacity } = theme;
+  const { theme } = useTheme()
+  const { cardOpacity } = theme
 
   // Update card opacity CSS variables
   useLayoutEffect(() => {
-    let style = document.getElementById('sp-card-opacity');
+    let style = document.getElementById('sp-card-opacity')
     if (!style) {
-      style = document.createElement('style');
-      style.id = 'sp-card-opacity';
-      document.head.appendChild(style);
+      style = document.createElement('style')
+      style.id = 'sp-card-opacity'
+      document.head.appendChild(style)
     }
 
     const cssContent = `
@@ -34,8 +34,8 @@ export default function useCardOpacityStyles(): void {
 .dark .dark\\:bg-white\\/10 {
   background-color: rgba(39, 39, 42, ${cardOpacity.dark}%) !important;
 }
-`;
+`
 
-    style.textContent = cssContent;
-  }, [cardOpacity]);
+    style.textContent = cssContent
+  }, [cardOpacity])
 }

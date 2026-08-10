@@ -1,44 +1,39 @@
-import { Button } from '@/components/ui/button';
-import { fileAttachmentStorage } from '@/stores/app';
-import { Download, Eye, FileText, Upload, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { fileAttachmentStorage } from '@/stores/app'
+import { Download, Eye, FileText, Upload, X } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface SyllabusUploadProps {
-  courseId: string;
-  syllabusFileId?: string;
-  onSyllabusChange: (fileId: string | undefined) => void;
-  className?: string;
+  courseId: string
+  syllabusFileId?: string
+  onSyllabusChange: (fileId: string | undefined) => void
+  className?: string
 }
 
-export default function SyllabusUpload({
-  courseId,
-  syllabusFileId,
-  onSyllabusChange,
-  className = '',
-}: SyllabusUploadProps) {
-  const { t } = useTranslation(['common', 'courseManager']);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [syllabusMetadata, setSyllabusMetadata] = useState<any>(null);
+export default function SyllabusUpload({ syllabusFileId, onSyllabusChange, className = '' }: SyllabusUploadProps) {
+  const { t } = useTranslation(['common', 'courseManager'])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [syllabusMetadata, setSyllabusMetadata] = useState<any>(null)
 
   // Load syllabus metadata when component mounts or syllabusFileId changes
   useEffect(() => {
     const loadSyllabusMetadata = async () => {
       if (syllabusFileId) {
-        const metadata = await fileAttachmentStorage.getFileMetadata(syllabusFileId);
-        setSyllabusMetadata(metadata);
+        const metadata = await fileAttachmentStorage.getFileMetadata(syllabusFileId)
+        setSyllabusMetadata(metadata)
       } else {
-        setSyllabusMetadata(null);
+        setSyllabusMetadata(null)
       }
-    };
+    }
 
-    loadSyllabusMetadata();
-  }, [syllabusFileId]);
+    loadSyllabusMetadata().catch(console.error)
+  }, [syllabusFileId])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
     // Validate file type (accept PDF, DOC, DOCX, TXT)
     const allowedTypes = [
@@ -46,98 +41,98 @@ export default function SyllabusUpload({
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/plain',
-    ];
+    ]
 
     if (!allowedTypes.includes(file.type)) {
-      alert(t('courseManager:syllabus.invalidFileType'));
-      return;
+      alert(t('courseManager:syllabus.invalidFileType'))
+      return
     }
 
     // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
     if (file.size > maxSize) {
-      alert(t('courseManager:syllabus.fileTooLarge'));
-      return;
+      alert(t('courseManager:syllabus.fileTooLarge'))
+      return
     }
 
-    setUploading(true);
+    setUploading(true)
     try {
       // Delete old syllabus file if exists
       if (syllabusFileId) {
-        await fileAttachmentStorage.deleteFile(syllabusFileId);
+        await fileAttachmentStorage.deleteFile(syllabusFileId)
       }
 
       // Upload new file
-      const metadata = await fileAttachmentStorage.storeFile(file);
-      setSyllabusMetadata(metadata);
-      onSyllabusChange(metadata.id);
+      const metadata = await fileAttachmentStorage.storeFile(file)
+      setSyllabusMetadata(metadata)
+      onSyllabusChange(metadata.id)
     } catch (error) {
-      console.error('Failed to upload syllabus:', error);
-      alert(t('courseManager:syllabus.uploadFailed'));
+      console.error('Failed to upload syllabus:', error)
+      alert(t('courseManager:syllabus.uploadFailed'))
     } finally {
-      setUploading(false);
+      setUploading(false)
       // Clear the input so the same file can be selected again
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = ''
       }
     }
-  };
+  }
 
   const handleViewSyllabus = async () => {
-    if (!syllabusFileId) return;
+    if (!syllabusFileId) return
 
     try {
-      const fileData = await fileAttachmentStorage.getFile(syllabusFileId);
+      const fileData = await fileAttachmentStorage.getFile(syllabusFileId)
       if (fileData) {
         // Create a blob URL and open it in a new tab
-        const response = await fetch(fileData.fileData);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        const response = await fetch(fileData.fileData)
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        window.open(url, '_blank')
 
         // Clean up the blob URL after a short delay
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
       }
     } catch (error) {
-      console.error('Failed to view syllabus:', error);
-      alert(t('courseManager:syllabus.viewFailed'));
+      console.error('Failed to view syllabus:', error)
+      alert(t('courseManager:syllabus.viewFailed'))
     }
-  };
+  }
 
   const handleDownloadSyllabus = async () => {
-    if (!syllabusFileId || !syllabusMetadata) return;
+    if (!syllabusFileId || !syllabusMetadata) return
 
     try {
-      const fileData = await fileAttachmentStorage.getFile(syllabusFileId);
+      const fileData = await fileAttachmentStorage.getFile(syllabusFileId)
       if (fileData) {
         // Create download link
-        const link = document.createElement('a');
-        link.href = fileData.fileData;
-        link.download = syllabusMetadata.fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const link = document.createElement('a')
+        link.href = fileData.fileData
+        link.download = syllabusMetadata.fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       }
     } catch (error) {
-      console.error('Failed to download syllabus:', error);
-      alert(t('courseManager:syllabus.downloadFailed'));
+      console.error('Failed to download syllabus:', error)
+      alert(t('courseManager:syllabus.downloadFailed'))
     }
-  };
+  }
 
   const handleRemoveSyllabus = async () => {
-    if (!syllabusFileId) return;
+    if (!syllabusFileId) return
 
     if (confirm(t('courseManager:syllabus.removeConfirmation'))) {
       try {
-        await fileAttachmentStorage.deleteFile(syllabusFileId);
-        setSyllabusMetadata(null);
-        onSyllabusChange(undefined);
+        await fileAttachmentStorage.deleteFile(syllabusFileId)
+        setSyllabusMetadata(null)
+        onSyllabusChange(undefined)
       } catch (error) {
-        console.error('Failed to remove syllabus:', error);
-        alert(t('courseManager:syllabus.removeFailed'));
+        console.error('Failed to remove syllabus:', error)
+        alert(t('courseManager:syllabus.removeFailed'))
       }
     }
-  };
+  }
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -244,5 +239,5 @@ export default function SyllabusUpload({
         style={{ display: 'none' }}
       />
     </div>
-  );
+  )
 }

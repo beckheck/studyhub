@@ -1,18 +1,18 @@
-import AboutSettings from '@/components/settings/AboutSettings';
-import AccentColorSettings from '@/components/settings/AccentColorSettings';
-import BackgroundGradientSettings from '@/components/settings/BackgroundGradientSettings';
-import BackgroundSettings from '@/components/settings/BackgroundSettings';
-import CardOpacitySettings from '@/components/settings/CardOpacitySettings';
-import CoursesSettings from '@/components/settings/CoursesSettings';
-import CustomCursorSettings from '@/components/settings/CustomCursorSettings';
-import DegreePlanSettings from '@/components/settings/DegreePlanSettings';
-import FocusTimerSettings from '@/components/settings/FocusTimerSettings';
-import GoogleCalendarSettings from '@/components/settings/GoogleCalendarSettings';
-import HydrationSettings from '@/components/settings/HydrationSettings';
-import MissionLinkSettings from '@/components/settings/MissionLinkSettings';
-import SemesterDatesSettings from '@/components/settings/SemesterDatesSettings';
-import SoundtrackSettings from '@/components/settings/SoundtrackSettings';
-import WeatherApiSettings from '@/components/settings/WeatherApiSettings';
+import AboutSettings from '@/components/settings/AboutSettings'
+import AccentColorSettings from '@/components/settings/AccentColorSettings'
+import BackgroundGradientSettings from '@/components/settings/BackgroundGradientSettings'
+import BackgroundSettings from '@/components/settings/BackgroundSettings'
+import CardOpacitySettings from '@/components/settings/CardOpacitySettings'
+import CoursesSettings from '@/components/settings/CoursesSettings'
+import CustomCursorSettings from '@/components/settings/CustomCursorSettings'
+import DegreePlanSettings from '@/components/settings/DegreePlanSettings'
+import FocusTimerSettings from '@/components/settings/FocusTimerSettings'
+import GoogleCalendarSettings from '@/components/settings/GoogleCalendarSettings'
+import HydrationSettings from '@/components/settings/HydrationSettings'
+import MissionLinkSettings from '@/components/settings/MissionLinkSettings'
+import SemesterDatesSettings from '@/components/settings/SemesterDatesSettings'
+import SoundtrackSettings from '@/components/settings/SoundtrackSettings'
+import WeatherApiSettings from '@/components/settings/WeatherApiSettings'
 import {
   BookOpen,
   Brush,
@@ -29,20 +29,20 @@ import {
   Link2,
   Palette,
   Timer,
-} from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+} from 'lucide-react'
+import React, { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface SettingsDialog {
-  title: React.ReactNode;
-  subtitle: string;
-  Icon: (props: any) => React.ReactNode;
-  Body: React.ComponentType;
+  title: React.ReactNode
+  subtitle: string
+  Icon: (props: any) => React.ReactNode
+  Body: React.ComponentType
 }
 
 export function useSettingsDialog() {
-  const { t } = useTranslation('settings');
-  const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const { t } = useTranslation('settings')
+  const [activeDialog, setActiveDialog] = useState<string | null>(null)
 
   // Settings dialogs configuration
   const settingsDialogs = useMemo(
@@ -138,22 +138,22 @@ export function useSettingsDialog() {
         Body: WeatherApiSettings,
       } as SettingsDialog,
     }),
-    [t]
-  );
+    [t],
+  )
 
   const openDialog = useCallback((id: string) => {
-    setActiveDialog(id);
-  }, []);
+    setActiveDialog(id)
+  }, [])
 
   const closeDialog = useCallback(() => {
-    setActiveDialog(null);
-  }, []);
+    setActiveDialog(null)
+  }, [])
 
   // Find active dialog
   const currentDialog = useMemo(
     () => (activeDialog ? settingsDialogs[activeDialog] || null : null),
-    [settingsDialogs, activeDialog]
-  );
+    [settingsDialogs, activeDialog],
+  )
 
   return {
     activeDialog,
@@ -161,5 +161,5 @@ export function useSettingsDialog() {
     closeDialog,
     settingsDialogs,
     currentDialog,
-  };
+  }
 }

@@ -1,13 +1,13 @@
-import { browser } from 'wxt/browser';
-import { isExtension } from '@/lib/browser-runtime-stub';
-import { getNotificationTranslationAsync } from '@/lib/translation-utils';
+import { browser } from 'wxt/browser'
+import { isExtension } from '@/lib/browser-runtime-stub'
+import { getNotificationTranslationAsync } from '@/lib/translation-utils'
 
 export interface NotificationOptions {
-  title: string;
-  message: string;
-  icon?: string;
-  requireInteraction?: boolean;
-  silent?: boolean;
+  title: string
+  message: string
+  icon?: string
+  requireInteraction?: boolean
+  silent?: boolean
 }
 
 /**
@@ -17,13 +17,13 @@ export async function showNotification(options: NotificationOptions): Promise<vo
   try {
     if (isExtension) {
       // Use Chrome extension notifications API
-      await showExtensionNotification(options);
+      await showExtensionNotification(options)
     } else {
       // Use Web Notifications API
-      await showWebNotification(options);
+      await showWebNotification(options)
     }
   } catch (error) {
-    console.error('Failed to show notification:', error);
+    console.error('Failed to show notification:', error)
   }
 }
 
@@ -32,7 +32,7 @@ export async function showNotification(options: NotificationOptions): Promise<vo
  */
 async function showExtensionNotification(options: NotificationOptions): Promise<void> {
   try {
-    const notificationId = `timer-${Date.now()}`;
+    const notificationId = `timer-${Date.now()}`
 
     await browser.notifications.create(notificationId, {
       type: 'basic',
@@ -41,20 +41,20 @@ async function showExtensionNotification(options: NotificationOptions): Promise<
       message: options.message,
       requireInteraction: options.requireInteraction || false,
       silent: options.silent || false,
-    });
+    })
 
     // Auto-clear notification after 5 seconds unless requireInteraction is true
     if (!options.requireInteraction) {
       setTimeout(() => {
         browser.notifications.clear(notificationId).catch(() => {
           // Ignore errors if notification was already cleared
-        });
-      }, 5000);
+        })
+      }, 5000)
     }
   } catch (error) {
-    console.error('Extension notification failed:', error);
+    console.error('Extension notification failed:', error)
     // Fallback to web notification if extension API fails
-    await showWebNotification(options);
+    await showWebNotification(options)
   }
 }
 
@@ -64,22 +64,22 @@ async function showExtensionNotification(options: NotificationOptions): Promise<
 async function showWebNotification(options: NotificationOptions): Promise<void> {
   // Check if notifications are supported
   if (!('Notification' in window)) {
-    console.warn('This browser does not support desktop notifications');
-    return;
+    console.warn('This browser does not support desktop notifications')
+    return
   }
 
   // Request permission if not already granted
   if (Notification.permission === 'default') {
-    const permission = await Notification.requestPermission();
+    const permission = await Notification.requestPermission()
     if (permission !== 'granted') {
-      console.warn('Notification permission denied');
-      return;
+      console.warn('Notification permission denied')
+      return
     }
   }
 
   if (Notification.permission !== 'granted') {
-    console.warn('Notifications not permitted');
-    return;
+    console.warn('Notifications not permitted')
+    return
   }
 
   // Create notification
@@ -89,20 +89,20 @@ async function showWebNotification(options: NotificationOptions): Promise<void> 
     requireInteraction: options.requireInteraction || false,
     silent: options.silent || false,
     tag: 'study-timer', // Replaces previous notifications with same tag
-  });
+  })
 
   // Auto-close after 5 seconds unless requireInteraction is true
   if (!options.requireInteraction) {
     setTimeout(() => {
-      notification.close();
-    }, 5000);
+      notification.close()
+    }, 5000)
   }
 
   // Handle click events
   notification.onclick = () => {
-    window.focus();
-    notification.close();
-  };
+    window.focus()
+    notification.close()
+  }
 }
 
 /**
@@ -111,14 +111,14 @@ async function showWebNotification(options: NotificationOptions): Promise<void> 
 export async function checkNotificationPermission(): Promise<'granted' | 'denied' | 'default'> {
   if (isExtension) {
     // In extensions, notifications permission is typically included in manifest
-    return 'granted';
+    return 'granted'
   }
 
   if (!('Notification' in window)) {
-    return 'denied';
+    return 'denied'
   }
 
-  return Notification.permission;
+  return Notification.permission
 }
 
 /**
@@ -126,15 +126,15 @@ export async function checkNotificationPermission(): Promise<'granted' | 'denied
  */
 export async function requestNotificationPermission(): Promise<'granted' | 'denied' | 'default'> {
   if (isExtension) {
-    return 'granted';
+    return 'granted'
   }
 
   if (!('Notification' in window)) {
-    return 'denied';
+    return 'denied'
   }
 
   if (Notification.permission === 'default') {
-    const permission = await Notification.requestPermission();
+    const permission = await Notification.requestPermission()
 
     // Show a welcome notification when permission is first granted
     if (permission === 'granted') {
@@ -145,14 +145,14 @@ export async function requestNotificationPermission(): Promise<'granted' | 'deni
           icon: '/hearticon.png',
           requireInteraction: false,
           silent: false,
-        });
+        })
       } catch (error) {
-        console.error('Failed to show welcome notification:', error);
+        console.error('Failed to show welcome notification:', error)
       }
     }
 
-    return permission;
+    return permission
   }
 
-  return Notification.permission;
+  return Notification.permission
 }

@@ -27,7 +27,7 @@ What did we decide? State it in one paragraph, plainly.
 ## Consequences
 
 What follows from this decision? What becomes easier, what becomes harder,
-what trade-off did we accept? What should a future explorer *not* re-suggest?
+what trade-off did we accept? What should a future explorer _not_ re-suggest?
 
 ## Alternatives considered
 

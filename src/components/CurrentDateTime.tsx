@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { useLocalization } from '@/hooks/useLocalization';
+import React, { useEffect, useState } from 'react'
+import { useLocalization } from '@/hooks/useLocalization'
 
 /**
  * Current Date and Time Component
  * Displays the current date and time, updating every second
  */
 export default function CurrentDateTime(): React.ReactElement {
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  const { formatDate, formatTime } = useLocalization();
+  const [currentTime, setCurrentTime] = useState<Date>(new Date())
+  const { formatDate, formatTime } = useLocalization()
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+      setCurrentTime(new Date())
+    }, 1000)
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => clearInterval(timer)
+  }, [])
 
   return (
     <div className="text-right">
@@ -35,5 +35,5 @@ export default function CurrentDateTime(): React.ReactElement {
         })}
       </div>
     </div>
-  );
+  )
 }

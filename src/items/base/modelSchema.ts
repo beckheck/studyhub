@@ -1,5 +1,5 @@
-import { t } from '@/i18n/config';
-import { z } from 'zod';
+import { t } from '@/i18n/config'
+import { z } from 'zod'
 
 export const ItemBaseSchema = z.object({
   id: z.string({ message: t('items:common.validation.idRequired') }),
@@ -15,6 +15,6 @@ export const ItemBaseSchema = z.object({
   isDeleted: z.boolean({ message: t('items:common.validation.isDeletedRequired') }),
   createdAt: z.date({ message: t('items:common.validation.createdAtRequired') }),
   updatedAt: z.date({ message: t('items:common.validation.updatedAtRequired') }),
-});
+})
 
-export type ItemBase = z.infer<typeof ItemBaseSchema>;
+export type ItemBase = z.infer<typeof ItemBaseSchema>

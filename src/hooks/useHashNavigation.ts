@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react'
 
 interface UseHashNavigationOptions {
-  validValues: string[];
-  defaultValue: string;
-  useHistory?: boolean; // Whether to use pushState (true) or replaceState (false)
+  validValues: string[]
+  defaultValue: string
+  useHistory?: boolean // Whether to use pushState (true) or replaceState (false)
 }
 
 interface UseHashNavigationReturn {
-  currentValue: string;
-  setValue: (value: string) => void;
+  currentValue: string
+  setValue: (value: string) => void
 }
 
 /**
@@ -39,64 +39,64 @@ export function useHashNavigation({
 }: UseHashNavigationOptions): UseHashNavigationReturn {
   // Helper function to get initial value from URL hash
   const getInitialValue = useCallback((): string => {
-    if (typeof window === 'undefined') return defaultValue;
+    if (typeof window === 'undefined') return defaultValue
 
-    const hashValue = window.location.hash.replace('#', '');
+    const hashValue = window.location.hash.replace('#', '')
 
     if (hashValue && validValues.includes(hashValue)) {
-      return hashValue;
+      return hashValue
     }
-    return defaultValue;
-  }, [validValues, defaultValue]);
+    return defaultValue
+  }, [validValues, defaultValue])
 
   // State initialized from URL hash
-  const [currentValue, setCurrentValue] = useState<string>(getInitialValue);
+  const [currentValue, setCurrentValue] = useState<string>(getInitialValue)
 
   // Update URL hash when value changes
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
 
-    const currentHash = window.location.hash.replace('#', '');
+    const currentHash = window.location.hash.replace('#', '')
     if (currentHash !== currentValue) {
-      const method = useHistory ? 'pushState' : 'replaceState';
-      window.history[method](null, '', `#${currentValue}`);
+      const method = useHistory ? 'pushState' : 'replaceState'
+      window.history[method](null, '', `#${currentValue}`)
     }
-  }, [currentValue, useHistory]);
+  }, [currentValue, useHistory])
 
   // Handle browser back/forward navigation
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
 
     const handleHashChange = () => {
-      const hashValue = window.location.hash.replace('#', '');
+      const hashValue = window.location.hash.replace('#', '')
 
       if (hashValue && validValues.includes(hashValue)) {
-        setCurrentValue(hashValue);
+        setCurrentValue(hashValue)
       } else if (!hashValue) {
-        setCurrentValue(defaultValue);
+        setCurrentValue(defaultValue)
       }
-    };
+    }
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [validValues, defaultValue]);
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [validValues, defaultValue])
 
   // Setter function that validates the value
   const setValue = useCallback(
     (value: string) => {
       if (validValues.includes(value)) {
-        setCurrentValue(value);
+        setCurrentValue(value)
       } else {
-        console.warn(`useHashNavigation: Invalid value "${value}". Valid values are: ${validValues.join(', ')}`);
+        console.warn(`useHashNavigation: Invalid value "${value}". Valid values are: ${validValues.join(', ')}`)
       }
     },
-    [validValues]
-  );
+    [validValues],
+  )
 
   return {
     currentValue,
     setValue,
-  };
+  }
 }
 
-export default useHashNavigation;
+export default useHashNavigation

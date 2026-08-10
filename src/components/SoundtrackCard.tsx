@@ -1,90 +1,90 @@
-import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAppContext } from '@/contexts/AppContext';
-import { SoundtrackPosition } from '@/types';
-import { ArrowDownToLine, Maximize, Minimize, Music2, Settings, X } from 'lucide-react';
-import React, { RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useSettingsDialogContext } from '@/components/settings/SettingsDialogProvider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAppContext } from '@/contexts/AppContext'
+import { SoundtrackPosition } from '@/types'
+import { ArrowDownToLine, Maximize, Minimize, Music2, Settings, X } from 'lucide-react'
+import React, { RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Global iframe management with better React integration
-let globalIframe: HTMLIFrameElement | null = null;
-let currentEmbed: string | null = null;
-let componentInstances = new Set<string>(); // Track active component instances
-let mountCounter = 0; // Generate unique IDs for component instances
+let globalIframe: HTMLIFrameElement | null = null
+let currentEmbed: string | null = null
+let componentInstances = new Set<string>() // Track active component instances
+let mountCounter = 0 // Generate unique IDs for component instances
 
 // Cleanup function for global iframe
 function cleanupGlobalIframe(force: boolean = false): void {
   if ((componentInstances.size === 0 || force) && globalIframe) {
-    globalIframe.src = 'about:blank';
+    globalIframe.src = 'about:blank'
     setTimeout(
       () => {
         if (globalIframe) {
-          globalIframe.remove();
-          globalIframe = null;
-          currentEmbed = null;
+          globalIframe.remove()
+          globalIframe = null
+          currentEmbed = null
         }
       },
-      force ? 0 : 50
-    );
+      force ? 0 : 50,
+    )
   }
 }
 
 function createIframeElement(embed: string, title: string): HTMLIFrameElement {
-  const iframe = document.createElement('iframe');
-  iframe.src = embed;
-  iframe.className = 'border-0';
-  iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-  iframe.loading = 'lazy';
-  iframe.title = title;
-  iframe.frameBorder = '0';
-  iframe.style.position = 'fixed';
-  iframe.style.display = 'none';
-  iframe.style.zIndex = '40';
-  return iframe;
+  const iframe = document.createElement('iframe')
+  iframe.src = embed
+  iframe.className = 'border-0'
+  iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+  iframe.loading = 'lazy'
+  iframe.title = title
+  iframe.frameBorder = '0'
+  iframe.style.position = 'fixed'
+  iframe.style.display = 'none'
+  iframe.style.zIndex = '40'
+  return iframe
 }
 
 function ensureGlobalIframe(embed: string, title: string): void {
   // Only recreate iframe if embed URL has changed
   if (!globalIframe || currentEmbed !== embed) {
     if (globalIframe && currentEmbed !== embed) {
-      globalIframe.remove();
-      globalIframe = null;
+      globalIframe.remove()
+      globalIframe = null
     }
 
     if (!globalIframe) {
-      globalIframe = createIframeElement(embed, title);
-      currentEmbed = embed;
-      document.body.appendChild(globalIframe);
+      globalIframe = createIframeElement(embed, title)
+      currentEmbed = embed
+      document.body.appendChild(globalIframe)
     }
   }
 }
 
 function positionIframeForContainer(targetElement: HTMLElement, position: SoundtrackPosition): void {
-  if (!globalIframe || !targetElement) return;
+  if (!globalIframe || !targetElement) return
 
-  const rect = targetElement.getBoundingClientRect();
+  const rect = targetElement.getBoundingClientRect()
 
   // Ensure we have valid dimensions
   if (rect.width === 0 || rect.height === 0) {
-    setTimeout(() => positionIframeForContainer(targetElement, position), 10);
-    return;
+    setTimeout(() => positionIframeForContainer(targetElement, position), 10)
+    return
   }
 
   // Check if iframe is already properly positioned to avoid unnecessary updates
-  const currentLeft = parseInt(globalIframe.style.left) || 0;
-  const currentTop = parseInt(globalIframe.style.top) || 0;
-  const currentWidth = parseInt(globalIframe.style.width) || 0;
-  const currentHeight = parseInt(globalIframe.style.height) || 0;
+  const currentLeft = parseInt(globalIframe.style.left) || 0
+  const currentTop = parseInt(globalIframe.style.top) || 0
+  const currentWidth = parseInt(globalIframe.style.width) || 0
+  const currentHeight = parseInt(globalIframe.style.height) || 0
 
   const needsReposition =
     Math.abs(currentLeft - rect.left) > 1 ||
     Math.abs(currentTop - rect.top) > 1 ||
     Math.abs(currentWidth - rect.width) > 1 ||
     Math.abs(currentHeight - rect.height) > 1 ||
-    globalIframe.style.display === 'none';
+    globalIframe.style.display === 'none'
 
-  if (!needsReposition) return;
+  if (!needsReposition) return
 
   // Apply all styles at once for better performance
   Object.assign(globalIframe.style, {
@@ -97,42 +97,42 @@ function positionIframeForContainer(targetElement: HTMLElement, position: Soundt
     opacity: position === 'minimized' ? '0' : '1',
     borderRadius: position === 'floating' ? '0.75rem' : '1rem',
     zIndex: position === 'floating' ? '51' : '41',
-  });
+  })
 
   // Restore the embed URL if it was cleared
   if (globalIframe.src === 'about:blank' && currentEmbed) {
-    globalIframe.src = currentEmbed;
+    globalIframe.src = currentEmbed
   }
 }
 
 function hideIframe(): void {
   // Only hide if no other instances are active
   if (componentInstances.size !== 0) {
-    return;
+    return
   }
   if (globalIframe) {
-    globalIframe.style.display = 'none';
+    globalIframe.style.display = 'none'
   }
 }
 
 function getTargetContainer(
   position: SoundtrackPosition,
-  dashboardRef: RefObject<HTMLDivElement>,
-  floatingRef: RefObject<HTMLDivElement>
+  dashboardRef: RefObject<HTMLDivElement | null>,
+  floatingRef: RefObject<HTMLDivElement | null>,
 ): HTMLDivElement | null {
   if (position === 'dashboard' && dashboardRef.current) {
-    return dashboardRef.current;
+    return dashboardRef.current
   } else if ((position === 'floating' || position === 'minimized') && floatingRef.current) {
-    return floatingRef.current;
+    return floatingRef.current
   }
-  return null;
+  return null
 }
 
 interface SoundtrackCardProps {
-  visible: boolean;
-  embed: string;
-  position?: SoundtrackPosition;
-  onPositionChange?: (position: SoundtrackPosition) => void;
+  visible: boolean
+  embed: string
+  position?: SoundtrackPosition
+  onPositionChange?: (position: SoundtrackPosition) => void
 }
 
 export default function SoundtrackCard({
@@ -141,111 +141,111 @@ export default function SoundtrackCard({
   position = 'dashboard',
   onPositionChange,
 }: SoundtrackCardProps) {
-  const { t } = useTranslation('soundtrack');
-  const { openDialog } = useSettingsDialogContext();
-  const dashboardContainerRef = useRef<HTMLDivElement>(null);
-  const floatingContainerRef = useRef<HTMLDivElement>(null);
-  const [componentId] = useState(() => `soundtrack-${++mountCounter}`);
+  const { t } = useTranslation('soundtrack')
+  const { openDialog } = useSettingsDialogContext()
+  const dashboardContainerRef = useRef<HTMLDivElement>(null)
+  const floatingContainerRef = useRef<HTMLDivElement>(null)
+  const [componentId] = useState(() => `soundtrack-${++mountCounter}`)
 
   // Check if component should be active (consolidate visibility checks)
-  const isActive = useMemo(() => embed && visible && position !== 'off', [embed, visible, position]);
+  const isActive = useMemo(() => embed && visible && position !== 'off', [embed, visible, position])
 
   // Helper function to update iframe position
   const updateIframePosition = useCallback(() => {
-    if (!isActive) return;
+    if (!isActive) return
 
-    const targetContainer = getTargetContainer(position, dashboardContainerRef, floatingContainerRef);
+    const targetContainer = getTargetContainer(position, dashboardContainerRef, floatingContainerRef)
     if (targetContainer) {
       requestAnimationFrame(() => {
-        positionIframeForContainer(targetContainer, position);
-      });
+        positionIframeForContainer(targetContainer, position)
+      })
     } else {
       // If no target container is ready, try again after a short delay
       setTimeout(() => {
-        const retryContainer = getTargetContainer(position, dashboardContainerRef, floatingContainerRef);
+        const retryContainer = getTargetContainer(position, dashboardContainerRef, floatingContainerRef)
         if (retryContainer) {
           requestAnimationFrame(() => {
-            positionIframeForContainer(retryContainer, position);
-          });
+            positionIframeForContainer(retryContainer, position)
+          })
         }
-      }, 10);
+      }, 10)
     }
-  }, [isActive, position]);
+  }, [isActive, position])
 
   // Register this component instance
   useEffect(() => {
     if (isActive) {
-      componentInstances.add(componentId);
+      componentInstances.add(componentId)
       return () => {
-        componentInstances.delete(componentId);
+        componentInstances.delete(componentId)
         // Only hide iframe if this is a dashboard position transition to prevent playback interruption
         // For other cases, let the main cleanup handle it
         if (position === 'dashboard') {
           // Small delay to allow for position transitions
           setTimeout(() => {
-            hideIframe();
-          }, 10);
+            hideIframe()
+          }, 10)
         } else {
           // setTimeout(cleanupGlobalIframe, 50);
         }
-      };
+      }
     } else {
-      componentInstances.delete(componentId);
-      hideIframe();
-      const cleanupDelay = position === 'off' ? 0 : 50;
+      componentInstances.delete(componentId)
+      hideIframe()
+      const _cleanupDelay = position === 'off' ? 0 : 50
       if (position === 'off') {
-        cleanupGlobalIframe(true);
+        cleanupGlobalIframe(true)
       }
     }
-  }, [isActive, componentId, position]);
+  }, [isActive, componentId, position])
 
   // Handle iframe positioning and creation
   useLayoutEffect(() => {
     if (!isActive) {
-      hideIframe();
-      return;
+      hideIframe()
+      return
     }
 
-    ensureGlobalIframe(embed, t('accessibility.iframe'));
+    ensureGlobalIframe(embed, t('accessibility.iframe'))
 
     // Use a small delay to ensure smooth position transitions
     const positionTimeout = setTimeout(() => {
-      updateIframePosition();
-    }, 50);
+      updateIframePosition()
+    }, 50)
 
     return () => {
-      clearTimeout(positionTimeout);
-    };
-  }, [isActive, embed, position, t, updateIframePosition]);
+      clearTimeout(positionTimeout)
+    }
+  }, [isActive, embed, position, t, updateIframePosition])
 
   // Handle scroll and resize events
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) return
 
     const getScrollContainer = (): Element => {
-      const extensionContainer = document.querySelector('.extension-container');
+      const extensionContainer = document.querySelector('.extension-container')
       if (extensionContainer && getComputedStyle(extensionContainer).overflowY === 'auto') {
-        return extensionContainer;
+        return extensionContainer
       }
-      return window as any;
-    };
+      return window as any
+    }
 
-    const scrollContainer = getScrollContainer();
-    scrollContainer.addEventListener('scroll', updateIframePosition);
-    window.addEventListener('resize', updateIframePosition);
-    const timeoutId = setTimeout(updateIframePosition, 500);
+    const scrollContainer = getScrollContainer()
+    scrollContainer.addEventListener('scroll', updateIframePosition)
+    window.addEventListener('resize', updateIframePosition)
+    const timeoutId = setTimeout(updateIframePosition, 500)
 
     return () => {
-      scrollContainer.removeEventListener('scroll', updateIframePosition);
-      window.removeEventListener('resize', updateIframePosition);
-      clearTimeout(timeoutId);
-    };
-  }, [isActive, position, updateIframePosition]);
+      scrollContainer.removeEventListener('scroll', updateIframePosition)
+      window.removeEventListener('resize', updateIframePosition)
+      clearTimeout(timeoutId)
+    }
+  }, [isActive, position, updateIframePosition])
 
-  const appContext = useAppContext();
+  const appContext = useAppContext()
 
   if (appContext.mode === 'popup') {
-    return null;
+    return null
   }
 
   if (position === 'dashboard' && !embed) {
@@ -275,12 +275,12 @@ export default function SoundtrackCard({
           <div className="text-sm text-zinc-500" dangerouslySetInnerHTML={{ __html: t('empty.message') }} />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // Return null if component should not be rendered
   if (!isActive) {
-    return null;
+    return null
   }
 
   // Reusable components to reduce redundancy
@@ -294,14 +294,14 @@ export default function SoundtrackCard({
     >
       {props.children}
     </Button>
-  );
+  )
 
   const SoundtrackTitle = ({ size = 'normal' }: { size?: 'normal' | 'small' }) => (
     <CardTitle className={`flex items-center gap-2 ${size === 'small' ? 'text-sm' : ''}`}>
       <Music2 className={size === 'small' ? 'w-4 h-4' : 'w-5 h-5'} />
       {t('title')}
     </CardTitle>
-  );
+  )
 
   // Dashboard position
   if (position === 'dashboard') {
@@ -341,7 +341,7 @@ export default function SoundtrackCard({
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // Floating and Minimized positions
@@ -398,5 +398,5 @@ export default function SoundtrackCard({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

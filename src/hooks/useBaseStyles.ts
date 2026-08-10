@@ -1,19 +1,19 @@
-import { useLayoutEffect } from 'react';
-import { useTheme } from './useStore';
+import { useLayoutEffect } from 'react'
+import { useTheme } from './useStore'
 
 export default function useBaseStyles(): void {
-  const { theme } = useTheme();
+  const { theme } = useTheme()
 
   useLayoutEffect(() => {
-    if (document.getElementById('sp-reset')) return;
-    const style = document.createElement('style');
-    style.id = 'sp-reset';
+    if (document.getElementById('sp-reset')) return
+    const style = document.createElement('style')
+    style.id = 'sp-reset'
 
     // Import font
-    const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap';
-    fontLink.rel = 'stylesheet';
-    document.head.appendChild(fontLink);
+    const fontLink = document.createElement('link')
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap'
+    fontLink.rel = 'stylesheet'
+    document.head.appendChild(fontLink)
 
     style.textContent = `
 :root {
@@ -113,21 +113,21 @@ button, .button {
     transform: translateY(-2px);
   }
 }
-`;
-    document.head.appendChild(style);
-  }, []);
+`
+    document.head.appendChild(style)
+  }, [])
 
   // Handle custom cursor separately
   useLayoutEffect(() => {
-    const body = document.body;
+    const body = document.body
     if (theme.customCursor) {
-      body.style.cursor = `url(${theme.customCursor}), auto`;
+      body.style.cursor = `url(${theme.customCursor}), auto`
     } else {
-      body.style.cursor = '';
+      body.style.cursor = ''
     }
 
     return () => {
-      body.style.cursor = '';
-    };
-  }, [theme.customCursor]);
+      body.style.cursor = ''
+    }
+  }, [theme.customCursor])
 }

@@ -5,19 +5,17 @@ Guidance for OpenCode sessions working in StudyHub. Read alongside [`CONTEXT.md`
 ## Commands
 
 ```sh
-npm run dev          # Vite web app (localhost:5173)
-npm run dev:ext      # WXT extension dev (Chrome); dev:firefox for Firefox
-npm run build        # Vite production build (web)
-npm run build:ext    # WXT extension build
-npm run zip          # Zip extension build for upload
-npm run test         # Vitest run (jsdom)
-npm run test:watch   # Vitest watch
-npm run test:coverage
-npm run lint         # ⚠ runs `tsc` ONLY — not eslint. Typecheck, not lint.
-npm run check        # lint -> build -> test (run before declaring work done)
+vp dev              # Vite web app (localhost:5173)
+vp build            # Vite production build (web)
+vp run ext:dev      # WXT extension dev (Chrome); ext:dev:firefox for Firefox
+vp run ext:build    # WXT extension build
+vp run ext:zip      # Zip extension build for upload
+vp test             # Vitest run (jsdom)
+vp test watch       # Vitest watch
+vp test --coverage
+vp check --fix      # lint+format, fix if possible
+vp run check:full   # lint -> build -> test (run before declaring work done)
 ```
-
-There is an `eslint.config.js` but no script wires it up. The `lint` script is `tsc`. If you mean to run eslint, invoke `npx eslint` directly.
 
 Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vitest run -t "test name"`.
 
@@ -25,7 +23,7 @@ Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vit
 
 - **Node 22** pinned via `mise.toml` (`package.json` only requires >=18). Run `mise install` if `node` is wrong.
 - **Two build targets, one React app:**
-  - Web: Vite (`vite.config.js`, `index.html`, `src/main.tsx`).
+  - Web: Vite+ (`vite.config.js`, `index.html`, `src/main.tsx`).
   - Extension: WXT (`wxt.config.ts`, `src/entrypoints/*`). WXT wraps Vite; `@wxt-dev/module-react` adds React.
 - **Path alias `@` → `src`** in both `vite.config.js` and `wxt.config.ts` (and `tsconfig.json`). Use `@/...` imports.
 - **Feature flags** (env, set in `.env.local`): `VITE_FEATURE_UGLY_CALENDAR`, `VITE_FEATURE_TESTING` gate optional tabs in `App.tsx`.
@@ -78,3 +76,24 @@ Check `docs/ARCHITECTURE.md` §7 (principles in force) and §1-2 (the dual-conte
   - "the reason it blocks is the missing observation" => "it blocks because no observation arrived"
 - DO NOT use semicolons, hyphens, en dashes, or em dashes as prose punctuation. Prefer short sentences and periods. For parenthetical asides, use commas, parentheses, or separate sentences using a period. For closely related parallel structures, use period or a coordinating conjunction.
 - DO NOT use arrow characters. Use `->`, `<-` or `<->` instead.
+
+<!--VITE PLUS START-->
+
+# Using Vite+, the Unified Toolchain for the Web
+
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+
+Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
+
+## Built-in Commands vs Scripts
+
+`vp <name>` runs a built-in command. `vp run <name>` runs a `package.json` script or a `vite.config.ts` task. Scripts cannot overwrite built-ins, so `vp dev` and `vp run dev` may do different things. Check `package.json` and `vite.config.ts` first, and run `vp run <name>` when the project defines a script or task with that name.
+
+## Review Checklist
+
+- [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+- [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
+
+<!--VITE PLUS END-->

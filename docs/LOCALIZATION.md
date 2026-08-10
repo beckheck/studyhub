@@ -60,7 +60,7 @@ src/
 // Usage
 t('hydration.goal', { count: 8 })
 t('hydration.progress', { current: 3, target: 8 })
-t('stats.streakCount', { count: 1 })  // "1 day streak" 
+t('stats.streakCount', { count: 1 })  // "1 day streak"
 t('stats.streakCount', { count: 5 })  // "5 days streak"
 ```
 
@@ -68,26 +68,30 @@ t('stats.streakCount', { count: 5 })  // "5 days streak"
 
 ```tsx
 function MyComponent() {
-  const { t } = useTranslation('planner');
-  const { t: tCommon } = useTranslation('common');
-  
+  const { t } = useTranslation('planner')
+  const { t: tCommon } = useTranslation('common')
+
   return (
     <div>
       <h1>{t('title')}</h1>
       <button>{tCommon('actions.save')}</button>
     </div>
-  );
+  )
 }
 ```
 
 ### Localized Formatting API
 
 ```tsx
-const { 
-  formatDate, formatTime, formatNumber,     // Locale-aware formatting
-  getDayNames, getMonthNames,               // Full localized names
-  getShortDayNames, getShortMonthNames      // Abbreviated names
-} = useLocalization();
+const {
+  formatDate,
+  formatTime,
+  formatNumber, // Locale-aware formatting
+  getDayNames,
+  getMonthNames, // Full localized names
+  getShortDayNames,
+  getShortMonthNames, // Abbreviated names
+} = useLocalization()
 ```
 
 ## Integration Examples
@@ -96,8 +100,8 @@ const {
 
 ```tsx
 export default function PlannerTab() {
-  const { t } = useTranslation('planner');
-  const { getShortDayNames, formatDate } = useLocalization();
+  const { t } = useTranslation('planner')
+  const { getShortDayNames, formatDate } = useLocalization()
 
   return (
     <div>
@@ -105,7 +109,7 @@ export default function PlannerTab() {
         <Plus className="w-4 h-4 mr-2" />
         {t('events.addEvent')}
       </Button>
-      
+
       <Select>
         <SelectItem value="class">{t('eventTypes.class')}</SelectItem>
         <SelectItem value="exam">{t('eventTypes.exam')}</SelectItem>
@@ -117,7 +121,7 @@ export default function PlannerTab() {
         ))}
       </div>
     </div>
-  );
+  )
 }
 ```
 
@@ -125,8 +129,8 @@ export default function PlannerTab() {
 
 ```tsx
 export default function CourseManagerTab() {
-  const { t: tCourse } = useTranslation('courseManager');
-  const { t: tCommon } = useTranslation('common');
+  const { t: tCourse } = useTranslation('courseManager')
+  const { t: tCommon } = useTranslation('common')
 
   return (
     <Card>
@@ -135,20 +139,18 @@ export default function CourseManagerTab() {
         <Plus className="w-4 h-4 mr-2" />
         {tCourse('actions.addTask')}
       </Button>
-      <Button onClick={clearData}>
-        {tCommon('actions.cancel')}
-      </Button>
+      <Button onClick={clearData}>{tCommon('actions.cancel')}</Button>
     </Card>
-  );
+  )
 }
 ```
 
 ## Supported Languages
 
 | Language | Code | Native Name | Flag | Coverage |
-|----------|------|-------------|------|----------|
-| English  | `en` | English     | 🇺🇸  | 100% |
-| Spanish  | `es` | Español     | 🇪🇸  | 100% |  
+| -------- | ---- | ----------- | ---- | -------- |
+| English  | `en` | English     | 🇺🇸   | 100%     |
+| Spanish  | `es` | Español     | 🇪🇸   | 100%     |
 
 ## Adding New Languages
 
@@ -164,8 +166,8 @@ cp -r src/locales/en/* src/locales/fr/
 
 ```typescript
 // Add to src/i18n/config.ts
-import frCommon from '../locales/fr/common.json';
-import frPlanner from '../locales/fr/planner.json';
+import frCommon from '../locales/fr/common.json'
+import frPlanner from '../locales/fr/planner.json'
 // ... other imports
 
 const resources = {
@@ -176,7 +178,7 @@ const resources = {
     wellness: frWellness,
     // ... other namespaces
   },
-};
+}
 ```
 
 ### 3. Add to Language List
@@ -191,7 +193,7 @@ export const SUPPORTED_LANGUAGES: Language[] = [
     nativeName: 'Français',
     flag: '🇫🇷',
   },
-];
+]
 ```
 
 ### 4. Update TypeScript Types
@@ -289,25 +291,25 @@ To add localization to existing components:
 1. **Add translation imports**
 
    ```tsx
-   import { useTranslation } from 'react-i18next';
+   import { useTranslation } from 'react-i18next'
    ```
 
 2. **Replace hardcoded strings**
 
    ```tsx
    // Before
-   <button>Add Event</button>
-   
+   ;<button>Add Event</button>
+
    // After
-   const { t } = useTranslation('planner');
-   <button>{t('events.addEvent')}</button>
+   const { t } = useTranslation('planner')
+   ;<button>{t('events.addEvent')}</button>
    ```
 
 3. **Use localization hooks for dates/numbers**
 
    ```tsx
-   const { formatDate } = useLocalization();
-   <p>{formatDate(new Date())}</p>
+   const { formatDate } = useLocalization()
+   ;<p>{formatDate(new Date())}</p>
    ```
 
 4. **Add language selector to UI**

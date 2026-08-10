@@ -1,20 +1,15 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { SUPPORTED_LANGUAGES, useLocalization } from '@/hooks/useLocalization';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { SUPPORTED_LANGUAGES, useLocalization } from '@/hooks/useLocalization'
 
 interface LanguageSelectorProps {
-  variant?: 'default' | 'ghost' | 'outline';
-  size?: 'sm' | 'default' | 'lg';
-  showText?: boolean;
+  variant?: 'default' | 'ghost' | 'outline'
+  size?: 'sm' | 'default' | 'lg'
+  showText?: boolean
 }
 
 export function LanguageSelector({ variant = 'ghost', size = 'default', showText = false }: LanguageSelectorProps) {
-  const { changeLanguage, getCurrentLanguage } = useLocalization();
-  const currentLanguage = getCurrentLanguage();
+  const { changeLanguage, getCurrentLanguage } = useLocalization()
+  const currentLanguage = getCurrentLanguage()
 
   return (
     <DropdownMenu>
@@ -39,5 +34,5 @@ export function LanguageSelector({ variant = 'ghost', size = 'default', showText
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

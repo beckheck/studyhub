@@ -1,14 +1,14 @@
-import * as React from 'react';
+import * as React from 'react'
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: React.ReactNode
+  fallback?: React.ReactNode
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: React.ErrorInfo;
+  hasError: boolean
+  error?: Error
+  errorInfo?: React.ErrorInfo
 }
 
 // Error fallback component
@@ -38,39 +38,33 @@ const DefaultErrorFallback: React.FC<{ error?: Error; errorInfo?: React.ErrorInf
       )}
     </div>
   </div>
-);
+)
 
 // Class component is required for error boundaries
 class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = { hasError: false };
+  public state: ErrorBoundaryState = { hasError: false }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('Error caught by boundary:', error, errorInfo);
-    this.setState({ error, errorInfo });
+    console.error('Error caught by boundary:', error, errorInfo)
+    this.setState({ error, errorInfo })
   }
 
   render(): React.ReactNode {
     if (this.state.hasError) {
-      return this.props.fallback || (
-        <DefaultErrorFallback error={this.state.error} errorInfo={this.state.errorInfo} />
-      );
+      return this.props.fallback || <DefaultErrorFallback error={this.state.error} errorInfo={this.state.errorInfo} />
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
 // Functional wrapper component
 const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({ children, fallback }) => {
-  return (
-    <ErrorBoundaryClass fallback={fallback}>
-      {children}
-    </ErrorBoundaryClass>
-  );
-};
+  return <ErrorBoundaryClass fallback={fallback}>{children}</ErrorBoundaryClass>
+}
 
-export default ErrorBoundary;
+export default ErrorBoundary

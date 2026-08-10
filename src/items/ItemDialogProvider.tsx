@@ -1,20 +1,20 @@
-import { ItemDialog } from '@/items/base/dialog';
-import { useItemDialog as useItemDialogInternal, ItemFormFieldFlags } from '@/items/useItemDialog';
-import { ItemDialogOptions } from '@/items/useItemDialogState';
-import React, { createContext, useContext } from 'react';
+import { ItemDialog } from '@/items/base/dialog'
+import { useItemDialog as useItemDialogInternal, ItemFormFieldFlags } from '@/items/useItemDialog'
+import { ItemDialogOptions } from '@/items/useItemDialogState'
+import React, { createContext, useContext } from 'react'
 
-export type { ItemFormFieldFlags, ItemDialogOptions };
+export type { ItemFormFieldFlags, ItemDialogOptions }
 
-type ItemDialogContextValue = ReturnType<typeof useItemDialogInternal>;
+type ItemDialogContextValue = ReturnType<typeof useItemDialogInternal>
 
-const ItemDialogContext = createContext<ItemDialogContextValue | undefined>(undefined);
+const ItemDialogContext = createContext<ItemDialogContextValue | undefined>(undefined)
 
 interface ItemDialogProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function ItemDialogProvider({ children }: ItemDialogProviderProps) {
-  const itemDialog = useItemDialogInternal();
+  const itemDialog = useItemDialogInternal()
 
   return (
     <ItemDialogContext.Provider value={itemDialog}>
@@ -33,13 +33,13 @@ export function ItemDialogProvider({ children }: ItemDialogProviderProps) {
         onDelete={itemDialog.handleDelete}
       />
     </ItemDialogContext.Provider>
-  );
+  )
 }
 
 export function useItemDialog() {
-  const context = useContext(ItemDialogContext);
+  const context = useContext(ItemDialogContext)
   if (!context) {
-    throw new Error('useItemDialog must be used within an ItemDialogProvider');
+    throw new Error('useItemDialog must be used within an ItemDialogProvider')
   }
-  return context;
+  return context
 }

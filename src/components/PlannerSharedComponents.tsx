@@ -1,17 +1,17 @@
-import { TasksProgressBar, type ProgressData } from '@/components/TasksProgressBar';
-import { RichTextDisplay } from '@/components/ui/rich-text-editor';
-import { useCourses } from '@/hooks/useStore';
-import { useTranslation } from 'react-i18next';
+import { TasksProgressBar, type ProgressData } from '@/components/TasksProgressBar'
+import { RichTextDisplay } from '@/components/ui/rich-text-editor'
+import { useCourses } from '@/hooks/useStore'
+import { useTranslation } from 'react-i18next'
 
 // Shared event type indicator component
 export const EventTypeIndicator = ({ event, size = 'sm' }: { event: any; size?: 'sm' | 'md' }) => {
-  const sizeClass = size === 'md' ? 'w-2.5 h-2.5' : 'w-2 h-2';
+  const sizeClass = size === 'md' ? 'w-2.5 h-2.5' : 'w-2 h-2'
 
   if (event.type === 'exam') {
-    return <span className={`flex-shrink-0 inline-block rounded-full bg-rose-500 ${sizeClass}`}></span>;
+    return <span className={`flex-shrink-0 inline-block rounded-full bg-rose-500 ${sizeClass}`}></span>
   }
   if (event.type === 'task') {
-    return <span className={`flex-shrink-0 inline-block rounded-full bg-amber-500 ${sizeClass}`}></span>;
+    return <span className={`flex-shrink-0 inline-block rounded-full bg-amber-500 ${sizeClass}`}></span>
   }
   if (event.type === 'event') {
     return (
@@ -19,10 +19,10 @@ export const EventTypeIndicator = ({ event, size = 'sm' }: { event: any; size?: 
         className={`flex-shrink-0 rounded-full ${sizeClass}`}
         style={{ backgroundColor: event.color || '#6366f1' }}
       ></span>
-    );
+    )
   }
-  return null;
-};
+  return null
+}
 
 // Shared event tooltip component
 export const EventTooltip = ({
@@ -31,13 +31,13 @@ export const EventTooltip = ({
   progress,
   onProgressChange,
 }: {
-  event: any;
-  onContentChange?: (newContent: string) => void;
-  progress?: ProgressData;
-  onProgressChange?: (progress: ProgressData) => void;
+  event: any
+  onContentChange?: (newContent: string) => void
+  progress?: ProgressData
+  onProgressChange?: (progress: ProgressData) => void
 }) => {
-  const { getCourseTitle } = useCourses();
-  const { t } = useTranslation('planner');
+  const { getCourseTitle } = useCourses()
+  const { t } = useTranslation('planner')
   return (
     <div
       style={{
@@ -85,5 +85,5 @@ export const EventTooltip = ({
         ></div>
       </div>
     </div>
-  );
-};
+  )
+}

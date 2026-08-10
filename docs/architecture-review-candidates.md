@@ -8,11 +8,11 @@
 
 ## Summary table
 
-| ID  | Candidate                                                                                               | Strength                  |
-| --- | ------------------------------------------------------------------------------------------------------- | ------------------------- |
-| C   | Timer manager untestable via `store` singleton import                                                   | Worth exploring           |
-| F   | Google Calendar OAuth client hardening (dynamic redirect URI, PKCE, per-call refresh) deferred          | **Worth exploring** (deferred) |
-| G   | File attachments store base64 in valtio, persisted on every mutation                                    | Worth exploring           |
+| ID  | Candidate                                                                                      | Strength                       |
+| --- | ---------------------------------------------------------------------------------------------- | ------------------------------ |
+| C   | Timer manager untestable via `store` singleton import                                          | Worth exploring                |
+| F   | Google Calendar OAuth client hardening (dynamic redirect URI, PKCE, per-call refresh) deferred | **Worth exploring** (deferred) |
+| G   | File attachments store base64 in valtio, persisted on every mutation                           | Worth exploring                |
 
 ---
 

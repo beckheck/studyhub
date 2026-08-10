@@ -7,6 +7,7 @@
 ---
 
 <a id="dual-surface"></a>
+
 ## The architectural key constraint: dual surface
 
 StudyHub runs as **one codebase, two execution models**. This single fact shapes every architectural decision below. Understand it before you judge any module's shape.
@@ -15,18 +16,19 @@ StudyHub runs as **one codebase, two execution models**. This single fact shapes
 
 Six render surfaces, all backed by the same React app (`App.tsx` via `AppContainer`). Only `AppContainerMode` and the available dimensions distinguish them:
 
-| Mode | Entry point | Lifetime | Has `browser.*`? |
-|---|---|---|---|
-| `web` | `src/main.tsx` | Page session | No. Uses `browserRuntimeStub` |
-| `popup` | `src/entrypoints/popup/main.tsx` | Closes on blur | Yes |
-| `sidepanel` | `src/entrypoints/sidepanel/main.tsx` | Persistent per tab | Yes |
-| `tab` | `src/entrypoints/tab/main.tsx` | Full browser tab | Yes |
-| `overlay` | content-script-injected iframe | Until removed | Yes (via content script) |
-| `newtab` | (reuses `tab` entry) | Full browser tab | Yes |
+| Mode        | Entry point                          | Lifetime           | Has `browser.*`?              |
+| ----------- | ------------------------------------ | ------------------ | ----------------------------- |
+| `web`       | `src/main.tsx`                       | Page session       | No. Uses `browserRuntimeStub` |
+| `popup`     | `src/entrypoints/popup/main.tsx`     | Closes on blur     | Yes                           |
+| `sidepanel` | `src/entrypoints/sidepanel/main.tsx` | Persistent per tab | Yes                           |
+| `tab`       | `src/entrypoints/tab/main.tsx`       | Full browser tab   | Yes                           |
+| `overlay`   | content-script-injected iframe       | Until removed      | Yes (via content script)      |
+| `newtab`    | (reuses `tab` entry)                 | Full browser tab   | Yes                           |
 
 `AppContext` (`src/contexts/AppContext.tsx`) exposes `{ mode, dimensions, isExtension }`. `isExtension` is the branch that selects which runtime adapter is in play.
 
 <a id="runtime-seam"></a>
+
 ### The runtime seam
 
 `src/lib/browser-runtime-stub.ts` defines the seam between extension and web:
@@ -34,15 +36,16 @@ Six render surfaces, all backed by the same React app (`App.tsx` via `AppContain
 - **Interface:** `browserRuntime.sendMessage(msg)` / `browserRuntime.onMessage.addListener(fn)`. A subset of `browser.runtime` for inter-context messaging.
 - **Two adapters**:
   - Extension: `browser.runtime` (WXT's `wxt/browser`).
-  - Web: `BrowserRuntimeStub`. An in-process pub/sub that emulates `browser.runtime`'s message API so the *same* code path works.
+  - Web: `BrowserRuntimeStub`. An in-process pub/sub that emulates `browser.runtime`'s message API so the _same_ code path works.
 
-`isExtension = !!browser.runtime?.id` is the discriminator, exported alongside the adapters. Code that needs extension-only APIs (`browser.tabs`, `browser.storage.local`, `browser.contextMenus`, `browser.identity`, `browser.action`) guards on `isExtension` or lives in `src/entrypoints/background.ts` (which only runs in the extension).
+`isExtension = !!browser?.runtime?.id` is the discriminator, exported alongside the adapters. Code that needs extension-only APIs (`browser.tabs`, `browser.storage.local`, `browser.contextMenus`, `browser.identity`, `browser.action`) guards on `isExtension` or lives in `src/entrypoints/background.ts` (which only runs in the extension).
 
 **Principle:** the `browserRuntime` seam exists because something actually varies across it (two adapters means a real seam). The same does **not** hold for hypothetical seams that only have one adapter. Do not introduce those speculatively.
 
 ---
 
 <a id="execution-contexts"></a>
+
 ## Execution contexts and state ownership
 
 ### Extension: two contexts, one source of truth
@@ -71,17 +74,17 @@ In extension mode there are **two distinct JS contexts**. Each has its own modul
                         └───────────────────┘
 ```
 
-- **Storage is the source of truth.** Each context's `store` is a synced in-memory cache of what sits in `hybridStorage`. When the UI mutates its `store`, `subscribe(store)` triggers `persistStore()` -> `hybridStorage.setItem`. When the background's `store` mutates, the same happens from the background's `subscribe`. Cross-context sync: `hybridStorage.addChangeListener` fires in *both* contexts on storage events, and `setupStorageSynchronization` (`stores/app.ts:335`) re-imports the changed key into the local `store` (guarded by `isApplyingFromStorage` to avoid a persist loop).
+- **Storage is the source of truth.** Each context's `store` is a synced in-memory cache of what sits in `hybridStorage`. When the UI mutates its `store`, `subscribe(store)` triggers `persistStore()` -> `hybridStorage.setItem`. When the background's `store` mutates, the same happens from the background's `subscribe`. Cross-context sync: `hybridStorage.addChangeListener` fires in _both_ contexts on storage events, and `setupStorageSynchronization` (`stores/app.ts:335`) re-imports the changed key into the local `store` (guarded by `isApplyingFromStorage` to avoid a persist loop).
 - **The timer lives in the background** so it survives the popup closing. The UI never creates a `StudySessionTimerManager` in extension mode (`useStudyTimer.ts:8` guards on `!isExtension`). It talks to the background's manager over `browser.runtime` messages (`timer.start`/`timer.stop`/`timer.getState`/`timer.updateState`), and the background broadcasts `timer.broadcastState` back. This topology is key to the architecture. It is not friction to remove.
 - **The background reads settings from its own `store`** (a synced cache) rather than re-fetching from storage on every use. This is the intended primary/replica pattern. The cross-context staleness window is inherent to the storage-event-based sync rather than an architectural flaw.
 
 ### Web: one context, one owner
 
-In web mode there is **one** JS context. `useStudyTimer.ts:9` creates the `StudySessionTimerManager` at module scope (guarded by `!isExtension`), and `BrowserRuntimeStub` emulates the message bridge so the *same* `useStudyTimer` code works unchanged. The timer state still flows: manager private field -> `HybridStorage` (for reload-survival) -> `useState` in the hook (for render). This is a primary + persistence + render-replica pattern, not duplication.
+In web mode there is **one** JS context. `useStudyTimer.ts:9` creates the `StudySessionTimerManager` at module scope (guarded by `!isExtension`), and `BrowserRuntimeStub` emulates the message bridge so the _same_ `useStudyTimer` code works unchanged. The timer state still flows: manager private field -> `HybridStorage` (for reload-survival) -> `useState` in the hook (for render). This is a primary + persistence + render-replica pattern, not duplication.
 
 ### Implication for judging depth
 
-Any module that looks "duplicated" or "split across contexts" needs evaluation against this dual-context model first. The `browserRuntime` seam and the per-context `store` instances are **earned** (two adapters). Criticisms that ignore the duality (e.g. "the background shouldn't read `snapshot(store)`") are wrong by default. Real friction is narrower: places where a lib module *writes* to the store singleton (crosses the seam the wrong way) or where coupling prevents testing.
+Any module that looks "duplicated" or "split across contexts" needs evaluation against this dual-context model first. The `browserRuntime` seam and the per-context `store` instances are **earned** (two adapters). Criticisms that ignore the duality (e.g. "the background shouldn't read `snapshot(store)`") are wrong by default. Real friction is narrower: places where a lib module _writes_ to the store singleton (crosses the seam the wrong way) or where coupling prevents testing.
 
 ---
 
@@ -89,23 +92,23 @@ Any module that looks "duplicated" or "split across contexts" needs evaluation a
 
 ### Entrypoints (`src/entrypoints/`)
 
-| Module | Interface | Role |
-|---|---|---|
-| `background.ts` | `defineBackground(() => void)` | Extension-only: context menus, keyboard commands, **owns the timer manager**, re-checks site blocking on tab navigation, badge updates |
-| `content.ts` | `defineContentScript(...)` | Extension-only: injected into pages. Site-blocking overlay, text-selection capture, overlay iframe |
-| `offscreen.ts` | `defineUnlistedScript(...)` | Chrome-only: plays audio in the background context (DOM-less service worker cannot play audio directly) |
-| `popup/`, `sidepanel/`, `tab/` | `main.tsx` -> `<AppContainer mode=...>` | Thin React boots. Each renders the same `App` at different dimensions |
+| Module                         | Interface                               | Role                                                                                                                                   |
+| ------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `background.ts`                | `defineBackground(() => void)`          | Extension-only: context menus, keyboard commands, **owns the timer manager**, re-checks site blocking on tab navigation, badge updates |
+| `content.ts`                   | `defineContentScript(...)`              | Extension-only: injected into pages. Site-blocking overlay, text-selection capture, overlay iframe                                     |
+| `offscreen.ts`                 | `defineUnlistedScript(...)`             | Chrome-only: plays audio in the background context (DOM-less service worker cannot play audio directly)                                |
+| `popup/`, `sidepanel/`, `tab/` | `main.tsx` -> `<AppContainer mode=...>` | Thin React boots. Each renders the same `App` at different dimensions                                                                  |
 
 Entrypoints are **adapters** at the WXT seam. They satisfy the extension host's expectations and delegate to `AppContainer`. Keep them thin.
 
 ### App shell (`src/`)
 
-| Module | Interface | Role |
-|---|---|---|
-| `AppContainer.tsx` | `<AppContainer mode />` | Wraps `AppContextProvider` + dimension tracking. The single entry to the React tree |
-| `App.tsx` | default export `<StudyPortal />` | Tab bar (11 tabs), header, soundtrack, scroll-to-top, style hooks, GC-on-mount, OAuth redirect |
-| `contexts/AppContext.tsx` | `useAppContext()` -> `{ mode, dimensions, isExtension }` | The Container Mode seam. Small, deep enough |
-| `hooks/useStore.ts` | 13 hooks (`useItems`, `useCourses`, `useTheme`, ...) | Valtio access layer. Each hook `useSnapshot`s a slice and returns mutators that write to `store` |
+| Module                    | Interface                                                | Role                                                                                             |
+| ------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `AppContainer.tsx`        | `<AppContainer mode />`                                  | Wraps `AppContextProvider` + dimension tracking. The single entry to the React tree              |
+| `App.tsx`                 | default export `<StudyPortal />`                         | Tab bar (11 tabs), header, soundtrack, scroll-to-top, style hooks, GC-on-mount, OAuth redirect   |
+| `contexts/AppContext.tsx` | `useAppContext()` -> `{ mode, dimensions, isExtension }` | The Container Mode seam. Small, deep enough                                                      |
+| `hooks/useStore.ts`       | 13 hooks (`useItems`, `useCourses`, `useTheme`, ...)     | Valtio access layer. Each hook `useSnapshot`s a slice and returns mutators that write to `store` |
 
 `App.tsx` is large (~450 lines) but mostly JSX wiring of tabs. The interesting logic lives in the style hooks and the GC effect (see [Cross-cutting concerns](#cross-cutting-concerns)).
 
@@ -117,6 +120,7 @@ Entrypoints are **adapters** at the WXT seam. They satisfy the extension host's 
 This is the **primary state module**. Its interface is broad (the proxy + lifecycle functions), reflecting that it owns the whole `AppState` shape. Persistence lifecycle (serialization, transport, cross-context sync, proxy patching) is delegated to the repository. See [ADR 0004](./adr/0004-repository-seam-for-app-state.md).
 
 <a id="state-access-hooks"></a>
+
 ### State access hooks (`src/hooks/useStore.ts`)
 
 Thirteen hooks, one per `AppState` slice: `useItems`, `useCourses`, `useProjects`, `useTheme`, `useWellness`, `useFocusTimer`, `useGoogleCalendar`, `useStudySessions`, `useExamGrades`, `useDegreePlan`, `useSemesterDates`, `useWeather`, `useSoundtrack`, `useDashboardLayout`, `useCourseRecords`, `useWeeklyGoals`.
@@ -146,36 +150,35 @@ src/items/
 
 ### Lib (`src/lib/`)
 
-| Module | Interface | Role | Notes |
-|---|---|---|---|
-| `hybrid-storage.ts` | `StorageAdapter` + `HybridStorage` + 4 adapters | Persistence transport | 750 lines. `BrowserStorageAdapter` (ext), `IndexedDBAdapter` (web), `LocalStorageAdapter` (fallback), `InMemoryAdapter` (tests) |
-| `data-transfer.ts` | `DataTransfer` class: `exportData`/`importData`/`exportFile`/`importFile` | Serialization to `ExchangeFormatV2` + legacy migration | 664 lines. Owns `XItem*` parallel types (Date<->number), `convertLegacyItems` |
-| `study-session-timer-manager.ts` | `StudySessionTimerManager` class: `handleMessage`, `getTimerState`, `startTimer`, `stopTimer`, `resetTimer`, `onStateChange` | Focus timer: phases, transitions, site blocking, notifications, audio, persistence | 453 lines. **Deep internally**, but imports `store` + `hybridStorage` + `notifications` + `site-blocking` at module top |
-| `google-calendar-sync.ts` | `GoogleCalendarSync` class: `syncItem`/`deleteItem`/`bulkSyncItems` (type-dispatch entry points) + `deleteEvent`/`fetchCalendars`/`fetchEventsFromCalendar` + exported `convertRecurrenceToRRule` | Google Calendar API adapter | 403 lines. One `convertItemToGoogleEvent` switch path for all item types; per-call retry in `makeApiRequest` (no shared instance state); `courses`/`projects` name-map context. |
-| `google-oauth.ts` | `GoogleOAuthManager`: `startOAuthFlow`/`refreshAccessToken`/`revokeToken`/`isTokenExpired` | OAuth via popup + `postMessage` handshake | 197 lines. **Hardcodes `REDIRECT_URI = 'http://localhost:5173/'`**. Web-only by decision (see [ADR 0006](./adr/0006-google-calendar-sync-web-only.md)) |
-| `file-attachment-storage.ts` | `fileAttachmentStorage` singleton: `storeFile`/`getFile`/`deleteFile`/`cleanupOrphanedFiles` | File attachment LRU + metadata | 213 lines. Stores base64 in `store.fileAttachments.files` (in-memory + persisted) |
-| `site-blocking.ts` | `isSiteBlocked`/`cleanSites`/`enactSiteBlockingStrategy`/`enactSiteBlockingStrategyInTab` | Domain/path matching + tab messaging | 181 lines. Pure-ish matching + extension-only orchestration |
-| `recurrence-utils.ts` | `isRecurrenceMatch`/`generateRecurrenceOccurrences`/`getNextOccurrence` | Recurrence expansion (daily/weekly/monthly/yearly, count/until, byWeekday) | 715 lines. Wired into `calendar-queries.ts` (`generateRecurrenceOccurrences` called when `expandRecurrence` is true). Tested (964 lines) |
-| `calendar-queries.ts` | `getItemsInRange`/`getItemsOnDate`/`entriesOnDate` | Shared calendar query: returns `CalendarEntry[]` with recurrence expansion and multi-day event coverage | Tested. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md) |
-| `date-utils.ts` | `getDateString`/`isSameDate`/`isDateInRange`/`createLocalMidnightDate`/... | Date helpers | tested |
-| `notifications.ts` | `showNotification`/`requestNotificationPermission` | OS notifications (ext: `browser.notifications`, web: `Notification` API) | adapter over two notification backends |
-| `audio.ts` | `playAudio`/`playAudioNow` | Sound playback (web: `Audio`, ext: offscreen document message) | adapter over two audio backends |
-| `technique-utils.ts` | `getTechniqueConfig`/`getPhaseDurationSeconds`/`shouldTransitionPhase`/`getNextPhase`/`getPhaseEmoji` | Pomodoro/flow technique definitions + phase math | pure, testable |
-| `navigation-utils.ts` | `handleNavigationClick` | Hash-vs-click nav helper | thin |
-| `translation-utils.ts` | `getNotificationTranslationAsync` | i18n for timer notifications | thin |
-| `browser-runtime-stub.ts` | `browserRuntime`/`browserRuntimeStub`/`isExtension` | The [runtime seam](#runtime-seam) | 90 lines. Two adapters |
+| Module                           | Interface                                                                                                                                                                                         | Role                                                                                                    | Notes                                                                                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hybrid-storage.ts`              | `StorageAdapter` + `HybridStorage` + 4 adapters                                                                                                                                                   | Persistence transport                                                                                   | 750 lines. `BrowserStorageAdapter` (ext), `IndexedDBAdapter` (web), `LocalStorageAdapter` (fallback), `InMemoryAdapter` (tests)                                                 |
+| `data-transfer.ts`               | `DataTransfer` class: `exportData`/`importData`/`exportFile`/`importFile`                                                                                                                         | Serialization to `ExchangeFormatV2` + legacy migration                                                  | 664 lines. Owns `XItem*` parallel types (Date<->number), `convertLegacyItems`                                                                                                   |
+| `study-session-timer-manager.ts` | `StudySessionTimerManager` class: `handleMessage`, `getTimerState`, `startTimer`, `stopTimer`, `resetTimer`, `onStateChange`                                                                      | Focus timer: phases, transitions, site blocking, notifications, audio, persistence                      | 453 lines. **Deep internally**, but imports `store` + `hybridStorage` + `notifications` + `site-blocking` at module top                                                         |
+| `google-calendar-sync.ts`        | `GoogleCalendarSync` class: `syncItem`/`deleteItem`/`bulkSyncItems` (type-dispatch entry points) + `deleteEvent`/`fetchCalendars`/`fetchEventsFromCalendar` + exported `convertRecurrenceToRRule` | Google Calendar API adapter                                                                             | 403 lines. One `convertItemToGoogleEvent` switch path for all item types; per-call retry in `makeApiRequest` (no shared instance state); `courses`/`projects` name-map context. |
+| `google-oauth.ts`                | `GoogleOAuthManager`: `startOAuthFlow`/`refreshAccessToken`/`revokeToken`/`isTokenExpired`                                                                                                        | OAuth via popup + `postMessage` handshake                                                               | 197 lines. **Hardcodes `REDIRECT_URI = 'http://localhost:5173/'`**. Web-only by decision (see [ADR 0006](./adr/0006-google-calendar-sync-web-only.md))                          |
+| `file-attachment-storage.ts`     | `fileAttachmentStorage` singleton: `storeFile`/`getFile`/`deleteFile`/`cleanupOrphanedFiles`                                                                                                      | File attachment LRU + metadata                                                                          | 213 lines. Stores base64 in `store.fileAttachments.files` (in-memory + persisted)                                                                                               |
+| `site-blocking.ts`               | `isSiteBlocked`/`cleanSites`/`enactSiteBlockingStrategy`/`enactSiteBlockingStrategyInTab`                                                                                                         | Domain/path matching + tab messaging                                                                    | 181 lines. Pure-ish matching + extension-only orchestration                                                                                                                     |
+| `recurrence-utils.ts`            | `isRecurrenceMatch`/`generateRecurrenceOccurrences`/`getNextOccurrence`                                                                                                                           | Recurrence expansion (daily/weekly/monthly/yearly, count/until, byWeekday)                              | 715 lines. Wired into `calendar-queries.ts` (`generateRecurrenceOccurrences` called when `expandRecurrence` is true). Tested (964 lines)                                        |
+| `calendar-queries.ts`            | `getItemsInRange`/`getItemsOnDate`/`entriesOnDate`                                                                                                                                                | Shared calendar query: returns `CalendarEntry[]` with recurrence expansion and multi-day event coverage | Tested. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md)                                                                                                               |
+| `date-utils.ts`                  | `getDateString`/`isSameDate`/`isDateInRange`/`createLocalMidnightDate`/...                                                                                                                        | Date helpers                                                                                            | tested                                                                                                                                                                          |
+| `notifications.ts`               | `showNotification`/`requestNotificationPermission`                                                                                                                                                | OS notifications (ext: `browser.notifications`, web: `Notification` API)                                | adapter over two notification backends                                                                                                                                          |
+| `audio.ts`                       | `playAudio`/`playAudioNow`                                                                                                                                                                        | Sound playback (web: `Audio`, ext: offscreen document message)                                          | adapter over two audio backends                                                                                                                                                 |
+| `technique-utils.ts`             | `getTechniqueConfig`/`getPhaseDurationSeconds`/`shouldTransitionPhase`/`getNextPhase`/`getPhaseEmoji`                                                                                             | Pomodoro/flow technique definitions + phase math                                                        | pure, testable                                                                                                                                                                  |
+| `navigation-utils.ts`            | `handleNavigationClick`                                                                                                                                                                           | Hash-vs-click nav helper                                                                                | thin                                                                                                                                                                            |
+| `translation-utils.ts`           | `getNotificationTranslationAsync`                                                                                                                                                                 | i18n for timer notifications                                                                            | thin                                                                                                                                                                            |
+| `browser-runtime-stub.ts`        | `browserRuntime`/`browserRuntimeStub`/`isExtension`                                                                                                                                               | The [runtime seam](#runtime-seam)                                                                       | 90 lines. Two adapters                                                                                                                                                          |
 
 ### Hooks (`src/hooks/`)
 
-| Hook | Role | Depth |
-|---|---|---|
-| `useStore.ts` | [State access hooks](#state-access-hooks) | deep |
-| `useStudyTimer.ts` | Timer UI bridge: `useState` + `browserRuntime` messages | moderate. The message bridge is key to the architecture (see [Execution contexts and state ownership](#execution-contexts)) |
-| `useModeAwareTab.ts` | Per-mode active tab persistence + hash nav | deep. Hides the "remember tab per Container Mode" rule |
-| `useSettingsDialog.ts` | Settings dialog open state | moderate |
-| `useDataMigration.ts` | One-shot legacy-data migration on mount | moderate |
-| `useOAuthRedirect.ts` | Popup-side: reads `?code=` and `postMessage` to opener | thin adapter (web OAuth flow) |
-| `useHashNavigation.ts`, `useScrollToTop.ts`, `useContextMenu.ts`, `useConfetti.ts`, `useLocalization.ts`, `useAccentColorStyles.ts`, `useBaseStyles.ts`, `useCardOpacityStyles.ts`, `useCardCollapse.ts`, `useDarkModeStyles.ts` | UI utilities & style injectors | mostly thin. `useCardCollapse` is **dead/broken** (references non-existent `useDashboardLayout` methods, zero call sites) |
+| Hook                                                                                                                                                                                                                             | Role                                                    | Depth                                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `useStore.ts`                                                                                                                                                                                                                    | [State access hooks](#state-access-hooks)               | deep                                                                                                                        |
+| `useStudyTimer.ts`                                                                                                                                                                                                               | Timer UI bridge: `useState` + `browserRuntime` messages | moderate. The message bridge is key to the architecture (see [Execution contexts and state ownership](#execution-contexts)) |
+| `useModeAwareTab.ts`                                                                                                                                                                                                             | Per-mode active tab persistence + hash nav              | deep. Hides the "remember tab per Container Mode" rule                                                                      |
+| `useSettingsDialog.ts`                                                                                                                                                                                                           | Settings dialog open state                              | moderate                                                                                                                    |
+| `useOAuthRedirect.ts`                                                                                                                                                                                                            | Popup-side: reads `?code=` and `postMessage` to opener  | thin adapter (web OAuth flow)                                                                                               |
+| `useHashNavigation.ts`, `useScrollToTop.ts`, `useContextMenu.ts`, `useConfetti.ts`, `useLocalization.ts`, `useAccentColorStyles.ts`, `useBaseStyles.ts`, `useCardOpacityStyles.ts`, `useCardCollapse.ts`, `useDarkModeStyles.ts` | UI utilities & style injectors                          | mostly thin. `useCardCollapse` is **dead/broken** (references non-existent `useDashboardLayout` methods, zero call sites)   |
 
 ### Tabs (`src/tabs/`)
 
@@ -183,7 +186,7 @@ src/items/
 
 ### Components (`src/components/`)
 
-Shared UI: `OverflowTabs`, `MiniCalendar`, `PlannerMonthView`, `PlannerWeekView`, `PlannerSharedComponents`, `CourseRecordCalendar`, `SwipeableExam`, `SwipeableTask`, `Upcoming`, `TodaySchedule`, `TasksProgressBar`, `SoundtrackCard`, `WeatherWidget`, `TipsRow`, `SyllabusUpload`, `StorageInfoCard`, `LoadingScreen`, `ErrorBoundary`, `LanguageSelector`, `MoonSunToggle`, `CurrentDateTime`, `DebugClearStorage`, `LevelsSlider`, `UglyCalendar.css`, `settings/` (settings dialog components), `ui/` (shadcn/ui primitives).
+Shared UI: `OverflowTabs`, `MiniCalendar`, `PlannerMonthView`, `PlannerWeekView`, `PlannerSharedComponents`, `CourseRecordCalendar`, `SwipeableExam`, `SwipeableTask`, `Upcoming`, `TodaySchedule`, `TasksProgressBar`, `SoundtrackCard`, `WeatherWidget`, `TipsRow`, `SyllabusUpload`, `StorageInfoCard`, `LoadingScreen`, `ErrorBoundary`, `LanguageSelector`, `MoonSunToggle`, `CurrentDateTime`, `LevelsSlider`, `UglyCalendar.css`, `settings/` (settings dialog components), `ui/` (shadcn/ui primitives).
 
 ---
 
@@ -204,6 +207,7 @@ Each subtype has a zod schema (`*/modelSchema.ts`), a form schema (`*/formSchema
 **Recurrence** is modeled on `ItemEvent` (`event/modelSchema.ts:5-25`: `frequency`/`interval`/`byWeekday`/`count`/`until`) and collected by the form, but **no calendar view expands it**. See [Calendar / Planner](#calendar-planner).
 
 <a id="persistence-path"></a>
+
 ### Persistence path
 
 ```
@@ -241,20 +245,21 @@ The on-disk shape. Notable: `items: XItem[]` uses `number` timestamps (`dueAt: n
 
 **Settings** (`store.focusTimer`: `audioEnabled`, `audioVolume`, `notificationsEnabled`, `showCountdown`, `blockingStrategy`, `sites`) are read by the manager via `snapshot(store).focusTimer` (`study-session-timer-manager.ts:44`). This is the synced-cache read. It is the cleanest way for the background to get current settings without its own React.
 
-**Known seam leak:** the manager *writes* `store.focusTimer.notificationsEnabled = false` (line 346) when permission is denied. A lib module mutates the app store singleton. Read is justified, write is not. See [Candidate C](./architecture-review-candidates.md#candidate-c) in the candidates doc.
+**Known seam leak:** the manager _writes_ `store.focusTimer.notificationsEnabled = false` (line 346) when permission is denied. A lib module mutates the app store singleton. Read is justified, write is not. See [Candidate C](./architecture-review-candidates.md#candidate-c) in the candidates doc.
 
 <a id="calendar-planner"></a>
+
 ### Calendar / Planner
 
 Five calendar-shaped views share one query module:
 
-| View | File | Query usage |
-|---|---|---|
+| View                 | File                                                              | Query usage                                                         |
+| -------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
 | Planner (month/week) | `PlannerTab.tsx` + `PlannerMonthView.tsx` + `PlannerWeekView.tsx` | `getItemsOnDate` + view filters (completed tasks, multi-day toggle) |
-| Mini calendar | `MiniCalendar.tsx` | `getItemsOnDate` + view filter (completed tasks on non-past dates) |
-| Course records | `CourseRecordCalendar.tsx` | `getItemsOnDate` scoped by `courseFilter` |
-| Ugly calendar | `UglyCalendarPlannerTab.tsx` | `getItemsInRange` (events/tasks/exams) + inline timetable expansion |
-| Dashboard upcoming | `Upcoming.tsx` / `TodaySchedule.tsx` | own filtering (tasks/exams only, no date-cell query) |
+| Mini calendar        | `MiniCalendar.tsx`                                                | `getItemsOnDate` + view filter (completed tasks on non-past dates)  |
+| Course records       | `CourseRecordCalendar.tsx`                                        | `getItemsOnDate` scoped by `courseFilter`                           |
+| Ugly calendar        | `UglyCalendarPlannerTab.tsx`                                      | `getItemsInRange` (events/tasks/exams) + inline timetable expansion |
+| Dashboard upcoming   | `Upcoming.tsx` / `TodaySchedule.tsx`                              | own filtering (tasks/exams only, no date-cell query)                |
 
 The shared query module `src/lib/calendar-queries.ts` exports `getItemsInRange(items, start, end, opts)` and `getItemsOnDate(items, date, opts)`, both returning `CalendarEntry[]`. Each entry carries the occurrence's effective `startsAt`/`endsAt` and `sequence` alongside the source `item`. The query answers "what occurs on this date." Views apply display filters (`hideCompleted`, `showMultiDay`) themselves. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md).
 
@@ -279,6 +284,7 @@ i18next with per-namespace JSON (`src/locales/{en,es}/`). The content script (`c
 ---
 
 <a id="cross-cutting-concerns"></a>
+
 ## Cross-cutting concerns
 
 ### State access discipline
@@ -306,6 +312,7 @@ Five style hooks run in `App.tsx:135-138`: `useDarkModeStyles`, `useAccentColorS
 ---
 
 <a id="principles-in-force"></a>
+
 ## Principles in force (baseline)
 
 These describe the **current** conventions rather than aspirations. Future work should preserve them unless a candidate explicitly revisits one.

@@ -1,14 +1,14 @@
-import React from 'react';
+import React from 'react'
 
 interface ContextMenuProps {
-  show: boolean;
-  position: { x: number; y: number };
-  menuRef: React.RefObject<HTMLDivElement>;
-  children: React.ReactNode;
+  show: boolean
+  position: { x: number; y: number }
+  menuRef: React.RefObject<HTMLDivElement>
+  children: React.ReactNode
 }
 
 export function ContextMenu({ show, position, menuRef, children }: ContextMenuProps) {
-  if (!show) return null;
+  if (!show) return null
 
   return (
     <div
@@ -21,25 +21,25 @@ export function ContextMenu({ show, position, menuRef, children }: ContextMenuPr
     >
       {children}
     </div>
-  );
+  )
 }
 
 interface ContextMenuItemProps {
-  onClick: () => void;
-  variant?: 'default' | 'destructive';
-  children: React.ReactNode;
+  onClick: () => void
+  variant?: 'default' | 'destructive'
+  children: React.ReactNode
 }
 
 export function ContextMenuItem({ onClick, variant = 'default', children }: ContextMenuItemProps) {
-  const baseClasses = 'w-full text-left px-3 py-2 text-sm rounded-md';
+  const baseClasses = 'w-full text-left px-3 py-2 text-sm rounded-md'
   const variantClasses =
     variant === 'destructive'
       ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-      : 'hover:bg-gray-100 dark:hover:bg-zinc-700';
+      : 'hover:bg-gray-100 dark:hover:bg-zinc-700'
 
   return (
     <button className={`${baseClasses} ${variantClasses} ${variant === 'destructive' ? '' : 'mb-1'}`} onClick={onClick}>
       {children}
     </button>
-  );
+  )
 }

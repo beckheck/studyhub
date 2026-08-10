@@ -1,16 +1,16 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { SettingsDialog as SettingsDialogType } from '@/hooks/useSettingsDialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { SettingsDialog as SettingsDialogType } from '@/hooks/useSettingsDialog'
 
 interface SettingsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  dialog: SettingsDialogType | null;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  dialog: SettingsDialogType | null
 }
 
 export default function SettingsDialog({ open, onOpenChange, dialog }: SettingsDialogProps) {
-  if (!dialog) return null;
+  if (!dialog) return null
 
-  const { title, subtitle, Icon, Body } = dialog;
+  const { title, subtitle, Icon, Body } = dialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -28,5 +28,5 @@ export default function SettingsDialog({ open, onOpenChange, dialog }: SettingsD
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -3,17 +3,17 @@
  * Shows while the app is loading data from storage
  */
 
-import { motion } from 'framer-motion';
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion'
+import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface LoadingScreenProps {
-  error?: string | null;
-  status?: string;
+  error?: string | null
+  status?: string
 }
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ error, status }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('common')
 
   if (error) {
     return (
@@ -32,7 +32,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ error, status }) =
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -102,7 +102,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ error, status }) =
         </motion.div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoadingScreen;
+export default LoadingScreen

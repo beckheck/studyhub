@@ -1,27 +1,27 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useWellness } from '@/hooks/useStore';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { useWellness } from '@/hooks/useStore'
+import { useTranslation } from 'react-i18next'
 
 export default function HydrationSettings() {
-  const { t } = useTranslation('wellness');
-  const { wellness, setWater, setHydrationSettings } = useWellness();
-  const { water, hydrationSettings } = wellness;
+  const { t: _t } = useTranslation('wellness')
+  const { wellness, setWater, setHydrationSettings } = useWellness()
+  const { water, hydrationSettings } = wellness
 
   // Helper function to get display goal
   const getDisplayGoal = () => {
     if (hydrationSettings.useCups) {
       return hydrationSettings.unit === 'metric'
         ? `${Math.ceil(hydrationSettings.dailyGoalML / hydrationSettings.cupSizeML)} cups`
-        : `${Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)} cups`;
+        : `${Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)} cups`
     } else {
       return hydrationSettings.unit === 'metric'
         ? `${hydrationSettings.dailyGoalML}mL`
-        : `${hydrationSettings.dailyGoalOZ}oz`;
+        : `${hydrationSettings.dailyGoalOZ}oz`
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
@@ -56,21 +56,21 @@ export default function HydrationSettings() {
           <Switch
             checked={hydrationSettings.useCups}
             onCheckedChange={checked => {
-              const currentUseCups = hydrationSettings.useCups;
+              const currentUseCups = hydrationSettings.useCups
               const cupSize =
-                hydrationSettings.unit === 'metric' ? hydrationSettings.cupSizeML : hydrationSettings.cupSizeOZ;
+                hydrationSettings.unit === 'metric' ? hydrationSettings.cupSizeML : hydrationSettings.cupSizeOZ
 
               if (currentUseCups && !checked) {
                 // Converting from cups to direct volume
-                const volumeAmount = water * cupSize;
-                setWater(volumeAmount);
+                const volumeAmount = water * cupSize
+                setWater(volumeAmount)
               } else if (!currentUseCups && checked) {
                 // Converting from direct volume to cups
-                const cupsAmount = Math.round(water / cupSize);
-                setWater(cupsAmount);
+                const cupsAmount = Math.round(water / cupSize)
+                setWater(cupsAmount)
               }
 
-              setHydrationSettings({ ...hydrationSettings, useCups: checked });
+              setHydrationSettings({ ...hydrationSettings, useCups: checked })
             }}
             className="data-[state=checked]:bg-blue-600"
           />
@@ -87,11 +87,11 @@ export default function HydrationSettings() {
           type="number"
           value={hydrationSettings.unit === 'metric' ? hydrationSettings.cupSizeML : hydrationSettings.cupSizeOZ}
           onChange={e => {
-            const value = parseFloat(e.target.value) || 0;
+            const value = parseFloat(e.target.value) || 0
             setHydrationSettings({
               ...hydrationSettings,
               ...(hydrationSettings.unit === 'metric' ? { cupSizeML: value } : { cupSizeOZ: value }),
-            });
+            })
           }}
           className="rounded-xl"
           placeholder={hydrationSettings.unit === 'metric' ? '250' : '8.5'}
@@ -110,11 +110,11 @@ export default function HydrationSettings() {
           type="number"
           value={hydrationSettings.unit === 'metric' ? hydrationSettings.dailyGoalML : hydrationSettings.dailyGoalOZ}
           onChange={e => {
-            const value = parseFloat(e.target.value) || 0;
+            const value = parseFloat(e.target.value) || 0
             setHydrationSettings({
               ...hydrationSettings,
               ...(hydrationSettings.unit === 'metric' ? { dailyGoalML: value } : { dailyGoalOZ: value }),
-            });
+            })
           }}
           className="rounded-xl"
           placeholder={hydrationSettings.unit === 'metric' ? '2000' : '67.6'}
@@ -142,5 +142,5 @@ export default function HydrationSettings() {
         Note: Changes to tracking method or units will reset your current water counter to 0 when you close this dialog.
       </div>
     </div>
-  );
+  )
 }

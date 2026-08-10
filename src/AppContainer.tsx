@@ -1,12 +1,12 @@
-import { AppContainerDimensions, AppContainerMode, AppContextProvider } from '@/contexts/AppContext';
-import { useEffect, useState } from 'react';
-import App from './App';
+import { AppContainerDimensions, AppContainerMode, AppContextProvider } from '@/contexts/AppContext'
+import { useEffect, useState } from 'react'
+import App from './App'
 
 export function AppContainer({ mode }: { mode: AppContainerMode }) {
   const [dimensions, setDimensions] = useState<AppContainerDimensions>({
     width: mode === 'popup' ? 400 : window.innerWidth,
     height: mode === 'popup' ? 600 : window.innerHeight,
-  });
+  })
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -14,13 +14,13 @@ export function AppContainer({ mode }: { mode: AppContainerMode }) {
         setDimensions({
           width: window.innerWidth,
           height: window.innerHeight,
-        });
+        })
       }
-    };
+    }
 
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, [mode]);
+    window.addEventListener('resize', updateDimensions)
+    return () => window.removeEventListener('resize', updateDimensions)
+  }, [mode])
 
   return (
     <AppContextProvider mode={mode} dimensions={dimensions}>
@@ -36,5 +36,5 @@ export function AppContainer({ mode }: { mode: AppContainerMode }) {
         <App />
       </div>
     </AppContextProvider>
-  );
+  )
 }

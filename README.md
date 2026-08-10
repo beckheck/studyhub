@@ -12,7 +12,7 @@ A modern, interactive study portal built specifically for Generation Z students,
 ## 🛠️ Tech Stack
 
 - **Framework:** React 18
-- **Build Tool:** Vite
+- **Build Tool:** Vite+ https://viteplus.dev/
 - **Styling:** Tailwind CSS
 - **UI Components:** shadcn/ui + Radix UI
 - **Icons:** Lucide React
@@ -30,20 +30,20 @@ A modern, interactive study portal built specifically for Generation Z students,
 2. Install dependencies:
 
    ```sh
-   npm install
+   vp install
    ```
 
 3. Start the development server:
 
    ```sh
-   npm run dev
+   vp dev
    ```
 
 ## 🔧 Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+- `vp dev` - Start development server
+- `vp build` - Build for production
+- `vp preview` - Preview production build
 
 ## 💻 System Requirements
 

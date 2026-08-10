@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 /**
  * Utility functions for navigation handling
@@ -14,7 +14,7 @@ import React from 'react';
 export function handleNavigationClick(e: React.MouseEvent<HTMLAnchorElement>, callback: () => void): void {
   // Allow default behavior (e.g. opening in new tab) when modifier keys are pressed
   if (e.metaKey || e.ctrlKey || e.shiftKey) {
-    return;
+    return
   }
-  callback();
+  callback()
 }

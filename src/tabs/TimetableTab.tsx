@@ -1,62 +1,62 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses, useItems } from '@/hooks/useStore';
-import { ITEM_TIMETABLE_ACTIVITY_TYPES, ItemTimetable, TIME_BLOCKS } from '@/items/timetable/modelSchema';
-import { useItemDialog } from '@/items/ItemDialogProvider';
-import { Plus } from 'lucide-react';
-import React, { useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses, useItems } from '@/hooks/useStore'
+import { ITEM_TIMETABLE_ACTIVITY_TYPES, ItemTimetable, TIME_BLOCKS } from '@/items/timetable/modelSchema'
+import { useItemDialog } from '@/items/ItemDialogProvider'
+import { Plus } from 'lucide-react'
+import React, { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function TimetableTab() {
-  const { t } = useTranslation('timetable');
-  const { getDayNames, getShortDayNames } = useLocalization();
-  const { getCourseTitle } = useCourses();
-  const { getItemsByType, updateItem, deleteItem } = useItems();
-  const itemDialog = useItemDialog();
+  const { t } = useTranslation('timetable')
+  const { getDayNames, getShortDayNames } = useLocalization()
+  const { getCourseTitle } = useCourses()
+  const { getItemsByType, updateItem } = useItems()
+  const itemDialog = useItemDialog()
 
   // Get timetable events from the unified item system
-  const timetableEvents = getItemsByType('timetable') as ItemTimetable[];
+  const timetableEvents = getItemsByType('timetable') as ItemTimetable[]
 
-  const [draggedEvent, setDraggedEvent] = useState<ItemTimetable | null>(null);
-  const [dragOverCell, setDragOverCell] = useState<{ day: string; block: string } | null>(null);
-  const dragCounter = useRef(0);
+  const [draggedEvent, setDraggedEvent] = useState<ItemTimetable | null>(null)
+  const [dragOverCell, setDragOverCell] = useState<{ day: string; block: string } | null>(null)
+  const dragCounter = useRef(0)
 
   // Days of the week - use English as keys, translate for display
-  const weekDays: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const weekDays: string[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 
   // Get localized day and short day names using useLocalization
-  const dayNames = getDayNames();
-  const shortDayNames = getShortDayNames();
+  const dayNames = getDayNames()
+  const shortDayNames = getShortDayNames()
 
   // Helper function to convert to title case
   const toTitleCase = (str: string): string => {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
 
   // Helper function to get translated day name in title case
   const getTranslatedDayName = (englishDay: string): string => {
-    const dayIndex = weekDays.indexOf(englishDay);
-    return dayIndex !== -1 ? toTitleCase(dayNames[dayIndex]) : englishDay;
-  };
+    const dayIndex = weekDays.indexOf(englishDay)
+    return dayIndex !== -1 ? toTitleCase(dayNames[dayIndex]) : englishDay
+  }
 
   // Helper function to get translated short day name in title case
   const getTranslatedShortDayName = (englishDay: string): string => {
-    const dayIndex = weekDays.indexOf(englishDay);
-    return dayIndex !== -1 ? toTitleCase(shortDayNames[dayIndex]) : englishDay.slice(0, 3);
-  };
+    const dayIndex = weekDays.indexOf(englishDay)
+    return dayIndex !== -1 ? toTitleCase(shortDayNames[dayIndex]) : englishDay.slice(0, 3)
+  }
 
   // Time blocks - use the unified TIME_BLOCKS but convert to legacy format for UI compatibility
   const timeBlocks = TIME_BLOCKS.map(block => ({
     block: block.id,
     time: `${block.startsAt} - ${block.endsAt}`,
-  }));
+  }))
 
   // Helper function to convert English day name to weekday number
   const getWeekdayNumber = (dayName: string): number => {
-    const dayMapping = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
-    return dayMapping[dayName as keyof typeof dayMapping] || 1;
-  };
+    const dayMapping = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 }
+    return dayMapping[dayName as keyof typeof dayMapping] || 1
+  }
 
   // Handle empty cell click to add new event
   const handleCellClick = (day: string, block: string): void => {
@@ -67,69 +67,69 @@ export default function TimetableTab() {
       activityType: ITEM_TIMETABLE_ACTIVITY_TYPES[0],
       classroom: '',
       teacher: '',
-    });
-  };
+    })
+  }
 
   // Start editing an event
   const editEvent = (event: ItemTimetable): void => {
-    itemDialog.openEditDialog(event);
-  };
+    itemDialog.openEditDialog(event)
+  }
 
   // Helper function to get time display for an event
   const getEventTimeDisplay = (event: ItemTimetable): string => {
-    const block = TIME_BLOCKS.find(b => b.id === event.blockId);
-    return block ? `${block.startsAt} - ${block.endsAt}` : '';
-  };
+    const block = TIME_BLOCKS.find(b => b.id === event.blockId)
+    return block ? `${block.startsAt} - ${block.endsAt}` : ''
+  }
 
   // Helper function to get activity type display
   const getActivityTypeDisplay = (activityType: string): string => {
-    return t(`items:timetable.activityTypes.${activityType}`);
-  };
+    return t(`items:timetable.activityTypes.${activityType}`)
+  }
 
   // Filter events for a specific day and block
   const getEventForDayAndBlock = (day: string, block: string): ItemTimetable[] => {
-    const weekday = getWeekdayNumber(day);
-    return timetableEvents.filter(event => event.weekday === weekday && event.blockId === block);
-  };
+    const weekday = getWeekdayNumber(day)
+    return timetableEvents.filter(event => event.weekday === weekday && event.blockId === block)
+  }
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, event: ItemTimetable) => {
-    setDraggedEvent(event);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', event.id);
-  };
+    setDraggedEvent(event)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', event.id)
+  }
 
   const handleDragEnd = () => {
-    setDraggedEvent(null);
-    setDragOverCell(null);
-    dragCounter.current = 0;
-  };
+    setDraggedEvent(null)
+    setDragOverCell(null)
+    dragCounter.current = 0
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
 
   const handleDragEnter = (e: React.DragEvent, day: string, block: string) => {
-    e.preventDefault();
-    dragCounter.current++;
-    setDragOverCell({ day, block });
-  };
+    e.preventDefault()
+    dragCounter.current++
+    setDragOverCell({ day, block })
+  }
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    dragCounter.current--;
+    e.preventDefault()
+    dragCounter.current--
     if (dragCounter.current === 0) {
-      setDragOverCell(null);
+      setDragOverCell(null)
     }
-  };
+  }
 
   const handleDrop = (e: React.DragEvent, targetDay: string, targetBlock: string) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!draggedEvent) return;
+    if (!draggedEvent) return
 
-    const targetWeekday = getWeekdayNumber(targetDay);
+    const targetWeekday = getWeekdayNumber(targetDay)
 
     // Check if the event is being dropped in a different cell
     if (draggedEvent.weekday !== targetWeekday || draggedEvent.blockId !== targetBlock) {
@@ -137,13 +137,13 @@ export default function TimetableTab() {
       updateItem(draggedEvent.id, {
         weekday: targetWeekday,
         blockId: targetBlock,
-      } as any);
+      } as any)
     }
 
-    setDraggedEvent(null);
-    setDragOverCell(null);
-    dragCounter.current = 0;
-  };
+    setDraggedEvent(null)
+    setDragOverCell(null)
+    dragCounter.current = 0
+  }
 
   return (
     <div className="space-y-6">
@@ -165,7 +165,7 @@ export default function TimetableTab() {
         <CardContent>
           <div className="grid grid-cols-6 gap-2 mb-4">
             <div className="font-medium text-zinc-500 dark:text-zinc-400"></div>
-            {weekDays.map((day, index) => (
+            {weekDays.map(day => (
               <div key={day} className="font-medium text-center text-zinc-800 dark:text-zinc-200">
                 <span className="hidden sm:inline">{getTranslatedDayName(day)}</span>
                 <span className="sm:hidden">{getTranslatedShortDayName(day)}</span>
@@ -182,9 +182,9 @@ export default function TimetableTab() {
               </div>
 
               {weekDays.map(day => {
-                const eventsInCell = getEventForDayAndBlock(day, block);
-                const isEmpty = eventsInCell.length === 0;
-                const isDragOver = dragOverCell?.day === day && dragOverCell?.block === block;
+                const eventsInCell = getEventForDayAndBlock(day, block)
+                const isEmpty = eventsInCell.length === 0
+                const isDragOver = dragOverCell?.day === day && dragOverCell?.block === block
 
                 return (
                   <div
@@ -219,8 +219,8 @@ export default function TimetableTab() {
                         onDragStart={e => handleDragStart(e, event)}
                         onDragEnd={handleDragEnd}
                         onClick={e => {
-                          e.stopPropagation();
-                          editEvent(event);
+                          e.stopPropagation()
+                          editEvent(event)
                         }}
                       >
                         <div className="text-xs sm:text-sm font-medium text-zinc-800 dark:text-zinc-200">
@@ -272,12 +272,12 @@ export default function TimetableTab() {
                       </div>
                     )}
                   </div>
-                );
+                )
               })}
             </div>
           ))}
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

@@ -1,16 +1,16 @@
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coffee, Music2, Target } from 'lucide-react';
-import { ReactElement } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Coffee, Music2, Target } from 'lucide-react'
+import { ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface Tip {
-  icon: ReactElement;
-  title: string;
-  tip: string;
+  icon: ReactElement
+  title: string
+  tip: string
 }
 
 export default function TipsRow() {
-  const { t } = useTranslation('tips');
+  const { t } = useTranslation('tips')
 
   const tips: Tip[] = [
     {
@@ -28,7 +28,7 @@ export default function TipsRow() {
       title: t('soundtrack.title'),
       tip: t('soundtrack.tip'),
     },
-  ];
+  ]
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
@@ -44,5 +44,5 @@ export default function TipsRow() {
         </Card>
       ))}
     </div>
-  );
+  )
 }

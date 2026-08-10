@@ -1,37 +1,37 @@
-import { Input } from '@/components/ui/input';
-import { SimpleSelect } from '@/components/ui/simple-select';
-import { useLocalization } from '@/hooks/useLocalization';
-import { ItemFormFieldFlags } from '@/items/useItemDialog';
-import { GenericFieldWrapper } from '../base/GenericFieldWrapper';
-import { itemTimetableFormSchema } from './formSchema';
-import { ITEM_TIMETABLE_ACTIVITY_TYPES, TIME_BLOCKS } from './modelSchema';
+import { Input } from '@/components/ui/input'
+import { SimpleSelect } from '@/components/ui/simple-select'
+import { useLocalization } from '@/hooks/useLocalization'
+import { ItemFormFieldFlags } from '@/items/useItemDialog'
+import { GenericFieldWrapper } from '../base/GenericFieldWrapper'
+import { itemTimetableFormSchema } from './formSchema'
+import { ITEM_TIMETABLE_ACTIVITY_TYPES, TIME_BLOCKS } from './modelSchema'
 
 export interface TimetableFormProps {
-  hidden: ItemFormFieldFlags;
-  disabled: ItemFormFieldFlags;
+  hidden: ItemFormFieldFlags
+  disabled: ItemFormFieldFlags
 }
 
 export function TimetableForm({ hidden, disabled }: TimetableFormProps) {
-  const { getDayNames, t } = useLocalization();
+  const { getDayNames, t } = useLocalization()
 
   const weekdayOptions = getDayNames().map((dayName, index) => {
     // Convert Monday-first (from getDayNames) to Sunday-first indexing (0=Sunday)
-    const dayValue = index === 6 ? 0 : index + 1;
+    const dayValue = index === 6 ? 0 : index + 1
     return {
       value: dayValue.toString(),
       label: dayName,
-    };
-  });
+    }
+  })
 
   const activityTypeOptions = ITEM_TIMETABLE_ACTIVITY_TYPES.map(value => ({
     value,
     label: t(`items:timetable.activityTypes.${value}`),
-  }));
+  }))
 
   const timeBlockOptions = TIME_BLOCKS.map((block, index) => ({
     value: block.id,
     label: `${t('items:timetable.block')} ${index + 1} (${block.startsAt} - ${block.endsAt})`,
-  }));
+  }))
 
   return (
     <div className="space-y-4">
@@ -120,5 +120,5 @@ export function TimetableForm({ hidden, disabled }: TimetableFormProps) {
         )}
       </GenericFieldWrapper>
     </div>
-  );
+  )
 }

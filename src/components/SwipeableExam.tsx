@@ -1,30 +1,30 @@
-import { Badge } from '@/components/ui/badge';
-import SwipeableItem from '@/components/ui/swipeable-item';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses } from '@/hooks/useStore';
-import { ItemExam } from '@/items/exam/modelSchema';
-import { AlertTriangle } from 'lucide-react';
-import React from 'react';
+import { Badge } from '@/components/ui/badge'
+import SwipeableItem from '@/components/ui/swipeable-item'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses } from '@/hooks/useStore'
+import { ItemExam } from '@/items/exam/modelSchema'
+import { AlertTriangle } from 'lucide-react'
+import React from 'react'
 
 interface SwipeableExamProps {
-  key: string; // Unique key for React
-  exam: ItemExam;
-  index: number;
-  expanded: number;
-  calculateDDay: (dateString: string) => string | null;
-  onComplete: (examId: string) => void;
-  onClick?: () => void;
+  key: string // Unique key for React
+  exam: ItemExam
+  index: number
+  expanded: number
+  calculateDDay: (dateString: string) => string | null
+  onComplete: (examId: string) => void
+  onClick?: () => void
 }
 
 const SwipeableExam = React.forwardRef<HTMLDivElement, SwipeableExamProps>(function SwipeableExam(
   { exam, index, expanded, calculateDDay, onComplete, onClick },
-  ref
+  ref,
 ) {
-  const { getCourseTitle } = useCourses();
-  const { formatDateDDMMYYYY } = useLocalization();
+  const { getCourseTitle } = useCourses()
+  const { formatDateDDMMYYYY } = useLocalization()
 
   // Convert timestamp to date string for compatibility with existing functions
-  const examDateString = new Date(exam.startsAt).toISOString().split('T')[0];
+  const examDateString = new Date(exam.startsAt).toISOString().split('T')[0]
 
   return (
     <SwipeableItem ref={ref} index={index} expanded={expanded} onComplete={() => onComplete(exam.id)} onClick={onClick}>
@@ -53,7 +53,7 @@ const SwipeableExam = React.forwardRef<HTMLDivElement, SwipeableExamProps>(funct
         </div>
       </div>
     </SwipeableItem>
-  );
-});
+  )
+})
 
-export default SwipeableExam;
+export default SwipeableExam

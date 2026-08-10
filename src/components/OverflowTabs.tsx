@@ -1,115 +1,110 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { TabsList } from '@/components/ui/tabs';
-import { handleNavigationClick } from '@/lib/navigation-utils';
-import { AppTab } from '@/types';
-import { MoreHorizontal } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { TabsList } from '@/components/ui/tabs'
+import { handleNavigationClick } from '@/lib/navigation-utils'
+import { AppTab } from '@/types'
+import { MoreHorizontal } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
 
 interface OverflowTabsProps {
-  tabs: AppTab[];
-  activeTab: string;
-  onTabChange: (value: string) => void;
-  className?: string;
-  style?: React.CSSProperties;
+  tabs: AppTab[]
+  activeTab: string
+  onTabChange: (value: string) => void
+  className?: string
+  style?: React.CSSProperties
 }
 
 export default function OverflowTabs({ tabs, activeTab, onTabChange, className, style }: OverflowTabsProps) {
-  const [visibleTabs, setVisibleTabs] = useState<AppTab[]>(tabs);
-  const [overflowTabs, setOverflowTabs] = useState<AppTab[]>([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const outerContainerRef = useRef<HTMLDivElement>(null);
-  const tabsListRef = useRef<HTMLDivElement>(null);
-  const measurementRef = useRef<HTMLDivElement>(null);
+  const [visibleTabs, setVisibleTabs] = useState<AppTab[]>(tabs)
+  const [overflowTabs, setOverflowTabs] = useState<AppTab[]>([])
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const outerContainerRef = useRef<HTMLDivElement>(null)
+  const tabsListRef = useRef<HTMLDivElement>(null)
+  const measurementRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const checkOverflow = () => {
       if (!outerContainerRef.current || !measurementRef.current) {
-        return;
+        return
       }
 
       // Use the outer container (parent) for width measurement, not the tabs container
-      const outerContainer = outerContainerRef.current;
-      const availableWidth = outerContainer.offsetWidth;
+      const outerContainer = outerContainerRef.current
+      const availableWidth = outerContainer.offsetWidth
 
       if (availableWidth === 0) {
-        setTimeout(checkOverflow, 100);
-        return;
+        setTimeout(checkOverflow, 100)
+        return
       }
 
       // Measure all tabs using the hidden measurement container
-      const measurementTabs = measurementRef.current.children;
+      const measurementTabs = measurementRef.current.children
       if (measurementTabs.length === 0) {
-        setTimeout(checkOverflow, 100);
-        return;
+        setTimeout(checkOverflow, 100)
+        return
       }
 
-      const dropdownWidth = 56; // Width of dropdown button
-      const tabsListPadding = 24; // Padding from TabsList
-      const gap = 8; // Gap between tabs
+      const dropdownWidth = 56 // Width of dropdown button
+      const tabsListPadding = 24 // Padding from TabsList
+      const gap = 8 // Gap between tabs
 
       // Calculate width of all tabs
-      let totalTabsWidth = tabsListPadding;
-      const tabWidths: number[] = [];
+      let totalTabsWidth = tabsListPadding
+      const tabWidths: number[] = []
 
       for (let i = 0; i < measurementTabs.length; i++) {
-        const tabElement = measurementTabs[i] as HTMLElement;
-        const tabWidth = tabElement.offsetWidth;
-        tabWidths.push(tabWidth);
-        totalTabsWidth += tabWidth;
-        if (i > 0) totalTabsWidth += gap;
+        const tabElement = measurementTabs[i] as HTMLElement
+        const tabWidth = tabElement.offsetWidth
+        tabWidths.push(tabWidth)
+        totalTabsWidth += tabWidth
+        if (i > 0) totalTabsWidth += gap
       }
 
       // Check if all tabs fit without dropdown
       if (totalTabsWidth <= availableWidth) {
-        setVisibleTabs(tabs);
-        setOverflowTabs([]);
-        return;
+        setVisibleTabs(tabs)
+        setOverflowTabs([])
+        return
       }
 
       // Calculate how many tabs fit with dropdown (dropdown is now inside TabsList)
-      const availableWidthWithDropdown = availableWidth - dropdownWidth;
-      let usedWidth = tabsListPadding;
-      let visibleCount = 0;
+      const availableWidthWithDropdown = availableWidth - dropdownWidth
+      let usedWidth = tabsListPadding
+      let visibleCount = 0
 
       for (let i = 0; i < tabWidths.length; i++) {
-        const nextWidth = usedWidth + tabWidths[i] + (i > 0 ? gap : 0);
+        const nextWidth = usedWidth + tabWidths[i] + (i > 0 ? gap : 0)
 
         if (nextWidth <= availableWidthWithDropdown) {
-          usedWidth = nextWidth;
-          visibleCount++;
+          usedWidth = nextWidth
+          visibleCount++
         } else {
-          break;
+          break
         }
       }
 
       // Ensure at least one tab is visible
-      visibleCount = Math.max(1, visibleCount);
+      visibleCount = Math.max(1, visibleCount)
 
-      setVisibleTabs(tabs.slice(0, visibleCount));
-      setOverflowTabs(tabs.slice(visibleCount));
-    };
+      setVisibleTabs(tabs.slice(0, visibleCount))
+      setOverflowTabs(tabs.slice(visibleCount))
+    }
 
     // Initial check after render
-    checkOverflow(); // Run immediately
-    const timeoutId = setTimeout(checkOverflow, 0); // Fallback
+    checkOverflow() // Run immediately
+    const timeoutId = setTimeout(checkOverflow, 0) // Fallback
 
     // Resize handler
     const handleResize = () => {
-      setTimeout(checkOverflow, 100);
-    };
+      setTimeout(checkOverflow, 100)
+    }
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize)
 
     return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [tabs]);
+      clearTimeout(timeoutId)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [tabs])
 
   return (
     <>
@@ -199,5 +194,5 @@ export default function OverflowTabs({ tabs, activeTab, onTabChange, className, 
         </div>
       </div>
     </>
-  );
+  )
 }

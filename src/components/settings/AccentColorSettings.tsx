@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button';
-import ColorPicker from '@/components/ui/color-picker';
-import { useTheme } from '@/hooks/useStore';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import ColorPicker from '@/components/ui/color-picker'
+import { useTheme } from '@/hooks/useStore'
+import { useTranslation } from 'react-i18next'
 
 export default function AccentColorSettings() {
-  const { t } = useTranslation('settings');
-  const { theme, setAccentColor } = useTheme();
+  const { t } = useTranslation('settings')
+  const { theme, setAccentColor } = useTheme()
 
   return (
     <div className="space-y-4">
@@ -16,8 +16,8 @@ export default function AccentColorSettings() {
           const newAccentColor = {
             ...theme.accentColor,
             [theme.darkMode ? 'dark' : 'light']: color,
-          };
-          setAccentColor(newAccentColor);
+          }
+          setAccentColor(newAccentColor)
         }}
         htmlFor="accent-color"
       />
@@ -28,12 +28,12 @@ export default function AccentColorSettings() {
           const defaultAccentColor = {
             light: '#7c3aed',
             dark: '#8b5cf6',
-          };
-          setAccentColor(defaultAccentColor);
+          }
+          setAccentColor(defaultAccentColor)
         }}
       >
         {t('accentColor.reset')}
       </Button>
     </div>
-  );
+  )
 }

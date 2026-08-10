@@ -1,13 +1,13 @@
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { t } from '@/i18n/config';
-import { ItemFormFieldFlags } from '@/items/useItemDialog';
-import { GenericFieldWrapper, SwitchFieldWrapper } from '../base/GenericFieldWrapper';
-import { itemExamFormSchema } from './formSchema';
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { t } from '@/i18n/config'
+import { ItemFormFieldFlags } from '@/items/useItemDialog'
+import { GenericFieldWrapper, SwitchFieldWrapper } from '../base/GenericFieldWrapper'
+import { itemExamFormSchema } from './formSchema'
 
 export interface ExamFormProps {
-  hidden: ItemFormFieldFlags;
-  disabled: ItemFormFieldFlags;
+  hidden: ItemFormFieldFlags
+  disabled: ItemFormFieldFlags
 }
 
 export function ExamForm({ hidden, disabled }: ExamFormProps) {
@@ -61,5 +61,5 @@ export function ExamForm({ hidden, disabled }: ExamFormProps) {
         {field => <Switch checked={field.value} onCheckedChange={field.onChange} disabled={disabled.isCompleted} />}
       </SwitchFieldWrapper>
     </div>
-  );
+  )
 }

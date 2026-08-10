@@ -1,31 +1,31 @@
-import { Badge } from '@/components/ui/badge';
-import SwipeableItem from '@/components/ui/swipeable-item';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses } from '@/hooks/useStore';
-import { getItemTaskPriorityColor } from '@/items/task/methods';
-import { ItemTask } from '@/items/task/modelSchema';
-import { AlertTriangle } from 'lucide-react';
-import React from 'react';
+import { Badge } from '@/components/ui/badge'
+import SwipeableItem from '@/components/ui/swipeable-item'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses } from '@/hooks/useStore'
+import { getItemTaskPriorityColor } from '@/items/task/methods'
+import { ItemTask } from '@/items/task/modelSchema'
+import { AlertTriangle } from 'lucide-react'
+import React from 'react'
 
 interface SwipeableTaskProps {
-  key: string; // Unique key for React
-  task: ItemTask;
-  index: number;
-  expanded: number;
-  calculateDDay: (dateString: string) => string | null;
-  onComplete: (taskId: string) => void;
-  onClick?: () => void;
+  key: string // Unique key for React
+  task: ItemTask
+  index: number
+  expanded: number
+  calculateDDay: (dateString: string) => string | null
+  onComplete: (taskId: string) => void
+  onClick?: () => void
 }
 
 const SwipeableTask = React.forwardRef<HTMLDivElement, SwipeableTaskProps>(function SwipeableTask(
   { task, index, expanded, calculateDDay, onComplete, onClick },
-  ref
+  ref,
 ) {
-  const { getCourseTitle } = useCourses();
-  const { formatDateDDMMYYYY } = useLocalization();
+  const { getCourseTitle } = useCourses()
+  const { formatDateDDMMYYYY } = useLocalization()
 
   // Convert timestamp to date string for compatibility with existing functions
-  const dueDateString = task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : '';
+  const dueDateString = task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : ''
 
   return (
     <SwipeableItem
@@ -64,7 +64,7 @@ const SwipeableTask = React.forwardRef<HTMLDivElement, SwipeableTaskProps>(funct
         </div>
       </div>
     </SwipeableItem>
-  );
-});
+  )
+})
 
-export default SwipeableTask;
+export default SwipeableTask

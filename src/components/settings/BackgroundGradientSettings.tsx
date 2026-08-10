@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui/button';
-import ColorPicker from '@/components/ui/color-picker';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useTheme } from '@/hooks/useStore';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import ColorPicker from '@/components/ui/color-picker'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { useTheme } from '@/hooks/useStore'
+import { useTranslation } from 'react-i18next'
 
 export default function BackgroundGradientSettings() {
-  const { t } = useTranslation('settings');
-  const { theme, setGradientEnabled, setGradientStart, setGradientMiddle, setGradientEnd } = useTheme();
+  const { t } = useTranslation('settings')
+  const { theme, setGradientEnabled, setGradientStart, setGradientMiddle, setGradientEnd } = useTheme()
 
   return (
     <div className="space-y-4">
@@ -26,8 +26,8 @@ export default function BackgroundGradientSettings() {
             const newGradientStart = {
               ...theme.gradientStart,
               [theme.darkMode ? 'dark' : 'light']: color,
-            };
-            setGradientStart(newGradientStart);
+            }
+            setGradientStart(newGradientStart)
           }}
           htmlFor="gradient-start-color"
         />
@@ -40,8 +40,8 @@ export default function BackgroundGradientSettings() {
             const newGradientMiddle = {
               ...theme.gradientMiddle,
               [theme.darkMode ? 'dark' : 'light']: color,
-            };
-            setGradientMiddle(newGradientMiddle);
+            }
+            setGradientMiddle(newGradientMiddle)
           }}
           htmlFor="gradient-middle-color"
         />
@@ -54,8 +54,8 @@ export default function BackgroundGradientSettings() {
             const newGradientEnd = {
               ...theme.gradientEnd,
               [theme.darkMode ? 'dark' : 'light']: color,
-            };
-            setGradientEnd(newGradientEnd);
+            }
+            setGradientEnd(newGradientEnd)
           }}
           htmlFor="gradient-end-color"
         />
@@ -64,13 +64,13 @@ export default function BackgroundGradientSettings() {
           className="rounded-xl w-full mt-4"
           onClick={() => {
             if (theme.darkMode) {
-              setGradientStart({ ...theme.gradientStart, dark: '#18181b' });
-              setGradientMiddle({ ...theme.gradientMiddle, dark: '#0f172a' });
-              setGradientEnd({ ...theme.gradientEnd, dark: '#1e293b' });
+              setGradientStart({ ...theme.gradientStart, dark: '#18181b' })
+              setGradientMiddle({ ...theme.gradientMiddle, dark: '#0f172a' })
+              setGradientEnd({ ...theme.gradientEnd, dark: '#1e293b' })
             } else {
-              setGradientStart({ ...theme.gradientStart, light: '#ffd2e9' });
-              setGradientMiddle({ ...theme.gradientMiddle, light: '#bae6fd' });
-              setGradientEnd({ ...theme.gradientEnd, light: '#a7f3d0' });
+              setGradientStart({ ...theme.gradientStart, light: '#ffd2e9' })
+              setGradientMiddle({ ...theme.gradientMiddle, light: '#bae6fd' })
+              setGradientEnd({ ...theme.gradientEnd, light: '#a7f3d0' })
             }
           }}
         >
@@ -78,5 +78,5 @@ export default function BackgroundGradientSettings() {
         </Button>
       </div>
     </div>
-  );
+  )
 }

@@ -1,18 +1,18 @@
-import { PlannerMonthView } from '@/components/PlannerMonthView';
-import { PlannerWeekView } from '@/components/PlannerWeekView';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses, useItems } from '@/hooks/useStore';
-import { ItemDialogOptions, useItemDialog } from '@/items/ItemDialogProvider';
-import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries';
-import { getDateString, isMultiDayEvent } from '@/lib/date-utils';
-import { CalendarView, Item } from '@/types';
-import { CalendarDays, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { PlannerMonthView } from '@/components/PlannerMonthView'
+import { PlannerWeekView } from '@/components/PlannerWeekView'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses, useItems } from '@/hooks/useStore'
+import { ItemDialogOptions, useItemDialog } from '@/items/ItemDialogProvider'
+import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries'
+import { getDateString, isMultiDayEvent } from '@/lib/date-utils'
+import { CalendarView, Item } from '@/types'
+import { CalendarDays, Plus } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // -----------------------------
 // Planner (Week + Month views)
@@ -21,53 +21,53 @@ import { useTranslation } from 'react-i18next';
 const addItemDialogOptions: ItemDialogOptions = {
   hidden: { type: false },
   availableItemTypes: ['event', 'exam', 'task'],
-};
+}
 
 export default function PlannerTab() {
-  const { courses } = useCourses();
-  const { items, getItemsByType, updateItem } = useItems();
+  const { courses } = useCourses()
+  const { items, updateItem } = useItems()
 
   // Localization hooks
-  const { t } = useTranslation('planner');
-  const { t: tCommon } = useTranslation('common');
-  const { getShortMonthNames, getMonthNames, formatDate: localizedFormatDate } = useLocalization();
+  const { t } = useTranslation('planner')
+  const { t: tCommon } = useTranslation('common')
+  const { getShortMonthNames, getMonthNames, formatDate: localizedFormatDate } = useLocalization()
 
-  const [showMultiDayEvents, setShowMultiDayEvents] = useState<boolean>(false);
-  const [filterCourse, setFilterCourse] = useState<string>('all');
-  const [view, setView] = useState<'week' | 'month'>('month');
-  const [weekOffset, setWeekOffset] = useState<number>(0);
+  const [showMultiDayEvents, setShowMultiDayEvents] = useState<boolean>(false)
+  const [filterCourse, setFilterCourse] = useState<string>('all')
+  const [view, setView] = useState<'week' | 'month'>('month')
+  const [weekOffset, setWeekOffset] = useState<number>(0)
 
   // Item dialog hook
-  const itemDialog = useItemDialog();
+  const itemDialog = useItemDialog()
 
   // Month data
-  const now = new Date();
-  const [monthView, setMonthView] = useState<CalendarView>({ year: now.getFullYear(), month: now.getMonth() });
+  const now = new Date()
+  const [monthView, setMonthView] = useState<CalendarView>({ year: now.getFullYear(), month: now.getMonth() })
 
   function monthMatrix(y: number, m: number): Date[] {
-    const first = new Date(y, m, 1);
-    const offset = (first.getDay() + 6) % 7; // Mon=0
-    const start = new Date(y, m, 1 - offset);
-    return Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+    const first = new Date(y, m, 1)
+    const offset = (first.getDay() + 6) % 7 // Mon=0
+    const start = new Date(y, m, 1 - offset)
+    return Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i))
   }
-  const matrix = useMemo(() => monthMatrix(monthView.year, monthView.month), [monthView]);
+  const matrix = useMemo(() => monthMatrix(monthView.year, monthView.month), [monthView])
   function shiftMonth(delta: number): void {
-    const d = new Date(monthView.year, monthView.month + delta, 1);
-    setMonthView({ year: d.getFullYear(), month: d.getMonth() });
+    const d = new Date(monthView.year, monthView.month + delta, 1)
+    setMonthView({ year: d.getFullYear(), month: d.getMonth() })
   }
 
   // Weekly dates (show numbered days on headers)
   const startOfWeek = useMemo(() => {
-    const d = new Date();
-    const w = (d.getDay() + 6) % 7;
-    d.setDate(d.getDate() - w + weekOffset * 7);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, [weekOffset]);
+    const d = new Date()
+    const w = (d.getDay() + 6) % 7
+    d.setDate(d.getDate() - w + weekOffset * 7)
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [weekOffset])
 
   // Handle day click to create new event with pre-filled date
   const handleDayClick = (date: Date): void => {
-    const dateString = getDateString(date);
+    const dateString = getDateString(date)
     itemDialog.openAddDialog(
       'event',
       {
@@ -76,21 +76,21 @@ export default function PlannerTab() {
         endsAt: dateString,
         endsAtTime: '11:00',
       },
-      addItemDialogOptions
-    );
-  };
+      addItemDialogOptions,
+    )
+  }
 
   // Helper: get all events for a specific date
   // Query returns occurrences (including recurrence expansion). View applies display filters.
   function getAllEventsForDate(date: Date): Item[] {
-    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse });
-    return filterEntries(entries).map(e => e.item);
+    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse })
+    return filterEntries(entries).map(e => e.item)
   }
 
   // Helper: get all events for tooltip (including hidden multi-day events)
   function getAllEventsForTooltip(date: Date): Item[] {
-    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse });
-    return filterEntries(entries, true).map(e => e.item);
+    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse })
+    return filterEntries(entries, true).map(e => e.item)
   }
 
   // Apply the view's display filters to query entries:
@@ -98,42 +98,42 @@ export default function PlannerTab() {
   // - multi-day events hidden unless includeMultiDay (the showMultiDayEvents toggle)
   function filterEntries(entries: CalendarEntry[], includeMultiDay = showMultiDayEvents): CalendarEntry[] {
     return entries.filter(e => {
-      if (e.item.type === 'task' && (e.item as { isCompleted: boolean }).isCompleted) return false;
+      if (e.item.type === 'task' && (e.item as { isCompleted: boolean }).isCompleted) return false
       if (e.item.type === 'event' && e.endsAt) {
-        if (isMultiDayEvent(e.item.startsAt, e.item.endsAt) && !includeMultiDay) return false;
+        if (isMultiDayEvent(e.item.startsAt, e.item.endsAt) && !includeMultiDay) return false
       }
-      return true;
-    });
+      return true
+    })
   }
 
   const handleEventDrop = (itemId: string, itemType: string, targetDate: Date) => {
-    const item = items.find(i => i.id === itemId);
-    if (!item) return;
+    const item = items.find(i => i.id === itemId)
+    if (!item) return
 
     if (item.type === 'event') {
-      const oldStart = new Date(item.startsAt);
-      const startOfDay = new Date(oldStart.getFullYear(), oldStart.getMonth(), oldStart.getDate());
-      const targetOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-      const daysDiff = Math.round((targetOfDay.getTime() - startOfDay.getTime()) / (1000 * 60 * 60 * 24));
+      const oldStart = new Date(item.startsAt)
+      const startOfDay = new Date(oldStart.getFullYear(), oldStart.getMonth(), oldStart.getDate())
+      const targetOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
+      const daysDiff = Math.round((targetOfDay.getTime() - startOfDay.getTime()) / (1000 * 60 * 60 * 24))
 
-      const newStart = new Date(item.startsAt);
-      newStart.setDate(newStart.getDate() + daysDiff);
-      const newEnd = new Date(item.endsAt);
-      newEnd.setDate(newEnd.getDate() + daysDiff);
+      const newStart = new Date(item.startsAt)
+      newStart.setDate(newStart.getDate() + daysDiff)
+      const newEnd = new Date(item.endsAt)
+      newEnd.setDate(newEnd.getDate() + daysDiff)
 
-      updateItem(itemId, { startsAt: newStart, endsAt: newEnd } as any);
+      updateItem(itemId, { startsAt: newStart, endsAt: newEnd } as any)
     } else if (item.type === 'exam') {
-      const oldDate = new Date(item.startsAt);
-      const newDate = new Date(oldDate);
-      newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-      updateItem(itemId, { startsAt: newDate } as any);
+      const oldDate = new Date(item.startsAt)
+      const newDate = new Date(oldDate)
+      newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
+      updateItem(itemId, { startsAt: newDate } as any)
     } else if (item.type === 'task') {
-      const oldDate = new Date(item.dueAt);
-      const newDate = new Date(oldDate);
-      newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-      updateItem(itemId, { dueAt: newDate } as any);
+      const oldDate = new Date(item.dueAt)
+      const newDate = new Date(oldDate)
+      newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
+      updateItem(itemId, { dueAt: newDate } as any)
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
@@ -225,7 +225,7 @@ export default function PlannerTab() {
           )}
           <Button
             className="rounded-xl"
-            onClick={() => itemDialog.openAddDialog('event', null, addItemDialogOptions)}
+            onClick={() => itemDialog.openAddDialog('event', undefined, addItemDialogOptions)}
           >
             <Plus className="w-4 h-4 mr-2" />
             {t('items:event.actions.add')}
@@ -254,5 +254,5 @@ export default function PlannerTab() {
         />
       )}
     </div>
-  );
+  )
 }

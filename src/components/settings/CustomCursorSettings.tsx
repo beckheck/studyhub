@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useTheme } from '@/hooks/useStore';
-import { ChangeEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useTheme } from '@/hooks/useStore'
+import { ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function CustomCursorSettings() {
-  const { t } = useTranslation('settings');
-  const { theme, setCustomCursor } = useTheme();
+  const { t } = useTranslation('settings')
+  const { theme, setCustomCursor } = useTheme()
 
   return (
     <div className="space-y-3">
@@ -16,16 +16,16 @@ export default function CustomCursorSettings() {
           accept=".cur"
           className="rounded-xl"
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            const r = new FileReader();
+            const f = e.target.files?.[0]
+            if (!f) return
+            const r = new FileReader()
             r.onload = () => {
-              const result = r.result;
+              const result = r.result
               if (typeof result === 'string') {
-                setCustomCursor(result);
+                setCustomCursor(result)
               }
-            };
-            r.readAsDataURL(f);
+            }
+            r.readAsDataURL(f)
           }}
         />
         <Button variant="outline" className="rounded-xl" onClick={() => setCustomCursor('')}>
@@ -54,5 +54,5 @@ export default function CustomCursorSettings() {
         <p className="text-yellow-800 dark:text-yellow-200">{t('customCursor.animatedNote')}</p>
       </div>
     </div>
-  );
+  )
 }

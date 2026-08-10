@@ -1,19 +1,19 @@
-import ReactConfetti from 'react-confetti';
+import ReactConfetti from 'react-confetti'
 
 interface ConfettiHookResult {
-  showConfetti: boolean;
-  confettiOpacity: number;
-  confettiPieces: number;
+  showConfetti: boolean
+  confettiOpacity: number
+  confettiPieces: number
 }
 
 interface ConfettiProps {
-  confetti: ConfettiHookResult;
-  gravity?: number;
-  fadeDuration?: number;
+  confetti: ConfettiHookResult
+  gravity?: number
+  fadeDuration?: number
 }
 
 export default function Confetti({ confetti, gravity = 0.3, fadeDuration = 1000 }: ConfettiProps) {
-  if (!confetti.showConfetti) return null;
+  if (!confetti.showConfetti) return null
 
   return (
     <div
@@ -37,5 +37,5 @@ export default function Confetti({ confetti, gravity = 0.3, fadeDuration = 1000 
         gravity={gravity}
       />
     </div>
-  );
+  )
 }

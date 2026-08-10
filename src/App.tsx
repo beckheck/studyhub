@@ -1,39 +1,39 @@
-import { LanguageSelector } from '@/components/LanguageSelector';
-import LoadingScreen from '@/components/LoadingScreen';
-import MoonSunToggle from '@/components/MoonSunToggle';
-import OverflowTabs from '@/components/OverflowTabs';
-import SettingsDialogProvider from '@/components/settings/SettingsDialogProvider';
-import { Button } from '@/components/ui/button';
-import SoundtrackCard from '@/components/SoundtrackCard';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { useAppContext } from '@/contexts/AppContext';
-import useAccentColorStyles from '@/hooks/useAccentColorStyles';
-import useBaseStyles from '@/hooks/useBaseStyles';
-import useCardOpacityStyles from '@/hooks/useCardOpacityStyles';
-import useDarkModeStyles from '@/hooks/useDarkModeStyles';
-import useModeAwareTab from '@/hooks/useModeAwareTab';
-import { useScrollToTop } from '@/hooks/useScrollToTop';
-import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore';
-import { useOAuthRedirect } from '@/hooks/useOAuthRedirect';
-import { ItemDialogProvider } from '@/items/ItemDialogProvider';
-import { handleNavigationClick } from '@/lib/navigation-utils';
-import { runFileAttachmentGC } from '@/lib/file-attachment-gc';
-import { snapshot } from 'valtio';
-import { fileAttachmentStorage, store } from '@/stores/app';
-import type { AppState } from '@/types';
-import CourseManagerTab from '@/tabs/CourseManagerTab';
-import DashboardTab from '@/tabs/DashboardTab';
-import DegreePlanTab from '@/tabs/DegreePlanTab';
-import PlannerTab from '@/tabs/PlannerTab';
-import ProjectsTab from '@/tabs/ProjectsTab';
-import SettingsTab from '@/tabs/SettingsTab';
-import StudyTrackerTab from '@/tabs/StudyTrackerTab';
-import TestTab from '@/tabs/TestTab';
-import TimetableTab from '@/tabs/TimetableTab';
-import UglyCalendarPlannerTab from '@/tabs/UglyCalendarPlannerTab';
-import WellnessTab from '@/tabs/WellnessTab';
-import { motion } from 'framer-motion';
+import { LanguageSelector } from '@/components/LanguageSelector'
+import LoadingScreen from '@/components/LoadingScreen'
+import MoonSunToggle from '@/components/MoonSunToggle'
+import OverflowTabs from '@/components/OverflowTabs'
+import SettingsDialogProvider from '@/components/settings/SettingsDialogProvider'
+import { Button } from '@/components/ui/button'
+import SoundtrackCard from '@/components/SoundtrackCard'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { useAppContext } from '@/contexts/AppContext'
+import useAccentColorStyles from '@/hooks/useAccentColorStyles'
+import useBaseStyles from '@/hooks/useBaseStyles'
+import useCardOpacityStyles from '@/hooks/useCardOpacityStyles'
+import useDarkModeStyles from '@/hooks/useDarkModeStyles'
+import useModeAwareTab from '@/hooks/useModeAwareTab'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
+import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore'
+import { useOAuthRedirect } from '@/hooks/useOAuthRedirect'
+import { ItemDialogProvider } from '@/items/ItemDialogProvider'
+import { handleNavigationClick } from '@/lib/navigation-utils'
+import { runFileAttachmentGC } from '@/lib/file-attachment-gc'
+import { snapshot } from 'valtio'
+import { fileAttachmentStorage, store } from '@/stores/app'
+import type { AppState } from '@/types'
+import CourseManagerTab from '@/tabs/CourseManagerTab'
+import DashboardTab from '@/tabs/DashboardTab'
+import DegreePlanTab from '@/tabs/DegreePlanTab'
+import PlannerTab from '@/tabs/PlannerTab'
+import ProjectsTab from '@/tabs/ProjectsTab'
+import SettingsTab from '@/tabs/SettingsTab'
+import StudyTrackerTab from '@/tabs/StudyTrackerTab'
+import TestTab from '@/tabs/TestTab'
+import TimetableTab from '@/tabs/TimetableTab'
+import UglyCalendarPlannerTab from '@/tabs/UglyCalendarPlannerTab'
+import WellnessTab from '@/tabs/WellnessTab'
+import { motion } from 'framer-motion'
 import {
   Brain,
   Calendar,
@@ -51,15 +51,15 @@ import {
   Settings as SettingsIcon,
   Sparkles,
   TestTubeDiagonal,
-} from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { browser } from 'wxt/browser';
-import ErrorBoundary from './components/ErrorBoundary';
-import { AppTab, SoundtrackPosition } from './types';
+} from 'lucide-react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { browser } from 'wxt/browser'
+import ErrorBoundary from './components/ErrorBoundary'
+import { AppTab, SoundtrackPosition } from './types'
 
 function AppSubtitle() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('common')
 
   return (
     <>
@@ -73,34 +73,34 @@ function AppSubtitle() {
       </span>{' '}
       {t('app.subtitle.portal')}
     </>
-  );
+  )
 }
 
 export default function StudyPortal(): React.JSX.Element {
   // Handle OAuth redirects from Google
-  useOAuthRedirect();
+  useOAuthRedirect()
 
   // Translation hook
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('common')
 
-  const { isExtension, mode } = useAppContext();
+  const { isExtension, mode } = useAppContext()
 
   // Get state from centralized store
-  const { theme, setDarkMode } = useTheme();
-  const { soundtrack, setSoundtrackPosition } = useSoundtrack();
-  const { isLoading, error, status } = useStoreLoading();
-  const [isDashboardWidgetEditMode, setIsDashboardWidgetEditMode] = useState(false);
+  const { theme, setDarkMode } = useTheme()
+  const { soundtrack, setSoundtrackPosition } = useSoundtrack()
+  const { isLoading, error, status } = useStoreLoading()
+  const [isDashboardWidgetEditMode, setIsDashboardWidgetEditMode] = useState(false)
 
   const onSoundtrackPositionChange = useCallback(
     (position: SoundtrackPosition) => {
-      setSoundtrackPosition(position);
+      setSoundtrackPosition(position)
       if (position === 'dashboard') {
         // If moving to dashboard, also switch to dashboard tab
-        setActiveTab('dashboard');
+        setActiveTab('dashboard')
       }
     },
     [setSoundtrackPosition],
-  );
+  )
 
   // Localized tabs array
   const tabs: AppTab[] = [
@@ -117,9 +117,9 @@ export default function StudyPortal(): React.JSX.Element {
     { value: 'wellness', label: t('navigation.wellness'), icon: HeartPulse },
     { value: 'settings', label: t('navigation.settings'), icon: SettingsIcon },
     ...(import.meta.env.VITE_FEATURE_TESTING ? [{ value: 'test', label: 'Test', icon: TestTubeDiagonal }] : []),
-  ];
+  ]
 
-  const navigationValues = tabs.map(tab => tab.value);
+  const navigationValues = tabs.map(tab => tab.value)
 
   // Mode-aware tab navigation with persistence and hash support
   // - Remembers the active tab for each mode (popup, sidepanel, newtab, tab, web)
@@ -128,68 +128,68 @@ export default function StudyPortal(): React.JSX.Element {
   const { activeTab, setActiveTab } = useModeAwareTab({
     validValues: navigationValues,
     defaultValue: navigationValues[0],
-  });
+  })
 
   // Local UI state (not persisted)
-  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
 
   // Scroll to top functionality
-  const { showScrollToTop, scrollToTop } = useScrollToTop();
+  const { showScrollToTop, scrollToTop } = useScrollToTop()
 
   // Style hooks
-  useDarkModeStyles();
-  useAccentColorStyles();
-  useBaseStyles();
-  useCardOpacityStyles();
+  useDarkModeStyles()
+  useAccentColorStyles()
+  useBaseStyles()
+  useCardOpacityStyles()
 
   const handleTabChange = useCallback(
     (value: string) => {
-      setActiveTab(value);
-      setIsDrawerOpen(false); // Close drawer when tab is selected
+      setActiveTab(value)
+      setIsDrawerOpen(false) // Close drawer when tab is selected
     },
     [setActiveTab, setIsDrawerOpen],
-  );
+  )
 
   useEffect(() => {
     if (activeTab !== 'dashboard') {
-      setIsDashboardWidgetEditMode(false);
+      setIsDashboardWidgetEditMode(false)
     }
-  }, [activeTab]);
+  }, [activeTab])
 
   // Handle opening in full tab
-  const openInTab = useCallback(() => {
-    browser.runtime.sendMessage({
+  const openInTab = useCallback(async () => {
+    await browser.runtime.sendMessage({
       type: 'openStudyPortalTab',
       activeTab,
-    });
-  }, [activeTab]);
+    })
+  }, [activeTab])
 
   // File attachment garbage collection - runs on app startup
   useEffect(() => {
     // Run garbage collection on startup (with a small delay to let the app initialize)
     const timeoutId = setTimeout(async () => {
-      await runFileAttachmentGC(snapshot(store) as AppState, fileAttachmentStorage);
-    }, 2000);
+      await runFileAttachmentGC(snapshot(store) as AppState, fileAttachmentStorage)
+    }, 2000)
 
-    return () => clearTimeout(timeoutId);
-  }, []); // Run only once on mount
+    return () => clearTimeout(timeoutId)
+  }, []) // Run only once on mount
 
   // Update page title with selected tab
   useEffect(() => {
-    const activeTabInfo = tabs.find(tab => tab.value === activeTab);
-    const baseTitle = t('app.title');
-    const tabTitle = activeTabInfo?.label || '';
+    const activeTabInfo = tabs.find(tab => tab.value === activeTab)
+    const baseTitle = t('app.title')
+    const tabTitle = activeTabInfo?.label || ''
 
     if (tabTitle) {
-      document.title = `${tabTitle} · ${baseTitle}`;
+      document.title = `${tabTitle} · ${baseTitle}`
     } else {
-      document.title = baseTitle;
+      document.title = baseTitle
     }
-  }, [activeTab, tabs, t]);
+  }, [activeTab, tabs, t])
 
   // Show loading screen until state is ready
   if (isLoading || error) {
-    return <LoadingScreen error={error} status={status} />;
+    return <LoadingScreen error={error} status={status} />
   }
 
   return (
@@ -453,5 +453,5 @@ export default function StudyPortal(): React.JSX.Element {
         </div>
       </SettingsDialogProvider>
     </ErrorBoundary>
-  );
+  )
 }

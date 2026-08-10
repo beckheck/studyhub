@@ -1,11 +1,11 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useDashboardLayout } from '@/hooks/useStore';
-import { useTranslation } from 'react-i18next';
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useDashboardLayout } from '@/hooks/useStore'
+import { useTranslation } from 'react-i18next'
 
 export default function MissionLinkSettings() {
-  const { t } = useTranslation('settings');
-  const { missionLink, setMissionLink } = useDashboardLayout();
+  const { t } = useTranslation('settings')
+  const { missionLink, setMissionLink } = useDashboardLayout()
 
   return (
     <div className="space-y-3">
@@ -24,5 +24,5 @@ export default function MissionLinkSettings() {
 
       <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('missionLink.helper')}</p>
     </div>
-  );
+  )
 }

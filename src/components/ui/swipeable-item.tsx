@@ -1,108 +1,108 @@
-import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion'
+import { Check } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
 
 interface SwipeableItemProps {
   /** Unique key for React (should be passed as key prop) */
-  index: number;
+  index: number
   /** Controls animation state */
-  expanded: number;
+  expanded: number
   /** Callback when item is completed via swipe */
-  onComplete: () => void;
+  onComplete: () => void
   /** Optional click handler */
-  onClick?: () => void;
+  onClick?: () => void
   /** Custom styles for the item container */
-  itemStyle?: React.CSSProperties;
+  itemStyle?: React.CSSProperties
   /** Custom className for the item container */
-  itemClassName?: string;
+  itemClassName?: string
   /** Content to render inside the swipeable item */
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 const SwipeableItem = React.forwardRef<HTMLDivElement, SwipeableItemProps>(function SwipeableItem(
   { index, expanded, onComplete, onClick, itemStyle, itemClassName = '', children },
-  ref
+  ref,
 ) {
-  const [dragX, setDragX] = useState<number>(0);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [startX, setStartX] = useState<number>(0);
-  const dragRef = useRef<number>(0);
-  const isDraggingRef = useRef<boolean>(false);
-  const preventClickRef = useRef<boolean>(false);
+  const [dragX, setDragX] = useState<number>(0)
+  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [startX, setStartX] = useState<number>(0)
+  const dragRef = useRef<number>(0)
+  const isDraggingRef = useRef<boolean>(false)
+  const preventClickRef = useRef<boolean>(false)
 
-  const COMPLETE_THRESHOLD = 80; // Drag 80px right to complete
+  const COMPLETE_THRESHOLD = 80 // Drag 80px right to complete
 
   const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     const clientX =
-      e.type === 'mousedown' ? (e as React.MouseEvent).clientX : (e as React.TouchEvent).touches[0].clientX;
-    setStartX(clientX);
-    setIsDragging(true);
-    isDraggingRef.current = true;
-    dragRef.current = 0;
-  };
+      e.type === 'mousedown' ? (e as React.MouseEvent).clientX : (e as React.TouchEvent).touches[0].clientX
+    setStartX(clientX)
+    setIsDragging(true)
+    isDraggingRef.current = true
+    dragRef.current = 0
+  }
 
   const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDraggingRef.current) return;
+    if (!isDraggingRef.current) return
 
-    e.preventDefault();
+    e.preventDefault()
     const clientX =
-      e.type === 'mousemove' ? (e as React.MouseEvent).clientX : (e as React.TouchEvent).touches[0].clientX;
-    const deltaX = clientX - startX;
+      e.type === 'mousemove' ? (e as React.MouseEvent).clientX : (e as React.TouchEvent).touches[0].clientX
+    const deltaX = clientX - startX
 
     // Only allow right swipe (positive values) with smoother updates
     if (deltaX >= 0) {
-      const newDragX = Math.min(deltaX, 120); // Max drag distance
-      dragRef.current = newDragX;
+      const newDragX = Math.min(deltaX, 120) // Max drag distance
+      dragRef.current = newDragX
 
       // Use requestAnimationFrame for smoother updates
       requestAnimationFrame(() => {
-        setDragX(newDragX);
-      });
+        setDragX(newDragX)
+      })
     }
-  };
+  }
 
   const handleEnd = (e?: React.MouseEvent | React.TouchEvent) => {
-    if (!isDraggingRef.current) return;
+    if (!isDraggingRef.current) return
 
-    e?.preventDefault();
-    isDraggingRef.current = false;
+    e?.preventDefault()
+    isDraggingRef.current = false
 
-    const finalDragX = dragRef.current;
-    const hadSignificantDrag = Math.abs(finalDragX) >= 5;
+    const finalDragX = dragRef.current
+    const hadSignificantDrag = Math.abs(finalDragX) >= 5
 
     // Set prevent click flag if there was significant drag movement
     if (hadSignificantDrag) {
-      preventClickRef.current = true;
+      preventClickRef.current = true
       // Reset the flag after a short delay to allow future clicks
       setTimeout(() => {
-        preventClickRef.current = false;
-      }, 100);
+        preventClickRef.current = false
+      }, 100)
     }
 
     if (finalDragX >= COMPLETE_THRESHOLD) {
       // Complete the item
-      onComplete();
+      onComplete()
     }
 
     // Reset position smoothly
-    setIsDragging(false);
-    setDragX(0);
-    dragRef.current = 0;
-  };
+    setIsDragging(false)
+    setDragX(0)
+    dragRef.current = 0
+  }
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      isDraggingRef.current = false;
-      dragRef.current = 0;
-      preventClickRef.current = false;
-    };
-  }, []);
+      isDraggingRef.current = false
+      dragRef.current = 0
+      preventClickRef.current = false
+    }
+  }, [])
 
-  const completionProgress = Math.abs(dragX) / Math.abs(COMPLETE_THRESHOLD);
-  const shouldComplete = dragX >= COMPLETE_THRESHOLD;
-  const animationsEnabled = expanded > 0;
+  const completionProgress = Math.abs(dragX) / Math.abs(COMPLETE_THRESHOLD)
+  const shouldComplete = dragX >= COMPLETE_THRESHOLD
+  const animationsEnabled = expanded > 0
 
   return (
     <motion.div
@@ -161,17 +161,17 @@ const SwipeableItem = React.forwardRef<HTMLDivElement, SwipeableItemProps>(funct
         onTouchMove={handleMove}
         onTouchEnd={handleEnd}
         onTouchCancel={handleEnd}
-        onClick={e => {
+        onClick={_e => {
           // Only trigger click if there was no recent swipe gesture and not currently dragging
           if (!isDraggingRef.current && !preventClickRef.current && onClick) {
-            onClick();
+            onClick()
           }
         }}
       >
         {children}
       </div>
     </motion.div>
-  );
-});
+  )
+})
 
-export default SwipeableItem;
+export default SwipeableItem

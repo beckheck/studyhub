@@ -1,8 +1,8 @@
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/switch'
 
 interface MoonSunToggleProps {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
 }
 
 export default function MoonSunToggle({ checked, onCheckedChange }: MoonSunToggleProps) {
@@ -12,5 +12,5 @@ export default function MoonSunToggle({ checked, onCheckedChange }: MoonSunToggl
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
       <span className="text-xs">🌚</span>
     </div>
-  );
+  )
 }

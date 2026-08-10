@@ -1,18 +1,18 @@
-import StorageInfoCard from '@/components/StorageInfoCard';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useAppContext } from '@/contexts/AppContext';
-import { exportFile, importFile } from '@/lib/data-transfer';
-import { useAppState } from '@/hooks/useStore';
-import { patchStoreState, persistStore } from '@/stores/app';
-import { Download, Github } from 'lucide-react';
-import { ChangeEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import StorageInfoCard from '@/components/StorageInfoCard'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useAppContext } from '@/contexts/AppContext'
+import { exportFile, importFile } from '@/lib/data-transfer'
+import { useAppState } from '@/hooks/useStore'
+import { patchStoreState, persistStore } from '@/stores/app'
+import { Download, Github } from 'lucide-react'
+import { ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function AboutSettings() {
-  const { isExtension } = useAppContext();
-  const { t } = useTranslation('settings');
-  const appState = useAppState();
+  const { isExtension } = useAppContext()
+  const { t } = useTranslation('settings')
+  const appState = useAppState()
 
   return (
     <div className="space-y-4 text-sm text-zinc-600 dark:text-zinc-400">
@@ -31,25 +31,25 @@ export default function AboutSettings() {
               type="file"
               accept=".json"
               onChange={async (e: ChangeEvent<HTMLInputElement>) => {
-                const file = e.target.files?.[0];
+                const file = e.target.files?.[0]
                 if (file) {
                   try {
-                    const importedState = await importFile(file);
+                    const importedState = await importFile(file)
                     if (importedState) {
-                      patchStoreState(importedState);
-                      await persistStore();
+                      patchStoreState(importedState)
+                      await persistStore()
                       setTimeout(() => {
-                        alert(t('about.importSuccess'));
-                        window.location.reload();
-                      }, 100);
+                        alert(t('about.importSuccess'))
+                        window.location.reload()
+                      }, 100)
                     } else {
-                      alert(t('about.importError'));
+                      alert(t('about.importError'))
                     }
                   } catch (error) {
-                    console.error('Import error:', error);
-                    alert(t('about.importErrorGeneral'));
+                    console.error('Import error:', error)
+                    alert(t('about.importErrorGeneral'))
                   }
-                  e.target.value = '';
+                  e.target.value = ''
                 }
               }}
               className="hidden"
@@ -64,12 +64,12 @@ export default function AboutSettings() {
       </div>
       <StorageInfoCard />
     </div>
-  );
+  )
 }
 
 function BuyMeACoffeeButton({ id }: { id: string }) {
-  const { i18n, t } = useTranslation('settings');
-  const primaryLanguageCode = i18n.language.split('-')[0];
+  const { i18n, t } = useTranslation('settings')
+  const primaryLanguageCode = i18n.language.split('-')[0]
 
   return (
     <a
@@ -81,11 +81,11 @@ function BuyMeACoffeeButton({ id }: { id: string }) {
       <img src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg" alt={t('about.buyMeACoffee')} />
       <span>{t('about.buyMeACoffee')}</span>
     </a>
-  );
+  )
 }
 
-function GithubCornerRibbon() {
-  const { t } = useTranslation('settings');
+function _GithubCornerRibbon() {
+  const { t } = useTranslation('settings')
   return (
     <a
       href="https://github.com/beckheck/gen-z-study-portal"
@@ -103,5 +103,5 @@ function GithubCornerRibbon() {
         </div>
       </div>
     </a>
-  );
+  )
 }

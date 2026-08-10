@@ -1,6 +1,6 @@
-import { ItemList } from '@/items/ItemList';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ItemList } from '@/items/ItemList'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 // Mock the translation function
 vi.mock('@/i18n/config', () => ({
@@ -14,10 +14,10 @@ vi.mock('@/i18n/config', () => ({
       'common:common.searchByTitle': 'Search by title...',
       'common:common.noItemsYet': 'No items yet. Click the buttons above to add some!',
       'common:common.noItemsFound': 'No items found matching your search',
-    };
-    return translations[key] || key;
+    }
+    return translations[key] || key
   },
-}));
+}))
 
 // Mock the dialog components
 vi.mock('@/items/base/dialog', () => ({
@@ -27,7 +27,7 @@ vi.mock('@/items/base/dialog', () => ({
       <button onClick={onDelete}>Delete</button>
     </div>
   ),
-}));
+}))
 
 vi.mock('@/items/ItemDialogProvider', () => ({
   useItemDialog: () => ({
@@ -46,64 +46,64 @@ vi.mock('@/items/ItemDialogProvider', () => ({
     handleChangeItemType: vi.fn(),
     onOpenChange: vi.fn(),
   }),
-}));
+}))
 
 describe('ItemList Component', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   it('renders the component with title and add buttons', () => {
-    render(<ItemList />);
+    render(<ItemList />)
 
     // Check if the main title is rendered
-    expect(screen.getByText('Items')).toBeInTheDocument();
+    expect(screen.getByText('Items')).toBeInTheDocument()
 
     // Check if all add buttons are rendered
-    expect(screen.getByText('Task')).toBeInTheDocument();
-    expect(screen.getByText('Exam')).toBeInTheDocument();
-    expect(screen.getByText('Event')).toBeInTheDocument();
-    expect(screen.getByText('Timetable')).toBeInTheDocument();
+    expect(screen.getByText('Task')).toBeInTheDocument()
+    expect(screen.getByText('Exam')).toBeInTheDocument()
+    expect(screen.getByText('Event')).toBeInTheDocument()
+    expect(screen.getByText('Timetable')).toBeInTheDocument()
 
     // Check if the search input is rendered
-    expect(screen.getByPlaceholderText('Search by title...')).toBeInTheDocument();
-  });
+    expect(screen.getByPlaceholderText('Search by title...')).toBeInTheDocument()
+  })
 
   it('displays no items message when list is empty', () => {
-    render(<ItemList />);
+    render(<ItemList />)
 
-    expect(screen.getByText('No items yet. Click the buttons above to add some!')).toBeInTheDocument();
-  });
+    expect(screen.getByText('No items yet. Click the buttons above to add some!')).toBeInTheDocument()
+  })
 
   it('filters items based on search input', async () => {
-    render(<ItemList />);
+    render(<ItemList />)
 
-    const searchInput = screen.getByPlaceholderText('Search by title...');
+    const searchInput = screen.getByPlaceholderText('Search by title...')
 
     // Type in the search input
-    fireEvent.change(searchInput, { target: { value: 'test' } });
+    fireEvent.change(searchInput, { target: { value: 'test' } })
 
     await waitFor(() => {
-      expect(screen.getByText('No items found matching your search')).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText('No items found matching your search')).toBeInTheDocument()
+    })
+  })
 
   it('has proper CSS classes for styling', () => {
-    const { container } = render(<ItemList className="custom-class" />);
+    const { container } = render(<ItemList className="custom-class" />)
 
     // Check if custom class is applied
-    const mainDiv = container.firstChild as HTMLElement;
-    expect(mainDiv).toHaveClass('custom-class');
-    expect(mainDiv).toHaveClass('space-y-4');
-  });
+    const mainDiv = container.firstChild as HTMLElement
+    expect(mainDiv).toHaveClass('custom-class')
+    expect(mainDiv).toHaveClass('space-y-4')
+  })
 
   it('renders add buttons with plus icons', () => {
-    render(<ItemList />);
+    render(<ItemList />)
 
     // Find all buttons that contain Plus icons (by finding svg elements)
-    const addButtons = screen.getAllByRole('button');
-    const addTaskButton = addButtons.find(button => button.textContent?.includes('Task'));
+    const addButtons = screen.getAllByRole('button')
+    const addTaskButton = addButtons.find(button => button.textContent?.includes('Task'))
 
-    expect(addTaskButton).toBeInTheDocument();
-  });
-});
+    expect(addTaskButton).toBeInTheDocument()
+  })
+})

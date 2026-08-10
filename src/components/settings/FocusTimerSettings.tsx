@@ -1,33 +1,33 @@
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { useAppContext } from '@/contexts/AppContext';
-import { useFocusTimer } from '@/hooks/useStore';
-import { Bell, BellOff, Shield, Volume2, VolumeX } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
+import { useAppContext } from '@/contexts/AppContext'
+import { useFocusTimer } from '@/hooks/useStore'
+import { Bell, BellOff, Shield, Volume2, VolumeX } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function FocusTimerSettings() {
-  const { isExtension } = useAppContext();
-  const { t } = useTranslation('settings');
+  const { isExtension } = useAppContext()
+  const { t } = useTranslation('settings')
   const { focusTimer, setAudioEnabled, setAudioVolume, setNotificationsEnabled, setSites, setBlockingStrategy } =
-    useFocusTimer();
+    useFocusTimer()
 
   // Local state for textarea to prevent cursor jumping
-  const [localSites, setLocalSites] = useState(focusTimer.sites);
+  const [localSites, setLocalSites] = useState(focusTimer.sites)
 
   // Sync local state with store when focusTimer.sites changes from external sources
   useEffect(() => {
-    setLocalSites(focusTimer.sites);
-  }, [focusTimer.sites]);
+    setLocalSites(focusTimer.sites)
+  }, [focusTimer.sites])
 
   const handleSitesChange = (value: string) => {
     // Update local state immediately for smooth typing
-    setLocalSites(value);
+    setLocalSites(value)
     // Update store (debounced or immediate)
-    setSites(value);
-  };
+    setSites(value)
+  }
 
   return (
     <div className="space-y-6">
@@ -121,7 +121,7 @@ export default function FocusTimerSettings() {
         </div>
       )}
 
-      {/* 
+      {/*
         Future Focus Timer settings sections can be added here:
         
         - Timer Display Settings (countdown vs elapsed, time format)
@@ -144,5 +144,5 @@ export default function FocusTimerSettings() {
         </div>
       */}
     </div>
-  );
+  )
 }

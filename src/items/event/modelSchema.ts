@@ -1,6 +1,6 @@
-import { t } from '@/i18n/config';
-import { z } from 'zod';
-import { ItemBase, ItemBaseSchema } from '../base/modelSchema';
+import { t } from '@/i18n/config'
+import { z } from 'zod'
+import { ItemBase, ItemBaseSchema } from '../base/modelSchema'
 
 export const EventRecurrenceSchema = z.object({
   frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly'], {
@@ -14,7 +14,7 @@ export const EventRecurrenceSchema = z.object({
       z
         .number()
         .min(0, { message: t('items:event.validation.weekdayMin') })
-        .max(6, { message: t('items:event.validation.weekdayMax') })
+        .max(6, { message: t('items:event.validation.weekdayMax') }),
     )
     .optional(),
   count: z
@@ -22,7 +22,7 @@ export const EventRecurrenceSchema = z.object({
     .min(1, { message: t('items:event.validation.countMin') })
     .optional(),
   until: z.date({ message: t('items:event.validation.untilRequired') }).optional(),
-});
+})
 
 export const ItemEventSchema = z
   .object({
@@ -37,9 +37,9 @@ export const ItemEventSchema = z
   .refine(data => data.endsAt > data.startsAt, {
     message: t('items:event.validation.endAfterStart'),
     path: ['endsAt'],
-  });
+  })
 
-export const ItemEventCompleteSchema = ItemBaseSchema.extend(ItemEventSchema.shape);
-export type EventRecurrence = z.infer<typeof EventRecurrenceSchema>;
-export type ItemEventSpecific = z.infer<typeof ItemEventSchema>;
-export type ItemEvent = ItemBase & ItemEventSpecific;
+export const ItemEventCompleteSchema = ItemBaseSchema.extend(ItemEventSchema.shape)
+export type EventRecurrence = z.infer<typeof EventRecurrenceSchema>
+export type ItemEventSpecific = z.infer<typeof ItemEventSchema>
+export type ItemEvent = ItemBase & ItemEventSpecific

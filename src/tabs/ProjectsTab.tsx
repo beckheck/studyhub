@@ -1,16 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useItems, useProjects } from '@/hooks/useStore';
-import { ItemEvent } from '@/items/event/modelSchema';
-import { ItemTask } from '@/items/task/modelSchema';
-import { useItemDialog } from '@/items/ItemDialogProvider';
-import { Project, ProjectIconName, ProjectMember, ProjectType, ProjectVisualType } from '@/types';
-import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { useItems, useProjects } from '@/hooks/useStore'
+import { ItemEvent } from '@/items/event/modelSchema'
+import { ItemTask } from '@/items/task/modelSchema'
+import { useItemDialog } from '@/items/ItemDialogProvider'
+import { Project, ProjectIconName, ProjectMember, ProjectType, ProjectVisualType } from '@/types'
+import { motion } from 'framer-motion'
 import {
   BookOpen,
   Building2,
@@ -28,28 +28,28 @@ import {
   Trash2,
   Users,
   Vote,
-} from 'lucide-react';
-import { isDateBefore } from '@/lib/date-utils';
-import { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+} from 'lucide-react'
+import { isDateBefore } from '@/lib/date-utils'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type ProjectForm = {
-  title: string;
-  type: ProjectType;
-  memberCount: string;
-  visualType: ProjectVisualType;
-  emoji: string;
-  iconName: ProjectIconName;
-  summary: string;
-  notes: string;
-  teamMembers: ProjectMember[];
-  yourRolesText: string;
-  resourcesText: string;
-};
+  title: string
+  type: ProjectType
+  memberCount: string
+  visualType: ProjectVisualType
+  emoji: string
+  iconName: ProjectIconName
+  summary: string
+  notes: string
+  teamMembers: ProjectMember[]
+  yourRolesText: string
+  resourcesText: string
+}
 
-type ProjectMemberForm = ProjectMember;
+type ProjectMemberForm = ProjectMember
 
-const PROJECT_EMOJI_OPTIONS = ['🏫', '🎓', '🧪', '🗳️', '📣', '🤝', '📚', '🚀', '🧠', '💡', '🧩', '🧭'];
+const PROJECT_EMOJI_OPTIONS = ['🏫', '🎓', '🧪', '🗳️', '📣', '🤝', '📚', '🚀', '🧠', '💡', '🧩', '🧭']
 
 const PROJECT_ICON_MAP: Record<ProjectIconName, React.ComponentType<{ className?: string }>> = {
   users: Users,
@@ -62,7 +62,7 @@ const PROJECT_ICON_MAP: Record<ProjectIconName, React.ComponentType<{ className?
   rocket: Rocket,
   globe: Globe,
   handshake: Handshake,
-};
+}
 
 const DEFAULT_PROJECT_FORM: ProjectForm = {
   title: '',
@@ -76,17 +76,17 @@ const DEFAULT_PROJECT_FORM: ProjectForm = {
   teamMembers: [{ name: '', role: '', email: '' }],
   yourRolesText: '',
   resourcesText: '',
-};
+}
 
 function splitMultilineList(value: string): string[] {
   return value
     .split('\n')
     .map(entry => entry.trim())
-    .filter(Boolean);
+    .filter(Boolean)
 }
 
 function createEmptyProjectMember(): ProjectMemberForm {
-  return { name: '', role: '', email: '' };
+  return { name: '', role: '', email: '' }
 }
 
 function splitResourceLines(value: string) {
@@ -95,54 +95,51 @@ function splitResourceLines(value: string) {
     .map(entry => entry.trim())
     .filter(Boolean)
     .map(entry => {
-      const [label, url] = entry.split('|').map(part => part.trim());
+      const [label, url] = entry.split('|').map(part => part.trim())
       return {
         label: label || url,
         url: url || label,
-      };
+      }
     })
-    .filter(resource => resource.label.length > 0 && resource.url.length > 0);
+    .filter(resource => resource.label.length > 0 && resource.url.length > 0)
 }
 
 function formatProjectType(type: ProjectType): string {
   return type
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+    .join(' ')
 }
 
 function ProjectVisual({ project, className }: { project: Project; className?: string }) {
   if (project.visualType === 'icon') {
-    const Icon = PROJECT_ICON_MAP[project.iconName];
-    return <Icon className={className} />;
+    const Icon = PROJECT_ICON_MAP[project.iconName]
+    return <Icon className={className} />
   }
 
-  return <span className={className}>{project.emoji}</span>;
+  return <span className={className}>{project.emoji}</span>
 }
 
 function normalizeUrl(url: string): string {
   if (/^https?:\/\//i.test(url)) {
-    return url;
+    return url
   }
 
-  return `https://${url}`;
+  return `https://${url}`
 }
 
 function getContactInitials(name: string): string {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = name.trim().split(/\s+/).filter(Boolean)
 
   if (parts.length === 0) {
-    return '??';
+    return '??'
   }
 
   if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase()
   }
 
-  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
 }
 
 const CONTACT_AVATAR_STYLES = [
@@ -152,37 +149,37 @@ const CONTACT_AVATAR_STYLES = [
   'bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200',
   'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200',
   'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/15 dark:text-cyan-200',
-];
+]
 
 export default function ProjectsTab() {
-  const { t } = useTranslation('projects');
-  const { projects, addProject, updateProject, deleteProject, setProjects } = useProjects();
-  const { items, updateItem } = useItems();
-  const itemDialog = useItemDialog();
+  const { t } = useTranslation('projects')
+  const { projects, addProject, updateProject, deleteProject, setProjects } = useProjects()
+  const { items, updateItem } = useItems()
+  const itemDialog = useItemDialog()
 
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
-  const [teamOverflowDialogOpen, setTeamOverflowDialogOpen] = useState(false);
-  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [projectForm, setProjectForm] = useState<ProjectForm>(DEFAULT_PROJECT_FORM);
-  const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false)
+  const [teamOverflowDialogOpen, setTeamOverflowDialogOpen] = useState(false)
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
+  const [projectForm, setProjectForm] = useState<ProjectForm>(DEFAULT_PROJECT_FORM)
+  const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!projects.length) {
-      setSelectedProjectId(null);
-      return;
+      setSelectedProjectId(null)
+      return
     }
 
-    const selectedExists = selectedProjectId && projects.some(project => project.id === selectedProjectId);
+    const selectedExists = selectedProjectId && projects.some(project => project.id === selectedProjectId)
     if (!selectedExists) {
-      setSelectedProjectId(projects[0]?.id ?? null);
+      setSelectedProjectId(projects[0]?.id ?? null)
     }
-  }, [projects, selectedProjectId]);
+  }, [projects, selectedProjectId])
 
   const selectedProject = useMemo(
     () => projects.find(project => project.id === selectedProjectId) || projects[0] || null,
-    [projects, selectedProjectId]
-  );
+    [projects, selectedProjectId],
+  )
 
   const linkedMeetings = useMemo(
     () =>
@@ -192,10 +189,10 @@ export default function ProjectsTab() {
           item.projectId === selectedProject?.id &&
           !item.isDeleted &&
           // hide events that have already ended (compare by calendar day)
-          !isDateBefore((item as ItemEvent).endsAt, new Date())
+          !isDateBefore((item as ItemEvent).endsAt, new Date()),
       ) as ItemEvent[],
-    [items, selectedProject?.id]
-  );
+    [items, selectedProject?.id],
+  )
 
   const linkedTasks = useMemo(
     () =>
@@ -205,22 +202,22 @@ export default function ProjectsTab() {
           item.projectId === selectedProject?.id &&
           !item.isDeleted &&
           // hide tasks whose due date is before today
-          !isDateBefore((item as ItemTask).dueAt, new Date())
+          !isDateBefore((item as ItemTask).dueAt, new Date()),
       ) as ItemTask[],
-    [items, selectedProject?.id]
-  );
+    [items, selectedProject?.id],
+  )
 
-  const visibleTeamMembers = selectedProject?.teamMembers.slice(0, 3) ?? [];
-  const hiddenTeamMemberCount = Math.max(0, (selectedProject?.teamMembers.length ?? 0) - visibleTeamMembers.length);
+  const visibleTeamMembers = selectedProject?.teamMembers.slice(0, 3) ?? []
+  const hiddenTeamMemberCount = Math.max(0, (selectedProject?.teamMembers.length ?? 0) - visibleTeamMembers.length)
 
   const openCreateProjectDialog = () => {
-    setEditingProjectId(null);
-    setProjectForm(DEFAULT_PROJECT_FORM);
-    setProjectDialogOpen(true);
-  };
+    setEditingProjectId(null)
+    setProjectForm(DEFAULT_PROJECT_FORM)
+    setProjectDialogOpen(true)
+  }
 
   const openEditProjectDialog = (project: Project) => {
-    setEditingProjectId(project.id);
+    setEditingProjectId(project.id)
     setProjectForm({
       title: project.title,
       type: project.type,
@@ -239,38 +236,38 @@ export default function ProjectsTab() {
         : [createEmptyProjectMember()],
       yourRolesText: project.yourRoles.join('\n'),
       resourcesText: project.resources.map(resource => `${resource.label} | ${resource.url}`).join('\n'),
-    });
-    setProjectDialogOpen(true);
-  };
+    })
+    setProjectDialogOpen(true)
+  }
 
   const addTeamMember = () => {
     setProjectForm(prev => ({
       ...prev,
       teamMembers: [...prev.teamMembers, createEmptyProjectMember()],
-    }));
-  };
+    }))
+  }
 
   const updateTeamMember = (index: number, field: keyof ProjectMemberForm, value: string) => {
     setProjectForm(prev => ({
       ...prev,
       teamMembers: prev.teamMembers.map((member, memberIndex) =>
-        memberIndex === index ? { ...member, [field]: value } : member
+        memberIndex === index ? { ...member, [field]: value } : member,
       ),
-    }));
-  };
+    }))
+  }
 
   const removeTeamMember = (index: number) => {
     setProjectForm(prev => {
-      const nextTeamMembers = prev.teamMembers.filter((_, memberIndex) => memberIndex !== index);
+      const nextTeamMembers = prev.teamMembers.filter((_, memberIndex) => memberIndex !== index)
       return {
         ...prev,
         teamMembers: nextTeamMembers.length ? nextTeamMembers : [createEmptyProjectMember()],
-      };
-    });
-  };
+      }
+    })
+  }
 
   const handleSaveProject = () => {
-    const memberCount = Math.max(1, Number(projectForm.memberCount) || 1);
+    const memberCount = Math.max(1, Number(projectForm.memberCount) || 1)
     const payload = {
       title: projectForm.title.trim() || t('placeholders.untitledProject'),
       type: projectForm.type,
@@ -289,36 +286,36 @@ export default function ProjectsTab() {
         .filter(member => member.name.length > 0 || member.role.length > 0 || member.email.length > 0),
       yourRoles: splitMultilineList(projectForm.yourRolesText),
       resources: splitResourceLines(projectForm.resourcesText),
-    };
+    }
 
     if (editingProjectId) {
-      updateProject(editingProjectId, payload);
-      setSelectedProjectId(editingProjectId);
+      updateProject(editingProjectId, payload)
+      setSelectedProjectId(editingProjectId)
     } else {
-      const project = addProject(payload);
-      setSelectedProjectId(project.id);
+      const project = addProject(payload)
+      setSelectedProjectId(project.id)
     }
 
-    setProjectDialogOpen(false);
-  };
+    setProjectDialogOpen(false)
+  }
 
   const handleDeleteProject = (projectId: string) => {
-    const project = projects.find(entry => entry.id === projectId);
-    if (!project) return;
+    const project = projects.find(entry => entry.id === projectId)
+    if (!project) return
 
-    const confirmed = window.confirm(t('confirmations.deleteProject', { title: project.title }));
-    if (!confirmed) return;
+    const confirmed = window.confirm(t('confirmations.deleteProject', { title: project.title }))
+    if (!confirmed) return
 
-    deleteProject(projectId);
+    deleteProject(projectId)
     if (selectedProjectId === projectId) {
-      setSelectedProjectId(projects.find(entry => entry.id !== projectId)?.id ?? null);
+      setSelectedProjectId(projects.find(entry => entry.id !== projectId)?.id ?? null)
     }
-  };
+  }
 
   const addLinkedMeeting = () => {
-    if (!selectedProject) return;
+    if (!selectedProject) return
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0]
     itemDialog.openAddDialog(
       'event',
       {
@@ -330,12 +327,12 @@ export default function ProjectsTab() {
         endsAt: today,
         endsAtTime: '11:00',
       },
-      { hidden: { courseId: true, projectId: true } }
-    );
-  };
+      { hidden: { courseId: true, projectId: true } },
+    )
+  }
 
   const addLinkedTask = () => {
-    if (!selectedProject) return;
+    if (!selectedProject) return
 
     itemDialog.openAddDialog(
       'task',
@@ -345,27 +342,27 @@ export default function ProjectsTab() {
         projectId: selectedProject.id,
         priority: 'medium',
       },
-      { hidden: { courseId: true, projectId: true } }
-    );
-  };
+      { hidden: { courseId: true, projectId: true } },
+    )
+  }
 
   const reorderProjects = (sourceProjectId: string, targetProjectId: string) => {
     if (sourceProjectId === targetProjectId) {
-      return;
+      return
     }
 
-    const sourceIndex = projects.findIndex(project => project.id === sourceProjectId);
-    const targetIndex = projects.findIndex(project => project.id === targetProjectId);
+    const sourceIndex = projects.findIndex(project => project.id === sourceProjectId)
+    const targetIndex = projects.findIndex(project => project.id === targetProjectId)
 
     if (sourceIndex === -1 || targetIndex === -1) {
-      return;
+      return
     }
 
-    const nextProjects = [...projects];
-    const [movedProject] = nextProjects.splice(sourceIndex, 1);
-    nextProjects.splice(targetIndex, 0, movedProject);
-    setProjects(nextProjects);
-  };
+    const nextProjects = [...projects]
+    const [movedProject] = nextProjects.splice(sourceIndex, 1)
+    nextProjects.splice(targetIndex, 0, movedProject)
+    setProjects(nextProjects)
+  }
 
   const projectTypeOptions: Array<{ value: ProjectType; label: string }> = [
     { value: 'organization', label: t('types.organization') },
@@ -375,7 +372,7 @@ export default function ProjectsTab() {
     { value: 'competition', label: t('types.competition') },
     { value: 'startup', label: t('types.startup') },
     { value: 'other', label: t('types.other') },
-  ];
+  ]
 
   const iconOptions: Array<{ value: ProjectIconName; label: string }> = [
     { value: 'users', label: t('icons.users') },
@@ -388,11 +385,15 @@ export default function ProjectsTab() {
     { value: 'rocket', label: t('icons.rocket') },
     { value: 'globe', label: t('icons.globe') },
     { value: 'handshake', label: t('icons.handshake') },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight">{t('title')}</h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('subtitle')}</p>
@@ -422,47 +423,46 @@ export default function ProjectsTab() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="space-y-4">
-
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
               {projects.map(project => {
-                const ProjectIconOrEmoji = ProjectVisual;
-                const isSelected = selectedProject?.id === project.id;
-                const isBeingDragged = draggedProjectId === project.id;
+                const ProjectIconOrEmoji = ProjectVisual
+                const isSelected = selectedProject?.id === project.id
+                const isBeingDragged = draggedProjectId === project.id
                 const projectMeetingCount = items.filter(
                   item =>
                     item.type === 'event' &&
                     item.projectId === project.id &&
                     !item.isDeleted &&
-                    !isDateBefore((item as ItemEvent).endsAt, new Date())
-                ).length;
+                    !isDateBefore((item as ItemEvent).endsAt, new Date()),
+                ).length
                 const projectTaskCount = items.filter(
                   item =>
                     item.type === 'task' &&
                     item.projectId === project.id &&
                     !item.isDeleted &&
-                    !isDateBefore((item as ItemTask).dueAt, new Date())
-                ).length;
+                    !isDateBefore((item as ItemTask).dueAt, new Date()),
+                ).length
 
                 return (
                   <Card
                     key={project.id}
                     draggable={projects.length > 1}
                     onDragStart={event => {
-                      if (projects.length <= 1) return;
-                      event.dataTransfer.effectAllowed = 'move';
-                      event.dataTransfer.setData('text/plain', project.id);
-                      setDraggedProjectId(project.id);
+                      if (projects.length <= 1) return
+                      event.dataTransfer.effectAllowed = 'move'
+                      event.dataTransfer.setData('text/plain', project.id)
+                      setDraggedProjectId(project.id)
                     }}
                     onDragOver={event => {
-                      if (!draggedProjectId || draggedProjectId === project.id) return;
-                      event.preventDefault();
-                      event.dataTransfer.dropEffect = 'move';
+                      if (!draggedProjectId || draggedProjectId === project.id) return
+                      event.preventDefault()
+                      event.dataTransfer.dropEffect = 'move'
                     }}
                     onDrop={event => {
-                      if (!draggedProjectId) return;
-                      event.preventDefault();
-                      reorderProjects(draggedProjectId, project.id);
-                      setDraggedProjectId(null);
+                      if (!draggedProjectId) return
+                      event.preventDefault()
+                      reorderProjects(draggedProjectId, project.id)
+                      setDraggedProjectId(null)
                     }}
                     onDragEnd={() => setDraggedProjectId(null)}
                     className={`rounded-3xl border-none shadow-xl cursor-pointer transition-all duration-200 bg-white/80 dark:bg-white/10 backdrop-blur ${
@@ -474,7 +474,10 @@ export default function ProjectsTab() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                           {projects.length > 1 && (
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-300" aria-hidden="true">
+                            <div
+                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-300"
+                              aria-hidden="true"
+                            >
                               <GripVertical className="h-5 w-5" />
                             </div>
                           )}
@@ -483,7 +486,9 @@ export default function ProjectsTab() {
                           </div>
                           <div className="min-w-0">
                             <h3 className="truncate font-semibold">{project.title}</h3>
-                            <p className="text-xs text-zinc-600 dark:text-zinc-400">{formatProjectType(project.type)}</p>
+                            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                              {formatProjectType(project.type)}
+                            </p>
                           </div>
                         </div>
                         <div className="flex gap-1">
@@ -493,8 +498,8 @@ export default function ProjectsTab() {
                             variant="ghost"
                             className="h-8 w-8 rounded-full"
                             onClick={e => {
-                              e.stopPropagation();
-                              openEditProjectDialog(project);
+                              e.stopPropagation()
+                              openEditProjectDialog(project)
                             }}
                           >
                             <Edit3 className="w-4 h-4" />
@@ -505,8 +510,8 @@ export default function ProjectsTab() {
                             variant="ghost"
                             className="h-8 w-8 rounded-full text-red-500 hover:text-red-600"
                             onClick={e => {
-                              e.stopPropagation();
-                              handleDeleteProject(project.id);
+                              e.stopPropagation()
+                              handleDeleteProject(project.id)
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -515,9 +520,15 @@ export default function ProjectsTab() {
                       </div>
 
                       <div className="flex flex-wrap gap-2 text-xs">
-                        <span className="rounded-full bg-zinc-900/5 px-2.5 py-1 dark:bg-white/10">{t('meta.people', { count: project.memberCount })}</span>
-                        <span className="rounded-full bg-zinc-900/5 px-2.5 py-1 dark:bg-white/10">{t('meta.meetings', { count: projectMeetingCount })}</span>
-                        <span className="rounded-full bg-zinc-900/5 px-2.5 py-1 dark:bg-white/10">{t('meta.tasks', { count: projectTaskCount })}</span>
+                        <span className="rounded-full bg-zinc-900/5 px-2.5 py-1 dark:bg-white/10">
+                          {t('meta.people', { count: project.memberCount })}
+                        </span>
+                        <span className="rounded-full bg-zinc-900/5 px-2.5 py-1 dark:bg-white/10">
+                          {t('meta.meetings', { count: projectMeetingCount })}
+                        </span>
+                        <span className="rounded-full bg-zinc-900/5 px-2.5 py-1 dark:bg-white/10">
+                          {t('meta.tasks', { count: projectTaskCount })}
+                        </span>
                       </div>
 
                       <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-3">
@@ -525,7 +536,7 @@ export default function ProjectsTab() {
                       </p>
                     </CardContent>
                   </Card>
-                );
+                )
               })}
             </div>
           </aside>
@@ -541,7 +552,9 @@ export default function ProjectsTab() {
                       </div>
                       <div className="min-w-0">
                         <CardTitle className="truncate text-3xl">{selectedProject.title}</CardTitle>
-                        <CardDescription className="mt-1">{selectedProject.summary || t('empty.noSummary')}</CardDescription>
+                        <CardDescription className="mt-1">
+                          {selectedProject.summary || t('empty.noSummary')}
+                        </CardDescription>
                       </div>
                     </div>
                     <Button className="rounded-xl" onClick={() => openEditProjectDialog(selectedProject)}>
@@ -550,10 +563,17 @@ export default function ProjectsTab() {
                     </Button>
                   </CardHeader>
                   <CardContent className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-zinc-900/5 px-3 py-1 text-sm dark:bg-white/10">{t(`types.${selectedProject.type}`)}</span>
-                    <span className="rounded-full bg-zinc-900/5 px-3 py-1 text-sm dark:bg-white/10">{t('meta.people', { count: selectedProject.memberCount })}</span>
+                    <span className="rounded-full bg-zinc-900/5 px-3 py-1 text-sm dark:bg-white/10">
+                      {t(`types.${selectedProject.type}`)}
+                    </span>
+                    <span className="rounded-full bg-zinc-900/5 px-3 py-1 text-sm dark:bg-white/10">
+                      {t('meta.people', { count: selectedProject.memberCount })}
+                    </span>
                     {selectedProject.yourRoles.map(role => (
-                      <span key={role} className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm text-emerald-700 dark:text-emerald-300">
+                      <span
+                        key={role}
+                        className="rounded-full bg-emerald-500/10 px-3 py-1 text-sm text-emerald-700 dark:text-emerald-300"
+                      >
                         {role}
                       </span>
                     ))}
@@ -590,12 +610,19 @@ export default function ProjectsTab() {
                       <div className="space-y-3">
                         {linkedMeetings.length ? (
                           linkedMeetings.map(meeting => (
-                            <div key={meeting.id} className="rounded-2xl border border-white/20 bg-white/60 p-3 dark:bg-white/5">
+                            <div
+                              key={meeting.id}
+                              className="rounded-2xl border border-white/20 bg-white/60 p-3 dark:bg-white/5"
+                            >
                               <div className="font-medium">{meeting.title || t('empty.untitled')}</div>
                               <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                                {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(meeting.startsAt))}
+                                {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
+                                  new Date(meeting.startsAt),
+                                )}
                               </div>
-                              {meeting.location && <div className="text-xs text-zinc-600 dark:text-zinc-400">{meeting.location}</div>}
+                              {meeting.location && (
+                                <div className="text-xs text-zinc-600 dark:text-zinc-400">{meeting.location}</div>
+                              )}
                             </div>
                           ))
                         ) : (
@@ -618,14 +645,23 @@ export default function ProjectsTab() {
                       <div className="space-y-3">
                         {linkedTasks.length ? (
                           linkedTasks.map(task => (
-                            <div key={task.id} className="rounded-2xl border border-white/20 bg-white/60 p-3 dark:bg-white/5">
-                              <div className={`flex items-start justify-between gap-3 ${task.isCompleted ? 'line-through opacity-60' : ''}`}>
+                            <div
+                              key={task.id}
+                              className="rounded-2xl border border-white/20 bg-white/60 p-3 dark:bg-white/5"
+                            >
+                              <div
+                                className={`flex items-start justify-between gap-3 ${task.isCompleted ? 'line-through opacity-60' : ''}`}
+                              >
                                 <div>
                                   <div className="font-medium">{task.title || t('empty.untitled')}</div>
-                                  <div className="text-xs text-zinc-600 dark:text-zinc-400">{t(`priorities.${task.priority}`)}</div>
+                                  <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                                    {t(`priorities.${task.priority}`)}
+                                  </div>
                                   {task.dueAt && (
                                     <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                                      {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(task.dueAt))}
+                                      {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+                                        new Date(task.dueAt),
+                                      )}
                                     </div>
                                   )}
                                 </div>
@@ -636,8 +672,8 @@ export default function ProjectsTab() {
                                     variant="ghost"
                                     className={`h-8 w-8 rounded-full ${task.isCompleted ? 'text-green-500' : ''}`}
                                     onClick={e => {
-                                      e.stopPropagation();
-                                      updateItem(task.id, { isCompleted: !task.isCompleted } as any);
+                                      e.stopPropagation()
+                                      updateItem(task.id, { isCompleted: !task.isCompleted } as any)
                                     }}
                                   >
                                     <Check className="w-4 h-4" />
@@ -676,9 +712,9 @@ export default function ProjectsTab() {
                     <CardContent className="space-y-3">
                       {visibleTeamMembers.length > 0 ? (
                         visibleTeamMembers.map((contact, index) => {
-                          const initials = getContactInitials(contact.name);
-                          const avatarStyle = CONTACT_AVATAR_STYLES[index % CONTACT_AVATAR_STYLES.length];
-                          const emailHref = contact.email ? `mailto:${contact.email}` : null;
+                          const initials = getContactInitials(contact.name)
+                          const avatarStyle = CONTACT_AVATAR_STYLES[index % CONTACT_AVATAR_STYLES.length]
+                          const emailHref = contact.email ? `mailto:${contact.email}` : null
 
                           return (
                             <div
@@ -686,12 +722,18 @@ export default function ProjectsTab() {
                               className="flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/60 px-4 py-3 dark:bg-white/5"
                             >
                               <div className="flex min-w-0 items-center gap-3">
-                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle}`}>
+                                <div
+                                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle}`}
+                                >
                                   {initials}
                                 </div>
                                 <div className="min-w-0">
-                                  <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{contact.name}</div>
-                                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{contact.role || t('team.contactLabel')}</div>
+                                  <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                                    {contact.name}
+                                  </div>
+                                  <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {contact.role || t('team.contactLabel')}
+                                  </div>
                                   {contact.email && (
                                     <a
                                       href={emailHref ?? undefined}
@@ -717,7 +759,7 @@ export default function ProjectsTab() {
                                 </div>
                               )}
                             </div>
-                          );
+                          )
                         })
                       ) : (
                         <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('team.empty')}</p>
@@ -763,7 +805,10 @@ export default function ProjectsTab() {
 
             <div className="space-y-2">
               <Label>{t('forms.type')}</Label>
-              <Select value={projectForm.type} onValueChange={value => setProjectForm(prev => ({ ...prev, type: value as ProjectType }))}>
+              <Select
+                value={projectForm.type}
+                onValueChange={value => setProjectForm(prev => ({ ...prev, type: value as ProjectType }))}
+              >
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
@@ -841,7 +886,7 @@ export default function ProjectsTab() {
                 <Label>{t('forms.defaultIcon')}</Label>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {iconOptions.map(option => {
-                    const Icon = PROJECT_ICON_MAP[option.value];
+                    const Icon = PROJECT_ICON_MAP[option.value]
                     return (
                       <button
                         key={option.value}
@@ -856,7 +901,7 @@ export default function ProjectsTab() {
                         <Icon className="h-5 w-5" />
                         <span className="text-sm font-medium">{option.label}</span>
                       </button>
-                    );
+                    )
                   })}
                 </div>
               </div>
@@ -883,7 +928,7 @@ export default function ProjectsTab() {
 
               <div className="space-y-3 rounded-2xl border border-white/20 bg-white/50 p-3 dark:bg-white/5">
                 {projectForm.teamMembers.map((member, index) => (
-                    <div key={index} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                  <div key={index} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                     <Input
                       value={member.name}
                       onChange={event => updateTeamMember(index, 'name', event.target.value)}
@@ -896,12 +941,12 @@ export default function ProjectsTab() {
                       placeholder={t('placeholders.teamMemberRole')}
                       className="rounded-xl"
                     />
-                      <Input
-                        value={member.email}
-                        onChange={event => updateTeamMember(index, 'email', event.target.value)}
-                        placeholder={t('placeholders.teamMemberEmail')}
-                        className="rounded-xl"
-                      />
+                    <Input
+                      value={member.email}
+                      onChange={event => updateTeamMember(index, 'email', event.target.value)}
+                      placeholder={t('placeholders.teamMemberEmail')}
+                      className="rounded-xl"
+                    />
                     <Button
                       type="button"
                       variant="ghost"
@@ -967,9 +1012,9 @@ export default function ProjectsTab() {
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {selectedProject?.teamMembers.length ? (
               selectedProject.teamMembers.map((contact, index) => {
-                const initials = getContactInitials(contact.name);
-                const avatarStyle = CONTACT_AVATAR_STYLES[index % CONTACT_AVATAR_STYLES.length];
-                const emailHref = contact.email ? `mailto:${contact.email}` : null;
+                const initials = getContactInitials(contact.name)
+                const avatarStyle = CONTACT_AVATAR_STYLES[index % CONTACT_AVATAR_STYLES.length]
+                const emailHref = contact.email ? `mailto:${contact.email}` : null
 
                 return (
                   <div
@@ -977,12 +1022,18 @@ export default function ProjectsTab() {
                     className="flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/60 px-4 py-3 dark:bg-white/5"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle}`}>
+                      <div
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarStyle}`}
+                      >
                         {initials}
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{contact.name}</div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400">{contact.role || t('team.contactLabel')}</div>
+                        <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                          {contact.name}
+                        </div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {contact.role || t('team.contactLabel')}
+                        </div>
                         {contact.email && (
                           <a
                             href={emailHref ?? undefined}
@@ -1008,7 +1059,7 @@ export default function ProjectsTab() {
                       </div>
                     )}
                   </div>
-                );
+                )
               })
             ) : (
               <p className="text-sm text-zinc-600 dark:text-zinc-400">{t('team.empty')}</p>
@@ -1017,5 +1068,5 @@ export default function ProjectsTab() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

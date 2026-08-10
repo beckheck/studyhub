@@ -1,15 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAppContext } from '@/contexts/AppContext';
-import { useScrollToTop } from '@/hooks/useScrollToTop';
-import { useSettingsDialog } from '@/hooks/useSettingsDialog';
-import { useCallback, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAppContext } from '@/contexts/AppContext'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
+import { useSettingsDialog } from '@/hooks/useSettingsDialog'
+import { useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function SettingsTab() {
-  const { t } = useTranslation('settings');
-  const { isExtension } = useAppContext();
-  const { scrollToTop } = useScrollToTop();
-  const { settingsDialogs } = useSettingsDialog();
+  const { t } = useTranslation('settings')
+  const { isExtension } = useAppContext()
+  const { scrollToTop } = useScrollToTop()
+  const { settingsDialogs } = useSettingsDialog()
 
   const SETTINGS_DIALOGS_IN_CUSTOM_ORDER: (keyof typeof settingsDialogs)[] = [
     'about',
@@ -27,79 +27,81 @@ export default function SettingsTab() {
     'customCursor',
     'hydration',
     'weatherApi',
-  ];
+  ]
   const settingsKeysInCustomOrder = SETTINGS_DIALOGS_IN_CUSTOM_ORDER.filter(
-    key => !(isExtension && key === 'googleCalendar')
-  );
+    key => !(isExtension && key === 'googleCalendar'),
+  )
   const settingsDialogsInCustomOrder = settingsKeysInCustomOrder.map(key => ({
     key,
     ...settingsDialogs[key],
-  }));
+  }))
 
   // Hash navigation for settings sections
   const parseHashSection = useCallback(() => {
-    if (typeof window === 'undefined') return null;
-    const hash = window.location.hash;
-    const parts = hash.split('/');
-    return parts.length > 1 ? parts[1] : null;
-  }, []);
+    if (typeof window === 'undefined') return null
+    const hash = window.location.hash
+    const parts = hash.split('/')
+    return parts.length > 1 ? parts[1] : null
+  }, [])
 
   // Map section keys to their refs for scroll-to functionality
-  const sectionRefMap: Record<string, HTMLDivElement> = {};
+  const sectionRefMap: Record<string, HTMLDivElement> = {}
   const setSectionRef = useCallback(
     (key: string) => (node: HTMLDivElement | null) => {
-      sectionRefMap[key] = node;
+      if (node) {
+        sectionRefMap[key] = node
+      }
     },
-    []
-  );
+    [],
+  )
 
   // Scroll to section function
   const scrollToSection = useCallback(
     (sectionKey: string) => {
       // Update URL hash for deep linking
-      const parts = window.location.hash.split('/');
-      const mainRoute = parts[0];
-      const newHash = settingsDialogsInCustomOrder[0].key === sectionKey ? mainRoute : `${mainRoute}/${sectionKey}`;
+      const parts = window.location.hash.split('/')
+      const mainRoute = parts[0]
+      const newHash = settingsDialogsInCustomOrder[0].key === sectionKey ? mainRoute : `${mainRoute}/${sectionKey}`
       // const newHash = mainRoute
       if (window.location.hash !== newHash) {
-        window.history.replaceState(null, '', newHash);
+        window.history.replaceState(null, '', newHash)
       }
 
-      const sectionRef = sectionRefMap[sectionKey];
+      const sectionRef = sectionRefMap[sectionKey]
       if (sectionRef) {
         if (settingsDialogsInCustomOrder[0].key === sectionKey) {
-          scrollToTop();
+          scrollToTop()
         } else {
           sectionRef.scrollIntoView({
             behavior: 'smooth',
             block: 'start',
-          });
+          })
         }
 
-        sectionRef.tabIndex = -1; // Make it focusable for screen readers
-        sectionRef.focus({ preventScroll: true });
+        sectionRef.tabIndex = -1 // Make it focusable for screen readers
+        sectionRef.focus({ preventScroll: true })
       }
     },
-    [scrollToTop]
-  );
+    [scrollToTop],
+  )
 
   // Handle initial hash navigation and hash changes
   useEffect(() => {
     const handleHashNavigation = () => {
-      const sectionId = parseHashSection();
+      const sectionId = parseHashSection()
       if (sectionId) {
         // Small delay to ensure DOM is ready
-        setTimeout(() => scrollToSection(sectionId), 100);
+        setTimeout(() => scrollToSection(sectionId), 100)
       }
-    };
+    }
 
     // Handle initial load
-    handleHashNavigation();
+    handleHashNavigation()
 
     // Listen for hash changes
-    window.addEventListener('hashchange', handleHashNavigation);
-    return () => window.removeEventListener('hashchange', handleHashNavigation);
-  }, [parseHashSection, scrollToSection]);
+    window.addEventListener('hashchange', handleHashNavigation)
+    return () => window.removeEventListener('hashchange', handleHashNavigation)
+  }, [parseHashSection, scrollToSection])
 
   return (
     <div className="flex h-full gap-6">
@@ -113,7 +115,7 @@ export default function SettingsTab() {
           <CardContent className="p-0">
             <nav className="space-y-1">
               {settingsDialogsInCustomOrder.map(({ key, title, Icon }, index) => {
-                const isLast = index === settingsDialogsInCustomOrder.length - 1;
+                const isLast = index === settingsDialogsInCustomOrder.length - 1
                 return (
                   <button
                     key={key}
@@ -125,7 +127,7 @@ export default function SettingsTab() {
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{title}</span>
                   </button>
-                );
+                )
               })}
             </nav>
           </CardContent>
@@ -151,5 +153,5 @@ export default function SettingsTab() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,33 +1,33 @@
-import { EventTypeIndicator } from '@/components/PlannerSharedComponents';
-import { TasksProgressBar, type ProgressData } from '@/components/TasksProgressBar';
-import { Badge } from '@/components/ui/badge';
-import { RichTextDisplay } from '@/components/ui/rich-text-editor';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses, useItems } from '@/hooks/useStore';
-import { useItemDialog } from '@/items/ItemDialogProvider';
-import { Item } from '@/items/models';
-import { ItemDialogOptions } from '@/items/useItemDialogState';
-import { compareDates, isMultiDayEvent } from '@/lib/date-utils';
-import { useTranslation } from 'react-i18next';
-import { CalendarView } from '../types';
-import { useState } from 'react';
+import { EventTypeIndicator } from '@/components/PlannerSharedComponents'
+import { TasksProgressBar, type ProgressData } from '@/components/TasksProgressBar'
+import { Badge } from '@/components/ui/badge'
+import { RichTextDisplay } from '@/components/ui/rich-text-editor'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses, useItems } from '@/hooks/useStore'
+import { useItemDialog } from '@/items/ItemDialogProvider'
+import { Item } from '@/items/models'
+import { ItemDialogOptions } from '@/items/useItemDialogState'
+import { compareDates, isMultiDayEvent } from '@/lib/date-utils'
+import { useTranslation } from 'react-i18next'
+import { CalendarView } from '../types'
+import { useState } from 'react'
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
 const editItemDialogOptions: ItemDialogOptions = {
   hidden: { type: false },
   availableItemTypes: ['event', 'exam'],
-};
+}
 
 interface PlannerMonthViewProps {
-  monthView: CalendarView;
-  matrix: Date[];
-  filterCourse: string;
-  showMultiDayEvents: boolean;
-  getAllEventsForDate: (date: Date) => any[];
-  getAllEventsForTooltip: (date: Date) => any[];
-  handleDayClick: (date: Date) => void;
-  handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void;
+  monthView: CalendarView
+  matrix: Date[]
+  filterCourse: string
+  showMultiDayEvents: boolean
+  getAllEventsForDate: (date: Date) => any[]
+  getAllEventsForTooltip: (date: Date) => any[]
+  handleDayClick: (date: Date) => void
+  handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void
 }
 
 export function PlannerMonthView({
@@ -40,22 +40,22 @@ export function PlannerMonthView({
   handleDayClick,
   handleEventDrop,
 }: PlannerMonthViewProps) {
-  const { getCourseTitle } = useCourses();
-  const { getItemsByType, updateItem } = useItems();
-  const itemDialog = useItemDialog();
-  const { t } = useTranslation('planner');
-  const { getShortDayNames, formatDate: localizedFormatDate, formatDateDDMMYYYY } = useLocalization();
+  const { getCourseTitle } = useCourses()
+  const { getItemsByType, updateItem } = useItems()
+  const itemDialog = useItemDialog()
+  const { t } = useTranslation('planner')
+  const { getShortDayNames, formatDate: localizedFormatDate, formatDateDDMMYYYY } = useLocalization()
 
   // Get items by type
-  const regularEvents = getItemsByType('event');
+  const regularEvents = getItemsByType('event')
 
   // Progress tracking for task-based notes in events
-  const [eventNotesProgress, setEventNotesProgress] = useState<Record<string, ProgressData>>({});
+  const [eventNotesProgress, setEventNotesProgress] = useState<Record<string, ProgressData>>({})
 
   // Helper function to handle content changes for different event types
   const handleEventContentChange = (event: any, newContent: string) => {
-    updateItem(event.id, { notes: newContent });
-  };
+    updateItem(event.id, { notes: newContent })
+  }
 
   return (
     <div className="space-y-4">
@@ -69,25 +69,25 @@ export function PlannerMonthView({
 
       <div className="grid grid-cols-7 gap-3">
         {matrix.map((date, i) => {
-          const inMonth = date.getMonth() === monthView.month;
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const isToday = date.toDateString() === today.toDateString();
-          const dayEvents = getAllEventsForDate(date);
-          const tooltipEvents = getAllEventsForTooltip(date); // For tooltip, show all events including hidden multi-day
+          const inMonth = date.getMonth() === monthView.month
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          const isToday = date.toDateString() === today.toDateString()
+          const dayEvents = getAllEventsForDate(date)
+          const tooltipEvents = getAllEventsForTooltip(date) // For tooltip, show all events including hidden multi-day
 
           // Check if this day has any multi-day events for border color
-          const allRegularEventsOnDay = tooltipEvents.filter(e => e.type === 'event');
+          const allRegularEventsOnDay = tooltipEvents.filter(e => e.type === 'event')
           // Calculate multi-day events using timezone-safe comparison
           const multiDayEventsOnDay = allRegularEventsOnDay.filter(item => {
-            if (item.type !== 'event') return false;
+            if (item.type !== 'event') return false
             // Check if event spans multiple days using timezone-safe comparison
-            const startDate = new Date(item.startsAt);
-            const endDate = new Date(item.endsAt);
-            return isMultiDayEvent(startDate, endDate);
-          });
-          const hasMultiDayEvent = multiDayEventsOnDay.length > 0;
-          const multiDayEventColor = hasMultiDayEvent ? multiDayEventsOnDay[0].color || '#6366f1' : null;
+            const startDate = new Date(item.startsAt)
+            const endDate = new Date(item.endsAt)
+            return isMultiDayEvent(startDate, endDate)
+          })
+          const hasMultiDayEvent = multiDayEventsOnDay.length > 0
+          const multiDayEventColor = hasMultiDayEvent ? multiDayEventsOnDay[0].color || '#6366f1' : null
 
           return (
             <div
@@ -101,19 +101,19 @@ export function PlannerMonthView({
                 borderTopColor: hasMultiDayEvent ? multiDayEventColor : undefined,
               }}
               onClick={() => handleDayClick(date)}
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
+              onDragOver={e => {
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
               }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              onDrop={e => {
+                e.preventDefault()
+                e.stopPropagation()
                 try {
-                  const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                  const data = JSON.parse(e.dataTransfer.getData('application/json'))
                   if (data && data.itemId) {
-                    handleEventDrop(data.itemId, data.itemType, date);
+                    handleEventDrop(data.itemId, data.itemType, date)
                   }
-                } catch (err) {
+                } catch {
                   // Ignore invalid drop data
                 }
               }}
@@ -141,7 +141,7 @@ export function PlannerMonthView({
                     variant="secondary"
                     className="text-xs rounded-full cursor-pointer"
                     onClick={event => {
-                      event.stopPropagation(); // Prevent opening the add event dialog
+                      event.stopPropagation() // Prevent opening the add event dialog
                     }}
                   >
                     {dayEvents.length}
@@ -154,17 +154,17 @@ export function PlannerMonthView({
                   <div
                     key={idx}
                     draggable
-                    onDragStart={(dragEvent) => {
-                      dragEvent.stopPropagation();
+                    onDragStart={dragEvent => {
+                      dragEvent.stopPropagation()
                       dragEvent.dataTransfer.setData(
                         'application/json',
-                        JSON.stringify({ itemId: e.id, itemType: e.type })
-                      );
+                        JSON.stringify({ itemId: e.id, itemType: e.type }),
+                      )
                     }}
                     className="text-xs truncate flex items-center gap-1.5 p-1 rounded bg-white/50 dark:bg-white/10 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                     onClick={clickEvent => {
-                      clickEvent.stopPropagation();
-                      itemDialog.openEditDialog(e, editItemDialogOptions);
+                      clickEvent.stopPropagation()
+                      itemDialog.openEditDialog(e, editItemDialogOptions)
                     }}
                     title={t('messages.clickToEdit')}
                   >
@@ -197,8 +197,8 @@ export function PlannerMonthView({
                         key={idx}
                         className="space-y-1 p-2 rounded-lg bg-zinc-50 dark:bg-zinc-700/50 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                         onClick={clickEvent => {
-                          clickEvent.stopPropagation();
-                          itemDialog.openEditDialog(event, editItemDialogOptions);
+                          clickEvent.stopPropagation()
+                          itemDialog.openEditDialog(event, editItemDialogOptions)
                         }}
                         title={t('messages.clickToEdit')}
                       >
@@ -229,7 +229,7 @@ export function PlannerMonthView({
                                   setEventNotesProgress(prev => ({
                                     ...prev,
                                     [event.id]: progress,
-                                  }));
+                                  }))
                                 }}
                               />
                             </div>
@@ -246,17 +246,17 @@ export function PlannerMonthView({
                 </div>
               )}
             </div>
-          );
+          )
         })}
       </div>
 
       {/* Hidden Multi-Day Events Section */}
       {!showMultiDayEvents &&
         regularEvents.some(item => {
-          if (item.type !== 'event') return false;
-          const startDate = new Date(item.startsAt);
-          const endDate = new Date(item.endsAt);
-          return isMultiDayEvent(startDate, endDate);
+          if (item.type !== 'event') return false
+          const startDate = new Date(item.startsAt)
+          const endDate = new Date(item.endsAt)
+          return isMultiDayEvent(startDate, endDate)
         }) && (
           <div className="mt-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
@@ -265,21 +265,21 @@ export function PlannerMonthView({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {regularEvents
                 .filter(item => {
-                  if (item.type !== 'event') return false;
-                  const startDate = new Date(item.startsAt);
-                  const endDate = new Date(item.endsAt);
-                  const isMultiDay = isMultiDayEvent(startDate, endDate);
-                  return (filterCourse === 'all' || item.courseId === filterCourse) && isMultiDay;
+                  if (item.type !== 'event') return false
+                  const startDate = new Date(item.startsAt)
+                  const endDate = new Date(item.endsAt)
+                  const isMultiDay = isMultiDayEvent(startDate, endDate)
+                  return (filterCourse === 'all' || item.courseId === filterCourse) && isMultiDay
                 })
                 .sort((itemA, itemB) => {
-                  if (itemA.type !== 'event' || itemB.type !== 'event') return 0;
-                  return compareDates(itemA.startsAt, itemB.startsAt);
+                  if (itemA.type !== 'event' || itemB.type !== 'event') return 0
+                  return compareDates(itemA.startsAt, itemB.startsAt)
                 })
                 .map(item => {
-                  if (item.type !== 'event') return null;
-                  const startDate = new Date(item.startsAt);
-                  const endDate = new Date(item.endsAt);
-                  const isMultiDay = isMultiDayEvent(startDate, endDate);
+                  if (item.type !== 'event') return null
+                  const startDate = new Date(item.startsAt)
+                  const endDate = new Date(item.endsAt)
+                  const isMultiDay = isMultiDayEvent(startDate, endDate)
 
                   return (
                     <div
@@ -287,8 +287,8 @@ export function PlannerMonthView({
                       className="bg-white/90 dark:bg-white/10 rounded-xl p-4 border-t-4 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                       style={{ borderTopColor: item.color || '#6366f1' }}
                       onClick={e => {
-                        e.stopPropagation();
-                        itemDialog.openEditDialog(item as Item, editItemDialogOptions);
+                        e.stopPropagation()
+                        itemDialog.openEditDialog(item as Item, editItemDialogOptions)
                       }}
                       title={t('messages.clickToEdit')}
                     >
@@ -301,7 +301,7 @@ export function PlannerMonthView({
                               📅{' '}
                               {isMultiDay
                                 ? `${formatDateDDMMYYYY(startDate.toISOString().split('T')[0])} - ${formatDateDDMMYYYY(
-                                    endDate.toISOString().split('T')[0]
+                                    endDate.toISOString().split('T')[0],
                                   )}`
                                 : formatDateDDMMYYYY(startDate.toISOString().split('T')[0])}
                             </div>
@@ -318,7 +318,7 @@ export function PlannerMonthView({
                                     setEventNotesProgress(prev => ({
                                       ...prev,
                                       [item.id]: progress,
-                                    }));
+                                    }))
                                   }}
                                 />
                               </div>
@@ -331,11 +331,11 @@ export function PlannerMonthView({
                         ></div>
                       </div>
                     </div>
-                  );
+                  )
                 })}
             </div>
           </div>
         )}
     </div>
-  );
+  )
 }

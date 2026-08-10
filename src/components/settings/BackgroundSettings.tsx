@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useTheme } from '@/hooks/useStore';
-import { ChangeEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useTheme } from '@/hooks/useStore'
+import { ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function BackgroundSettings() {
-  const { t } = useTranslation('settings');
-  const { theme, setBgImage } = useTheme();
+  const { t } = useTranslation('settings')
+  const { theme, setBgImage } = useTheme()
 
   return (
     <div className="space-y-3">
@@ -16,16 +16,16 @@ export default function BackgroundSettings() {
           accept="image/*"
           className="rounded-xl"
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            const r = new FileReader();
+            const f = e.target.files?.[0]
+            if (!f) return
+            const r = new FileReader()
             r.onload = () => {
-              const result = r.result;
+              const result = r.result
               if (typeof result === 'string') {
-                setBgImage(result);
+                setBgImage(result)
               }
-            };
-            r.readAsDataURL(f);
+            }
+            r.readAsDataURL(f)
           }}
         />
         <Button variant="outline" className="rounded-xl" onClick={() => setBgImage('')}>
@@ -36,5 +36,5 @@ export default function BackgroundSettings() {
         <img src={theme.bgImage} alt={t('background.preview')} className="rounded-xl max-h-40 w-full object-cover" />
       )}
     </div>
-  );
+  )
 }

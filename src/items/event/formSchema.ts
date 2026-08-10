@@ -1,13 +1,13 @@
-import { t } from '@/i18n/config';
+import { t } from '@/i18n/config'
 import {
   getBaseFormFromModel,
   getBaseModelFromForm,
   getExistingItemModel,
   itemBaseFormSchema,
-} from '@/items/base/formSchema';
-import { Item } from '@/items/models';
-import { z } from 'zod';
-import { ItemEvent, ItemEventSchema } from './modelSchema';
+} from '@/items/base/formSchema'
+import { Item } from '@/items/models'
+import { z } from 'zod'
+import { ItemEvent, ItemEventSchema } from './modelSchema'
 
 export const itemEventFormSchema = itemBaseFormSchema.extend({
   startsAt: z.string().min(1, { message: t('items:event.validation.startsAtRequired') }), // Form uses date string
@@ -28,9 +28,9 @@ export const itemEventFormSchema = itemBaseFormSchema.extend({
     .min(1, { message: t('items:event.validation.countMin') })
     .optional(),
   recurrenceUntil: z.string().optional(),
-});
+})
 
-export type ItemEventForm = z.infer<typeof itemEventFormSchema>;
+export type ItemEventForm = z.infer<typeof itemEventFormSchema>
 
 export const DEFAULT_ITEM_EVENT_FORM: ItemEventForm = {
   title: '',
@@ -51,18 +51,18 @@ export const DEFAULT_ITEM_EVENT_FORM: ItemEventForm = {
   recurrenceByWeekday: [],
   recurrenceCount: undefined,
   recurrenceUntil: undefined,
-};
+}
 
-export type ItemFormFieldFlags = Partial<Record<keyof ItemEventForm, boolean>>;
+export type ItemFormFieldFlags = Partial<Record<keyof ItemEventForm, boolean>>
 export const DEFAULT_ITEM_EVENT_HIDDEN: ItemFormFieldFlags = {
   hasRecurrence: true,
-};
-export const DEFAULT_ITEM_EVENT_DISABLED: ItemFormFieldFlags = {};
+}
+export const DEFAULT_ITEM_EVENT_DISABLED: ItemFormFieldFlags = {}
 
 export const eventModelToFormConverter = (item: Item): ItemEventForm => {
-  if (item.type !== 'event') throw new Error('Invalid item type');
-  const startsAtDate = item.startsAt; // Now it's already a Date object
-  const endsAtDate = item.endsAt; // Now it's already a Date object
+  if (item.type !== 'event') throw new Error('Invalid item type')
+  const startsAtDate = item.startsAt // Now it's already a Date object
+  const endsAtDate = item.endsAt // Now it's already a Date object
   return {
     ...getBaseFormFromModel(item),
     startsAt: startsAtDate.toISOString().split('T')[0],
@@ -77,16 +77,16 @@ export const eventModelToFormConverter = (item: Item): ItemEventForm => {
     recurrenceByWeekday: item.recurrence?.byWeekday || [],
     recurrenceCount: item.recurrence?.count,
     recurrenceUntil: item.recurrence?.until ? item.recurrence.until.toISOString().split('T')[0] : undefined,
-  };
-};
+  }
+}
 
 export const eventFormToModelConverter = (form: ItemEventForm, existingItem?: Item): ItemEvent => {
   // Combine date and time
-  const startsAt = new Date(`${form.startsAt}T${form.startsAtTime}`);
+  const startsAt = new Date(`${form.startsAt}T${form.startsAtTime}`)
   const endsAt =
     form.endsAt && form.endsAtTime
       ? new Date(`${form.endsAt}T${form.endsAtTime}`)
-      : new Date(startsAt.getTime() + 60 * 60 * 1000); // Default to 1 hour after start if not provided
+      : new Date(startsAt.getTime() + 60 * 60 * 1000) // Default to 1 hour after start if not provided
 
   // Build recurrence object if hasRecurrence is true
   const recurrence = form.hasRecurrence
@@ -100,7 +100,7 @@ export const eventFormToModelConverter = (form: ItemEventForm, existingItem?: It
         ...(form.recurrenceCount && { count: form.recurrenceCount }),
         ...(form.recurrenceUntil && { until: new Date(form.recurrenceUntil) }),
       }
-    : undefined;
+    : undefined
 
   return {
     ...getBaseModelFromForm(form),
@@ -111,5 +111,5 @@ export const eventFormToModelConverter = (form: ItemEventForm, existingItem?: It
     location: form.location || undefined,
     recurrence,
     ...getExistingItemModel(existingItem),
-  };
-};
+  }
+}

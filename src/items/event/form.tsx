@@ -1,32 +1,32 @@
-import { Input } from '@/components/ui/input';
-import { SimpleSelect } from '@/components/ui/simple-select';
-import { Switch } from '@/components/ui/switch';
-import { useLocalization } from '@/hooks/useLocalization';
-import { t } from '@/i18n/config';
-import { ItemFormFieldFlags } from '@/items/useItemDialog';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { GenericFieldWrapper, SwitchFieldWrapper } from '../base/GenericFieldWrapper';
-import { ItemEventForm, itemEventFormSchema } from './formSchema';
+import { Input } from '@/components/ui/input'
+import { SimpleSelect } from '@/components/ui/simple-select'
+import { Switch } from '@/components/ui/switch'
+import { useLocalization } from '@/hooks/useLocalization'
+import { t } from '@/i18n/config'
+import { ItemFormFieldFlags } from '@/items/useItemDialog'
+import { useFormContext, useWatch } from 'react-hook-form'
+import { GenericFieldWrapper, SwitchFieldWrapper } from '../base/GenericFieldWrapper'
+import { ItemEventForm, itemEventFormSchema } from './formSchema'
 
 export interface EventFormProps {
-  hidden: ItemFormFieldFlags;
-  disabled: ItemFormFieldFlags;
+  hidden: ItemFormFieldFlags
+  disabled: ItemFormFieldFlags
 }
 
 export function EventForm({ hidden, disabled }: EventFormProps) {
-  const { control } = useFormContext<ItemEventForm>();
+  const { control } = useFormContext<ItemEventForm>()
 
-  const isAllDay = useWatch({ control, name: 'isAllDay' });
-  const hasRecurrence = useWatch({ control, name: 'hasRecurrence' });
-  const recurrenceFrequency = useWatch({ control, name: 'recurrenceFrequency' });
+  const isAllDay = useWatch({ control, name: 'isAllDay' })
+  const hasRecurrence = useWatch({ control, name: 'hasRecurrence' })
+  const recurrenceFrequency = useWatch({ control, name: 'recurrenceFrequency' })
 
-  const { getShortDayNames } = useLocalization();
+  const { getShortDayNames } = useLocalization()
 
-  const frequencies = ['daily', 'weekly', 'monthly', 'yearly'];
+  const frequencies = ['daily', 'weekly', 'monthly', 'yearly']
   const frequencyOptions = frequencies.map(freq => ({
     value: freq,
     label: t(`items:event.frequency.${freq}`),
-  }));
+  }))
 
   return (
     <div className="space-y-4">
@@ -155,13 +155,13 @@ export function EventForm({ hidden, disabled }: EventFormProps) {
               hidden={hidden.recurrenceByWeekday}
             >
               {(field, fieldValue) => {
-                const selectedDays = fieldValue || [];
-                const shortDayNames = getShortDayNames();
+                const selectedDays = fieldValue || []
+                const shortDayNames = getShortDayNames()
 
                 return (
                   <div className="flex gap-2 mt-1">
                     {shortDayNames.map((dayName, index) => {
-                      const isSelected = selectedDays.includes(index);
+                      const isSelected = selectedDays.includes(index)
                       return (
                         <button
                           key={index}
@@ -175,16 +175,16 @@ export function EventForm({ hidden, disabled }: EventFormProps) {
                           onClick={() => {
                             const newSelectedDays = isSelected
                               ? selectedDays.filter((day: number) => day !== index)
-                              : [...selectedDays, index];
-                            field.onChange(newSelectedDays);
+                              : [...selectedDays, index]
+                            field.onChange(newSelectedDays)
                           }}
                         >
                           {dayName}
                         </button>
-                      );
+                      )
                     })}
                   </div>
-                );
+                )
               }}
             </GenericFieldWrapper>
           )}
@@ -221,5 +221,5 @@ export function EventForm({ hidden, disabled }: EventFormProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -3,75 +3,75 @@
  * Displays current storage adapter and usage information
  */
 
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useLocalization } from '../hooks/useLocalization';
-import { hybridStorage } from '../lib/hybrid-storage';
-import { Card } from './ui/card';
+import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useLocalization } from '../hooks/useLocalization'
+import { hybridStorage } from '../lib/hybrid-storage'
+import { Card } from './ui/card'
 
 interface StorageInfo {
-  used: number;
-  available: number;
-  quota: number;
-  adapter: string;
+  used: number
+  available: number
+  quota: number
+  adapter: string
 }
 
 export const StorageInfoCard: React.FC = () => {
-  const { t } = useTranslation('settings');
-  const { formatNumber } = useLocalization();
-  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { t } = useTranslation('settings')
+  const { formatNumber } = useLocalization()
+  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === Infinity) return '∞';
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    if (bytes === Infinity) return '∞'
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
     const formattedNumber = formatNumber(bytes / Math.pow(k, i), {
       maximumFractionDigits: 2,
       minimumFractionDigits: 0,
-    });
-    return `${formattedNumber} ${sizes[i]}`;
-  };
+    })
+    return `${formattedNumber} ${sizes[i]}`
+  }
 
   const getUsagePercentage = (used: number, quota: number): number => {
-    if (quota === 0) return 0;
-    return Math.round((used / quota) * 100);
-  };
+    if (quota === 0) return 0
+    return Math.round((used / quota) * 100)
+  }
 
   const getStatusColor = (percentage: number): string => {
-    if (percentage < 50) return 'text-green-600';
-    if (percentage < 80) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+    if (percentage < 50) return 'text-green-600'
+    if (percentage < 80) return 'text-yellow-600'
+    return 'text-red-600'
+  }
 
   const getStatusText = (adapter: string, percentage: number): string => {
-    const statusKey = percentage < 50 ? 'good' : percentage < 80 ? 'warning' : 'critical';
-    const status = t(`storage.status.${statusKey}`);
-    return `${adapter} - ${status}`;
-  };
+    const statusKey = percentage < 50 ? 'good' : percentage < 80 ? 'warning' : 'critical'
+    const status = t(`storage.status.${statusKey}`)
+    return `${adapter} - ${status}`
+  }
 
   useEffect(() => {
     const fetchStorageInfo = async () => {
       try {
-        setIsLoading(true);
-        const info = await hybridStorage.getStorageInfo();
-        setStorageInfo(info);
+        setIsLoading(true)
+        const info = await hybridStorage.getStorageInfo()
+        setStorageInfo(info)
       } catch (error) {
-        console.error('Failed to get storage info:', error);
+        console.error('Failed to get storage info:', error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchStorageInfo();
+    fetchStorageInfo().catch(console.error)
 
     // Refresh storage info every 30 seconds
-    const interval = setInterval(fetchStorageInfo, 30000);
+    const interval = setInterval(fetchStorageInfo, 30000)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
   if (isLoading) {
     return (
@@ -79,7 +79,7 @@ export const StorageInfoCard: React.FC = () => {
         <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
         <div className="h-3 bg-gray-200 rounded w-1/2"></div>
       </Card>
-    );
+    )
   }
 
   if (!storageInfo) {
@@ -87,14 +87,14 @@ export const StorageInfoCard: React.FC = () => {
       <Card className="p-4">
         <p className="text-sm text-gray-500">{t('storage.unavailable')}</p>
       </Card>
-    );
+    )
   }
 
-  const usagePercentage = getUsagePercentage(storageInfo.used, storageInfo.quota);
-  const statusColor = getStatusColor(usagePercentage);
-  const statusText = getStatusText(storageInfo.adapter, usagePercentage);
+  const usagePercentage = getUsagePercentage(storageInfo.used, storageInfo.quota)
+  const statusColor = getStatusColor(usagePercentage)
+  const statusText = getStatusText(storageInfo.adapter, usagePercentage)
 
-  if (storageInfo.adapter === 'Browser') return null;
+  if (storageInfo.adapter === 'Browser') return null
 
   return (
     <Card className="p-4 space-y-3">
@@ -144,7 +144,7 @@ export const StorageInfoCard: React.FC = () => {
         )}
       </div>
     </Card>
-  );
-};
+  )
+}
 
-export default StorageInfoCard;
+export default StorageInfoCard

@@ -1,33 +1,33 @@
-import { EventTooltip, EventTypeIndicator } from '@/components/PlannerSharedComponents';
-import { type ProgressData } from '@/components/TasksProgressBar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useLocalization } from '@/hooks/useLocalization';
-import { useCourses, useItems, useWeeklyGoals } from '@/hooks/useStore';
-import { useItemDialog } from '@/items/ItemDialogProvider';
-import { ItemDialogOptions } from '@/items/useItemDialogState';
-import { Plus, Target, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useConfetti } from '../hooks/useConfetti';
-import Confetti from './ui/confetti';
+import { EventTooltip, EventTypeIndicator } from '@/components/PlannerSharedComponents'
+import { type ProgressData } from '@/components/TasksProgressBar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useLocalization } from '@/hooks/useLocalization'
+import { useCourses, useItems, useWeeklyGoals } from '@/hooks/useStore'
+import { useItemDialog } from '@/items/ItemDialogProvider'
+import { ItemDialogOptions } from '@/items/useItemDialogState'
+import { Plus, Target, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useConfetti } from '../hooks/useConfetti'
+import Confetti from './ui/confetti'
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
-type DayName = (typeof DAYS)[number];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+type DayName = (typeof DAYS)[number]
 
 const editItemDialogOptions: ItemDialogOptions = {
   hidden: { type: false },
   availableItemTypes: ['event', 'exam'],
-};
+}
 
 interface PlannerWeekViewProps {
-  startOfWeek: Date;
-  getAllEventsForDate: (date: Date) => any[];
-  handleDayClick: (date: Date) => void;
-  handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void;
+  startOfWeek: Date
+  getAllEventsForDate: (date: Date) => any[]
+  handleDayClick: (date: Date) => void
+  handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void
 }
 
 export function PlannerWeekView({
@@ -36,101 +36,101 @@ export function PlannerWeekView({
   handleDayClick,
   handleEventDrop,
 }: PlannerWeekViewProps) {
-  const { getCourseTitle } = useCourses();
-  const { weeklyGoals, addGoal, toggleGoal, deleteGoal, clearAllGoals } = useWeeklyGoals();
-  const { updateItem } = useItems();
-  const itemDialog = useItemDialog();
-  const { t } = useTranslation('planner');
-  const { getShortDayNames } = useLocalization();
+  const { getCourseTitle } = useCourses()
+  const { weeklyGoals, addGoal, toggleGoal, deleteGoal, clearAllGoals } = useWeeklyGoals()
+  const { updateItem } = useItems()
+  const itemDialog = useItemDialog()
+  const { t } = useTranslation('planner')
+  const { getShortDayNames } = useLocalization()
 
   // Helper function to handle content changes for different event types
   const handleEventContentChange = (event: any, newContent: string) => {
-    updateItem(event.id, { notes: newContent });
-  };
+    updateItem(event.id, { notes: newContent })
+  }
 
-  const [goalForm, setGoalForm] = useState<{ title: string }>({ title: '' });
+  const [goalForm, setGoalForm] = useState<{ title: string }>({ title: '' })
 
   // Use gradual confetti hook for goal completion
-  const allGoalsCompleted = weeklyGoals.length > 0 && weeklyGoals.every(goal => goal.completed);
+  const allGoalsCompleted = weeklyGoals.length > 0 && weeklyGoals.every(goal => goal.completed)
   const confetti = useConfetti({
     trigger: allGoalsCompleted,
-  });
+  })
 
   // Progress tracking for task-based notes in events
-  const [eventNotesProgress, setEventNotesProgress] = useState<Record<string, ProgressData>>({});
+  const [eventNotesProgress, setEventNotesProgress] = useState<Record<string, ProgressData>>({})
 
   // Calculate goal progress
-  const completedGoals = weeklyGoals.filter(goal => goal.completed).length;
-  const totalGoals = weeklyGoals.length;
-  const fillPercentage = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+  const completedGoals = weeklyGoals.filter(goal => goal.completed).length
+  const totalGoals = weeklyGoals.length
+  const fillPercentage = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0
 
   // Build gradient from completed tasks colors
   const buildGradientFromCompletedTasks = (): string => {
-    const completedTasks = weeklyGoals.filter(goal => goal.completed);
+    const completedTasks = weeklyGoals.filter(goal => goal.completed)
 
     if (completedTasks.length === 0) {
-      return 'transparent';
+      return 'transparent'
     }
 
     if (completedTasks.length === 1) {
       // Single color for first completed task - use existing color or a default
-      return completedTasks[0].color || '#7c3aed';
+      return completedTasks[0].color || '#7c3aed'
     }
 
     // Multiple colors - create gradient using existing colors or defaults
-    const colors = completedTasks.map(task => task.color || '#7c3aed');
-    const step = 100 / (colors.length - 1);
-    const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ');
+    const colors = completedTasks.map(task => task.color || '#7c3aed')
+    const step = 100 / (colors.length - 1)
+    const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ')
 
-    return `linear-gradient(180deg, ${gradientStops})`;
-  };
+    return `linear-gradient(180deg, ${gradientStops})`
+  }
 
-  const currentGradient = buildGradientFromCompletedTasks();
+  const currentGradient = buildGradientFromCompletedTasks()
 
   // Get border color from first completed task
   const getBorderColor = (): string => {
-    const firstCompletedTask = weeklyGoals.find(goal => goal.completed);
+    const firstCompletedTask = weeklyGoals.find(goal => goal.completed)
     if (firstCompletedTask && firstCompletedTask.color) {
-      return firstCompletedTask.color + '40'; // Add transparency
+      return firstCompletedTask.color + '40' // Add transparency
     }
-    return '#e5e7eb'; // Default gray border
-  };
+    return '#e5e7eb' // Default gray border
+  }
 
   function dayNumOfWeek(i: number): number {
-    const d = new Date(startOfWeek);
-    d.setDate(startOfWeek.getDate() + i);
-    return d.getDate();
+    const d = new Date(startOfWeek)
+    d.setDate(startOfWeek.getDate() + i)
+    return d.getDate()
   }
 
   // Helper: events for weekday name (Mon..Sun), filtered & sorted
   function eventsForWeekdayName(dayName: DayName): any[] {
-    const date = new Date(startOfWeek);
-    const dayIndex = DAYS.indexOf(dayName);
-    date.setDate(date.getDate() + dayIndex);
-    return getAllEventsForDate(date);
+    const date = new Date(startOfWeek)
+    const dayIndex = DAYS.indexOf(dayName)
+    date.setDate(date.getDate() + dayIndex)
+    return getAllEventsForDate(date)
   }
 
   // Weekly Goals Management
   function handleAddGoal(): void {
-    if (!goalForm.title.trim()) return;
-    addGoal(goalForm.title);
-    setGoalForm({ title: '' });
+    if (!goalForm.title.trim()) return
+    addGoal(goalForm.title)
+    setGoalForm({ title: '' })
   }
 
   function handleToggleGoal(id: string): void {
-    const result = toggleGoal(id);
+    const result = toggleGoal(id)
 
     // Check if all goals are completed - confetti will be handled by the hook
     if (result?.allCompleted) {
       // Reset all goals after a short delay to allow confetti to play
       setTimeout(() => {
-        clearAllGoals();
-      }, 3500); // Slightly longer to allow full confetti sequence
+        clearAllGoals()
+      }, 3500) // Slightly longer to allow full confetti sequence
     }
   }
 
   function handleDeleteGoal(id: string): void {
-    deleteGoal(id);
+    deleteGoal(id)
   }
 
   return (
@@ -138,28 +138,28 @@ export function PlannerWeekView({
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-7 gap-4 relative">
         {getShortDayNames().map((dayName, idx) => {
           // Calculate the date for this day
-          const dayDate = new Date(startOfWeek);
-          dayDate.setDate(startOfWeek.getDate() + idx);
-          const dayKey = DAYS[idx]; // Keep original key for logic
+          const dayDate = new Date(startOfWeek)
+          dayDate.setDate(startOfWeek.getDate() + idx)
+          const dayKey = DAYS[idx] // Keep original key for logic
 
           return (
             <Card
               key={dayKey}
               className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => handleDayClick(dayDate)}
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
+              onDragOver={e => {
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
               }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              onDrop={e => {
+                e.preventDefault()
+                e.stopPropagation()
                 try {
-                  const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                  const data = JSON.parse(e.dataTransfer.getData('application/json'))
                   if (data && data.itemId) {
-                    handleEventDrop(data.itemId, data.itemType, dayDate);
+                    handleEventDrop(data.itemId, data.itemType, dayDate)
                   }
-                } catch (err) {
+                } catch {
                   // Ignore invalid drop data
                 }
               }}
@@ -240,17 +240,17 @@ export function PlannerWeekView({
                           {/* Right: Event content */}
                           <div
                             draggable
-                            onDragStart={(dragEvent) => {
-                              dragEvent.stopPropagation();
+                            onDragStart={dragEvent => {
+                              dragEvent.stopPropagation()
                               dragEvent.dataTransfer.setData(
                                 'application/json',
-                                JSON.stringify({ itemId: e.id, itemType: e.type })
-                              );
+                                JSON.stringify({ itemId: e.id, itemType: e.type }),
+                              )
                             }}
                             className="flex-1 group relative bg-white/70 dark:bg-white/5 p-2.5 rounded-xl cursor-pointer hover:bg-white/90 dark:hover:bg-white/10 transition-colors"
                             onClick={clickEvent => {
-                              clickEvent.stopPropagation();
-                              itemDialog.openEditDialog(e, editItemDialogOptions);
+                              clickEvent.stopPropagation()
+                              itemDialog.openEditDialog(e, editItemDialogOptions)
                             }}
                           >
                             <div className="flex items-center justify-between gap-2">
@@ -277,7 +277,7 @@ export function PlannerWeekView({
                                 setEventNotesProgress(prev => ({
                                   ...prev,
                                   [e.id]: progress,
-                                }));
+                                }))
                               }}
                             />
                           </div>
@@ -293,17 +293,17 @@ export function PlannerWeekView({
                     <div
                       key={e.id}
                       draggable
-                      onDragStart={(dragEvent) => {
-                        dragEvent.stopPropagation();
+                      onDragStart={dragEvent => {
+                        dragEvent.stopPropagation()
                         dragEvent.dataTransfer.setData(
                           'application/json',
-                          JSON.stringify({ itemId: e.id, itemType: e.type })
-                        );
+                          JSON.stringify({ itemId: e.id, itemType: e.type }),
+                        )
                       }}
                       className="group relative flex flex-row items-start justify-between gap-2 bg-white/70 dark:bg-white/5 p-3 rounded-xl mb-2 cursor-pointer hover:bg-white/90 dark:hover:bg-white/10 transition-colors"
                       onClick={clickEvent => {
-                        clickEvent.stopPropagation();
-                        itemDialog.openEditDialog(e, editItemDialogOptions);
+                        clickEvent.stopPropagation()
+                        itemDialog.openEditDialog(e, editItemDialogOptions)
                       }}
                     >
                       <div className="flex-1 min-w-0">
@@ -330,7 +330,7 @@ export function PlannerWeekView({
                           setEventNotesProgress(prev => ({
                             ...prev,
                             [e.id]: progress,
-                          }));
+                          }))
                         }}
                       />
                     </div>
@@ -341,7 +341,7 @@ export function PlannerWeekView({
                 </div>
               </CardContent>
             </Card>
-          );
+          )
         })}
       </div>
 
@@ -488,5 +488,5 @@ export function PlannerWeekView({
       {/* Confetti Animation */}
       <Confetti confetti={confetti} />
     </div>
-  );
+  )
 }

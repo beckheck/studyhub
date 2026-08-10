@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { Item } from '@/items/models';
-import { useItemDialog } from '@/items/ItemDialogProvider';
-import { ITEM_TIMETABLE_ACTIVITY_TYPES, TIME_BLOCKS } from './timetable/modelSchema';
+import { Button } from '@/components/ui/button'
+import { Item } from '@/items/models'
+import { useItemDialog } from '@/items/ItemDialogProvider'
+import { ITEM_TIMETABLE_ACTIVITY_TYPES, TIME_BLOCKS } from './timetable/modelSchema'
 
 export function ItemDialogExample() {
-  const itemDialog = useItemDialog();
+  const itemDialog = useItemDialog()
 
   // Sample data for edit examples
   const sampleTask: Item = {
@@ -21,7 +21,7 @@ export function ItemDialogExample() {
     dueAt: new Date(Date.now() + 172800000), // 2 days from now
     priority: 'high',
     isCompleted: false,
-  };
+  }
 
   const sampleExam: Item = {
     id: 'sample-exam-1',
@@ -37,7 +37,7 @@ export function ItemDialogExample() {
     startsAt: new Date(Date.now() + 604800000), // 1 week from now
     weight: 40,
     isCompleted: false,
-  };
+  }
 
   const sampleEvent: Item = {
     id: 'sample-event-1',
@@ -60,7 +60,7 @@ export function ItemDialogExample() {
       byWeekday: [1], // Monday
       count: 10,
     },
-  };
+  }
 
   const sampleTimetable: Item = {
     id: 'sample-timetable-1',
@@ -78,7 +78,7 @@ export function ItemDialogExample() {
     classroom: 'Engineering Building 205',
     teacher: 'Dr. Johnson',
     activityType: ITEM_TIMETABLE_ACTIVITY_TYPES[0],
-  };
+  }
 
   // Add dialog handlers
   const handleAddTaskDialog = () => {
@@ -86,16 +86,16 @@ export function ItemDialogExample() {
       title: 'Complete assignment',
       courseId: '',
       priority: 'medium',
-    });
-  };
+    })
+  }
 
   const handleAddExamDialog = () => {
     itemDialog.openAddDialog('exam', {
       title: 'Midterm Exam',
       courseId: '',
       weight: 30,
-    });
-  };
+    })
+  }
 
   const handleAddEventDialog = () => {
     itemDialog.openAddDialog('event', {
@@ -103,8 +103,8 @@ export function ItemDialogExample() {
       courseId: '',
       location: 'Library Room 101',
       isAllDay: false,
-    });
-  };
+    })
+  }
 
   const handleAddTimetableDialog = () => {
     itemDialog.openAddDialog('timetable', {
@@ -115,25 +115,25 @@ export function ItemDialogExample() {
       classroom: 'Room 205',
       teacher: 'Prof. Smith',
       activityType: ITEM_TIMETABLE_ACTIVITY_TYPES[0],
-    });
-  };
+    })
+  }
 
   // Edit dialog handlers
   const handleEditTaskDialog = () => {
-    itemDialog.openEditDialog(sampleTask);
-  };
+    itemDialog.openEditDialog(sampleTask)
+  }
 
   const handleEditExamDialog = () => {
-    itemDialog.openEditDialog(sampleExam);
-  };
+    itemDialog.openEditDialog(sampleExam)
+  }
 
   const handleEditEventDialog = () => {
-    itemDialog.openEditDialog(sampleEvent);
-  };
+    itemDialog.openEditDialog(sampleEvent)
+  }
 
   const handleEditTimetableDialog = () => {
-    itemDialog.openEditDialog(sampleTimetable);
-  };
+    itemDialog.openEditDialog(sampleTimetable)
+  }
 
   return (
     <div className="space-y-6 p-4">
@@ -226,5 +226,5 @@ export function ItemDialogExample() {
         </div>
       </div>
     </div>
-  );
+  )
 }

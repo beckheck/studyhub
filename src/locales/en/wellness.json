@@ -40,7 +40,7 @@
     "subtitle": "4 in · 4 hold · 4 out · 4 hold",
     "instructions": {
       "inhale": "Inhale",
-      "hold": "Hold", 
+      "hold": "Hold",
       "exhale": "Exhale",
       "breatheIn": "Breathe in for {{seconds}} seconds",
       "holdBreath": "Hold for {{seconds}} seconds",

@@ -1,16 +1,16 @@
-import { Input } from '@/components/ui/input';
-import { SimpleSelect } from '@/components/ui/simple-select';
-import { Switch } from '@/components/ui/switch';
-import { t } from '@/i18n/config';
-import { ItemFormFieldFlags } from '@/items/useItemDialog';
-import { GenericFieldWrapper, SwitchFieldWrapper } from '../base/GenericFieldWrapper';
-import { itemTaskFormSchema } from './formSchema';
-import { getItemTaskPriorityEmoji } from './methods';
-import { ITEM_TASK_PRIORITIES } from './modelSchema';
+import { Input } from '@/components/ui/input'
+import { SimpleSelect } from '@/components/ui/simple-select'
+import { Switch } from '@/components/ui/switch'
+import { t } from '@/i18n/config'
+import { ItemFormFieldFlags } from '@/items/useItemDialog'
+import { GenericFieldWrapper, SwitchFieldWrapper } from '../base/GenericFieldWrapper'
+import { itemTaskFormSchema } from './formSchema'
+import { getItemTaskPriorityEmoji } from './methods'
+import { ITEM_TASK_PRIORITIES } from './modelSchema'
 
 export interface TaskFormProps {
-  hidden: ItemFormFieldFlags;
-  disabled: ItemFormFieldFlags;
+  hidden: ItemFormFieldFlags
+  disabled: ItemFormFieldFlags
 }
 
 export function TaskForm({ hidden, disabled }: TaskFormProps) {
@@ -22,7 +22,7 @@ export function TaskForm({ hidden, disabled }: TaskFormProps) {
         {t(`items:task.priority.${value}`)}
       </>
     ),
-  }));
+  }))
 
   return (
     <div className="space-y-4">
@@ -64,5 +64,5 @@ export function TaskForm({ hidden, disabled }: TaskFormProps) {
         )}
       </GenericFieldWrapper>
     </div>
-  );
+  )
 }

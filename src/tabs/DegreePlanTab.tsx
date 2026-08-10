@@ -1,27 +1,27 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useDegreePlan } from '@/hooks/useStore';
-import { uid } from '@/lib/utils';
-import { DegreeCourse } from '@/types';
-import { ArrowLeft, ArrowRight, Check, Edit, GraduationCap, Plus, Trash2, X } from 'lucide-react';
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useDegreePlan } from '@/hooks/useStore'
+import { uid } from '@/lib/utils'
+import { DegreeCourse } from '@/types'
+import { ArrowLeft, ArrowRight, Check, Edit, GraduationCap, Plus, Trash2, X } from 'lucide-react'
+import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface SemesterForm {
-  acronym: string;
-  name: string;
-  credits: string;
-  prerequisites: string;
-  corequisites: string;
-  finalGrade: string;
+  acronym: string
+  name: string
+  credits: string
+  prerequisites: string
+  corequisites: string
+  finalGrade: string
 }
 
 export default function DegreePlanTab() {
-  const { t } = useTranslation('degreePlan');
-  const { t: tCommon } = useTranslation('common');
+  const { t } = useTranslation('degreePlan')
+  const { t: tCommon } = useTranslation('common')
 
   // State management
   const {
@@ -32,20 +32,20 @@ export default function DegreePlanTab() {
     addCompletedCourse,
     removeCompletedCourse,
     removeSemester,
-  } = useDegreePlan();
-  const [degreePlanDialog, setDegreePlanDialog] = useState<boolean>(false);
-  const [degreePlanStep, setDegreePlanStep] = useState<'setup' | 'courses' | 'view'>('setup');
-  const [currentSemester, setCurrentSemester] = useState<number>(1);
-  const [editingCourse, setEditingCourse] = useState<DegreeCourse | null>(null);
-  const [resetConfirmDialog, setResetConfirmDialog] = useState<boolean>(false);
-  const [clearConfirmDialog, setClearConfirmDialog] = useState<boolean>(false);
-  const [deleteSemesterDialog, setDeleteSemesterDialog] = useState<boolean>(false);
-  const [semesterToDelete, setSemesterToDelete] = useState<number | null>(null);
-  const [draggedCourse, setDraggedCourse] = useState<DegreeCourse | null>(null);
-  const [draggedFromSemester, setDraggedFromSemester] = useState<number | null>(null);
-  const [totalSemestersInput, setTotalSemestersInput] = useState<number>(0);
-  const [degreePlanNameInput, setDegreePlanNameInput] = useState<string>('');
-  const [nameHasChanged, setNameHasChanged] = useState<boolean>(false);
+  } = useDegreePlan()
+  const [degreePlanDialog, setDegreePlanDialog] = useState<boolean>(false)
+  const [degreePlanStep, setDegreePlanStep] = useState<'setup' | 'courses' | 'view'>('setup')
+  const [currentSemester, setCurrentSemester] = useState<number>(1)
+  const [editingCourse, setEditingCourse] = useState<DegreeCourse | null>(null)
+  const [resetConfirmDialog, setResetConfirmDialog] = useState<boolean>(false)
+  const [clearConfirmDialog, setClearConfirmDialog] = useState<boolean>(false)
+  const [deleteSemesterDialog, setDeleteSemesterDialog] = useState<boolean>(false)
+  const [semesterToDelete, setSemesterToDelete] = useState<number | null>(null)
+  const [draggedCourse, setDraggedCourse] = useState<DegreeCourse | null>(null)
+  const [draggedFromSemester, setDraggedFromSemester] = useState<number | null>(null)
+  const [totalSemestersInput, setTotalSemestersInput] = useState<number>(0)
+  const [degreePlanNameInput, setDegreePlanNameInput] = useState<string>('')
+  const [nameHasChanged, setNameHasChanged] = useState<boolean>(false)
   const [semesterForm, setSemesterForm] = useState<SemesterForm>({
     acronym: '',
     name: '',
@@ -53,7 +53,7 @@ export default function DegreePlanTab() {
     prerequisites: '',
     corequisites: '',
     finalGrade: '',
-  });
+  })
 
   // Degree Plan Management Functions
   function setupDegreePlan(totalSemesters: number): void {
@@ -61,12 +61,12 @@ export default function DegreePlanTab() {
       id: i + 1,
       number: i + 1,
       courses: [],
-    }));
+    }))
 
-    setSemesters(semesters);
+    setSemesters(semesters)
 
-    setDegreePlanStep('courses');
-    setCurrentSemester(1);
+    setDegreePlanStep('courses')
+    setCurrentSemester(1)
   }
 
   function addCourseToSemester(semesterNumber: number, courseData: Omit<DegreeCourse, 'id' | 'completed'>): void {
@@ -83,40 +83,40 @@ export default function DegreePlanTab() {
               },
             ],
           }
-        : sem
-    );
-    setSemesters(newSemesters);
+        : sem,
+    )
+    setSemesters(newSemesters)
   }
 
   function toggleCourseCompletion(courseAcronym: string): void {
-    const isCompleted = degreePlan.completedCourses.includes(courseAcronym);
+    const isCompleted = degreePlan.completedCourses.includes(courseAcronym)
     if (isCompleted) {
-      removeCompletedCourse(courseAcronym);
+      removeCompletedCourse(courseAcronym)
     } else {
-      addCompletedCourse(courseAcronym);
+      addCompletedCourse(courseAcronym)
     }
   }
 
-  function checkPrerequisites(course: DegreeCourse, semester: any): boolean {
-    if (!course.prerequisites) return true;
+  function checkPrerequisites(course: DegreeCourse, _semester: any): boolean {
+    if (!course.prerequisites) return true
 
-    const prereqAcronyms = course.prerequisites.split(',').map(p => p.trim());
-    const completedCourses = degreePlan.completedCourses;
+    const prereqAcronyms = course.prerequisites.split(',').map(p => p.trim())
+    const completedCourses = degreePlan.completedCourses
 
     // Check if ALL prerequisites are completed
-    return prereqAcronyms.every(prereq => completedCourses.includes(prereq));
+    return prereqAcronyms.every(prereq => completedCourses.includes(prereq))
   }
 
   function getCourseColor(course: DegreeCourse, semester: any): string {
-    const isCompleted = degreePlan.completedCourses.includes(course.acronym);
-    const prerequisitesMet = checkPrerequisites(course, semester);
+    const isCompleted = degreePlan.completedCourses.includes(course.acronym)
+    const prerequisitesMet = checkPrerequisites(course, semester)
 
     if (isCompleted) {
-      return '#10ac84'; // Green for completed
+      return '#10ac84' // Green for completed
     } else if (prerequisitesMet) {
-      return '#3b82f6'; // Blue for available
+      return '#3b82f6' // Blue for available
     } else {
-      return 'transparent'; // No color for unavailable
+      return 'transparent' // No color for unavailable
     }
   }
 
@@ -125,12 +125,12 @@ export default function DegreePlanTab() {
       name: 'Degree Plan',
       semesters: [],
       completedCourses: [],
-    });
-    setDegreePlanStep('setup');
-    setCurrentSemester(1);
-    setEditingCourse(null);
-    setDegreePlanNameInput('');
-    setNameHasChanged(false);
+    })
+    setDegreePlanStep('setup')
+    setCurrentSemester(1)
+    setEditingCourse(null)
+    setDegreePlanNameInput('')
+    setNameHasChanged(false)
     setSemesterForm({
       acronym: '',
       name: '',
@@ -138,38 +138,38 @@ export default function DegreePlanTab() {
       prerequisites: '',
       corequisites: '',
       finalGrade: '',
-    });
-    setDegreePlanDialog(false);
+    })
+    setDegreePlanDialog(false)
   }
 
   // Drag and Drop Functions for Course Management
   function handleDragStart(course: DegreeCourse, sourceSemester: number): void {
-    setDraggedCourse(course);
-    setDraggedFromSemester(sourceSemester);
+    setDraggedCourse(course)
+    setDraggedFromSemester(sourceSemester)
   }
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>): void {
-    e.preventDefault();
+    e.preventDefault()
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>, targetSemester: number): void {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!draggedCourse || !draggedFromSemester) return;
+    if (!draggedCourse || !draggedFromSemester) return
 
     // Don't allow dropping on the same semester
     if (draggedFromSemester === targetSemester) {
-      setDraggedCourse(null);
-      setDraggedFromSemester(null);
-      return;
+      setDraggedCourse(null)
+      setDraggedFromSemester(null)
+      return
     }
 
     // Check if target semester has space (max 8 courses)
-    const targetSemesterData = degreePlan.semesters.find(s => s.number === targetSemester);
+    const targetSemesterData = degreePlan.semesters.find(s => s.number === targetSemester)
     if (targetSemesterData && targetSemesterData.courses.length >= 8) {
-      setDraggedCourse(null);
-      setDraggedFromSemester(null);
-      return;
+      setDraggedCourse(null)
+      setDraggedFromSemester(null)
+      return
     }
 
     // Move course from source to target semester
@@ -179,22 +179,22 @@ export default function DegreePlanTab() {
         return {
           ...semester,
           courses: semester.courses.filter(c => c.id !== draggedCourse.id),
-        };
+        }
       } else if (semester.number === targetSemester) {
         // Add course to target semester
         return {
           ...semester,
           courses: [...semester.courses, draggedCourse],
-        };
+        }
       }
-      return semester;
-    });
+      return semester
+    })
 
-    setSemesters(newSemesters);
+    setSemesters(newSemesters)
 
     // Clear drag state
-    setDraggedCourse(null);
-    setDraggedFromSemester(null);
+    setDraggedCourse(null)
+    setDraggedFromSemester(null)
   }
 
   // Credit calculation functions
@@ -203,51 +203,51 @@ export default function DegreePlanTab() {
       return (
         total +
         semester.courses.reduce((semesterTotal, course) => {
-          return semesterTotal + parseInt(course.credits || '0');
+          return semesterTotal + parseInt(course.credits || '0')
         }, 0)
-      );
-    }, 0);
-  };
+      )
+    }, 0)
+  }
 
   const getCompletedCredits = (): number => {
     return degreePlan.semesters.reduce((total, semester) => {
       return (
         total +
         semester.courses.reduce((semesterTotal, course) => {
-          const isCompleted = degreePlan.completedCourses.includes(course.acronym);
-          return semesterTotal + (isCompleted ? parseInt(course.credits || '0') : 0);
+          const isCompleted = degreePlan.completedCourses.includes(course.acronym)
+          return semesterTotal + (isCompleted ? parseInt(course.credits || '0') : 0)
         }, 0)
-      );
-    }, 0);
-  };
+      )
+    }, 0)
+  }
 
   // Add new semester function
   const addNewSemester = (): void => {
-    const newSemesterNumber = degreePlan.semesters.length + 1;
+    const newSemesterNumber = degreePlan.semesters.length + 1
     const newSemester = {
       id: uid(),
       number: newSemesterNumber,
       courses: [],
-    };
+    }
 
-    setSemesters([...degreePlan.semesters, newSemester]);
-  };
+    setSemesters([...degreePlan.semesters, newSemester])
+  }
 
   // Handle degree plan name changes
   const handleNameChange = (value: string): void => {
-    setDegreePlanNameInput(value);
-    setNameHasChanged(value !== degreePlan.name);
-  };
+    setDegreePlanNameInput(value)
+    setNameHasChanged(value !== degreePlan.name)
+  }
 
   const handleNameSave = (): void => {
-    setDegreePlanName(degreePlanNameInput.trim() || 'Degree Plan');
-    setNameHasChanged(false);
-  };
+    setDegreePlanName(degreePlanNameInput.trim() || 'Degree Plan')
+    setNameHasChanged(false)
+  }
 
   const handleNameReset = (): void => {
-    setDegreePlanNameInput(degreePlan.name || 'Degree Plan');
-    setNameHasChanged(false);
-  };
+    setDegreePlanNameInput(degreePlan.name || 'Degree Plan')
+    setNameHasChanged(false)
+  }
 
   return (
     <div className="space-y-6">
@@ -282,16 +282,16 @@ export default function DegreePlanTab() {
                 className="rounded-xl"
                 onClick={() => {
                   // Initialize the name input when opening the dialog
-                  setDegreePlanNameInput(degreePlan.name || 'Degree Plan');
-                  setNameHasChanged(false);
-                  
+                  setDegreePlanNameInput(degreePlan.name || 'Degree Plan')
+                  setNameHasChanged(false)
+
                   // If degree plan already exists, go to view step, otherwise start setup
                   if (degreePlan.semesters.length > 0) {
-                    setDegreePlanStep('view');
+                    setDegreePlanStep('view')
                   } else {
-                    setDegreePlanStep('setup');
+                    setDegreePlanStep('setup')
                   }
-                  setDegreePlanDialog(true);
+                  setDegreePlanDialog(true)
                 }}
                 title={t('actions.customize')}
               >
@@ -327,9 +327,9 @@ export default function DegreePlanTab() {
                       onDrop={e => handleDrop(e, semester.number)}
                     >
                       {semester.courses.map(course => {
-                        const isCompleted = degreePlan.completedCourses.includes(course.acronym);
-                        const prerequisitesMet = checkPrerequisites(course, semester);
-                        const bgColor = getCourseColor(course, semester);
+                        const isCompleted = degreePlan.completedCourses.includes(course.acronym)
+                        const prerequisitesMet = checkPrerequisites(course, semester)
+                        const bgColor = getCourseColor(course, semester)
 
                         return (
                           <div
@@ -342,8 +342,8 @@ export default function DegreePlanTab() {
                               isCompleted
                                 ? 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-600'
                                 : prerequisitesMet
-                                ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-600'
-                                : 'bg-gray-50 border-dashed border-gray-300 dark:bg-gray-800/50 dark:border-gray-500 opacity-60'
+                                  ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-600'
+                                  : 'bg-gray-50 border-dashed border-gray-300 dark:bg-gray-800/50 dark:border-gray-500 opacity-60'
                             }`}
                             style={
                               bgColor !== 'transparent'
@@ -357,8 +357,8 @@ export default function DegreePlanTab() {
                               isCompleted
                                 ? t('actions.markAsIncomplete')
                                 : prerequisitesMet
-                                ? t('actions.markAsCompleted')
-                                : t('course.prerequisitesNotMet')
+                                  ? t('actions.markAsCompleted')
+                                  : t('course.prerequisitesNotMet')
                             } • ${t('actions.dragToMove')}`}
                           >
                             <div className="flex items-start justify-between">
@@ -371,8 +371,8 @@ export default function DegreePlanTab() {
                                     isCompleted
                                       ? 'line-through text-green-700 dark:text-green-400'
                                       : prerequisitesMet
-                                      ? 'text-blue-700 dark:text-blue-400'
-                                      : 'text-gray-500'
+                                        ? 'text-blue-700 dark:text-blue-400'
+                                        : 'text-gray-500'
                                   }`}
                                 >
                                   {course.acronym}
@@ -382,8 +382,8 @@ export default function DegreePlanTab() {
                                     isCompleted
                                       ? 'line-through text-green-600 dark:text-green-300'
                                       : prerequisitesMet
-                                      ? 'text-blue-600 dark:text-blue-300'
-                                      : 'text-gray-400'
+                                        ? 'text-blue-600 dark:text-blue-300'
+                                        : 'text-gray-400'
                                   }`}
                                 >
                                   {course.name}
@@ -404,9 +404,9 @@ export default function DegreePlanTab() {
                                 size="sm"
                                 variant="ghost"
                                 onClick={e => {
-                                  e.stopPropagation();
+                                  e.stopPropagation()
                                   // Set up editing mode for this course
-                                  setEditingCourse(course);
+                                  setEditingCourse(course)
                                   setSemesterForm({
                                     acronym: course.acronym,
                                     name: course.name,
@@ -414,10 +414,10 @@ export default function DegreePlanTab() {
                                     prerequisites: course.prerequisites || '',
                                     corequisites: course.corequisites || '',
                                     finalGrade: course.finalGrade || '',
-                                  });
-                                  setCurrentSemester(semester.number);
-                                  setDegreePlanStep('courses');
-                                  setDegreePlanDialog(true);
+                                  })
+                                  setCurrentSemester(semester.number)
+                                  setDegreePlanStep('courses')
+                                  setDegreePlanDialog(true)
                                 }}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700"
                                 title={t('course.editCourse')}
@@ -426,7 +426,7 @@ export default function DegreePlanTab() {
                               </Button>
                             </div>
                           </div>
-                        );
+                        )
                       })}
                       {semester.courses.length === 0 && !draggedCourse && (
                         <div className="text-center text-zinc-400 py-8 text-sm">{t('semester.noCourses')}</div>
@@ -487,19 +487,22 @@ export default function DegreePlanTab() {
                   : `${t('semester.courses', { number: currentSemester })}. Maximum 8 courses per semester.`)}
               {degreePlanStep === 'view' && t('view.description')}
             </DialogDescription>
-            
+
             {/* Degree Plan Name Section - Only show when not editing a course */}
             {degreePlanStep !== 'courses' && (
               <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
                 <div className="space-y-2">
-                  <Label htmlFor="degree-plan-name-dialog" className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  <Label
+                    htmlFor="degree-plan-name-dialog"
+                    className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+                  >
                     {t('settings.degreePlanName')}
                   </Label>
                   <div className="flex gap-2">
                     <Input
                       id="degree-plan-name-dialog"
                       value={degreePlanNameInput}
-                      onChange={(e) => handleNameChange(e.target.value)}
+                      onChange={e => handleNameChange(e.target.value)}
                       placeholder="Enter degree plan name"
                       className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
                     />
@@ -525,13 +528,11 @@ export default function DegreePlanTab() {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-500">
-                    {t('settings.degreePlanNameDescription')}
-                  </p>
+                  <p className="text-xs text-zinc-500">{t('settings.degreePlanNameDescription')}</p>
                 </div>
               </div>
             )}
-            
+
             {/* Final Grade Section - Only show when editing a course */}
             {degreePlanStep === 'courses' && editingCourse && (
               <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
@@ -542,13 +543,11 @@ export default function DegreePlanTab() {
                   <Input
                     id="final-grade-input"
                     value={semesterForm.finalGrade}
-                    onChange={(e) => setSemesterForm(prev => ({ ...prev, finalGrade: e.target.value }))}
+                    onChange={e => setSemesterForm(prev => ({ ...prev, finalGrade: e.target.value }))}
                     placeholder="e.g., A+, 95, 4.0"
                     className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
                   />
-                  <p className="text-xs text-zinc-500">
-                    Enter the final grade received for this course
-                  </p>
+                  <p className="text-xs text-zinc-500">Enter the final grade received for this course</p>
                 </div>
               </div>
             )}
@@ -676,7 +675,7 @@ export default function DegreePlanTab() {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          setEditingCourse(null);
+                          setEditingCourse(null)
                           setSemesterForm({
                             acronym: '',
                             name: '',
@@ -684,7 +683,7 @@ export default function DegreePlanTab() {
                             prerequisites: '',
                             corequisites: '',
                             finalGrade: '',
-                          });
+                          })
                         }}
                         className="rounded-xl w-full border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 mb-2"
                       >
@@ -694,7 +693,7 @@ export default function DegreePlanTab() {
                     <Button
                       onClick={() => {
                         if (semesterForm.acronym && semesterForm.name && semesterForm.credits) {
-                          const currentSemesterData = degreePlan.semesters.find(s => s.number === currentSemester);
+                          const currentSemesterData = degreePlan.semesters.find(s => s.number === currentSemester)
 
                           if (editingCourse) {
                             // Update existing course
@@ -703,17 +702,17 @@ export default function DegreePlanTab() {
                                 ? {
                                     ...sem,
                                     courses: sem.courses.map(c =>
-                                      c.id === editingCourse.id ? { ...c, ...semesterForm } : c
+                                      c.id === editingCourse.id ? { ...c, ...semesterForm } : c,
                                     ),
                                   }
-                                : sem
-                            );
-                            setSemesters(updatedSemesters);
-                            setEditingCourse(null);
+                                : sem,
+                            )
+                            setSemesters(updatedSemesters)
+                            setEditingCourse(null)
                           } else {
                             // Add new course
                             if (currentSemesterData && currentSemesterData.courses.length < 7) {
-                              addCourseToSemester(currentSemester, semesterForm);
+                              addCourseToSemester(currentSemester, semesterForm)
                             }
                           }
 
@@ -724,7 +723,7 @@ export default function DegreePlanTab() {
                             prerequisites: '',
                             corequisites: '',
                             finalGrade: '',
-                          });
+                          })
                         }
                       }}
                       disabled={
@@ -732,7 +731,7 @@ export default function DegreePlanTab() {
                         !semesterForm.name ||
                         !semesterForm.credits ||
                         (!editingCourse &&
-                          degreePlan.semesters.find(s => s.number === currentSemester)?.courses.length >= 8)
+                          (degreePlan.semesters.find(s => s.number === currentSemester)?.courses.length ?? 0) >= 8)
                       }
                       className="rounded-xl w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
                     >
@@ -788,9 +787,9 @@ export default function DegreePlanTab() {
                                         ...sem,
                                         courses: sem.courses.filter(c => c.id !== course.id),
                                       }
-                                    : sem
-                                );
-                                setSemesters(updatedSemesters);
+                                    : sem,
+                                )
+                                setSemesters(updatedSemesters)
                               }}
                               className="rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700"
                             >
@@ -812,7 +811,7 @@ export default function DegreePlanTab() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setEditingCourse(null);
+                    setEditingCourse(null)
                     setSemesterForm({
                       acronym: '',
                       name: '',
@@ -820,11 +819,11 @@ export default function DegreePlanTab() {
                       prerequisites: '',
                       corequisites: '',
                       finalGrade: '',
-                    });
+                    })
                     if (currentSemester > 1) {
-                      setCurrentSemester(currentSemester - 1);
+                      setCurrentSemester(currentSemester - 1)
                     } else {
-                      setDegreePlanStep('setup');
+                      setDegreePlanStep('setup')
                     }
                   }}
                   className="rounded-xl border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -836,7 +835,7 @@ export default function DegreePlanTab() {
                 {currentSemester < degreePlan.semesters.length ? (
                   <Button
                     onClick={() => {
-                      setEditingCourse(null);
+                      setEditingCourse(null)
                       setSemesterForm({
                         acronym: '',
                         name: '',
@@ -844,8 +843,8 @@ export default function DegreePlanTab() {
                         prerequisites: '',
                         corequisites: '',
                         finalGrade: '',
-                      });
-                      setCurrentSemester(currentSemester + 1);
+                      })
+                      setCurrentSemester(currentSemester + 1)
                     }}
                     className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
                   >
@@ -854,7 +853,7 @@ export default function DegreePlanTab() {
                 ) : (
                   <Button
                     onClick={() => {
-                      setEditingCourse(null);
+                      setEditingCourse(null)
                       setSemesterForm({
                         acronym: '',
                         name: '',
@@ -862,9 +861,9 @@ export default function DegreePlanTab() {
                         prerequisites: '',
                         corequisites: '',
                         finalGrade: '',
-                      });
-                      setDegreePlanStep('view');
-                      setDegreePlanDialog(false);
+                      })
+                      setDegreePlanStep('view')
+                      setDegreePlanDialog(false)
                     }}
                     className="rounded-xl bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-600"
                   >
@@ -893,7 +892,7 @@ export default function DegreePlanTab() {
                           size="sm"
                           variant="ghost"
                           onClick={() => {
-                            setEditingCourse(null);
+                            setEditingCourse(null)
                             setSemesterForm({
                               acronym: '',
                               name: '',
@@ -901,9 +900,9 @@ export default function DegreePlanTab() {
                               prerequisites: '',
                               corequisites: '',
                               finalGrade: '',
-                            });
-                            setCurrentSemester(semester.number);
-                            setDegreePlanStep('courses');
+                            })
+                            setCurrentSemester(semester.number)
+                            setDegreePlanStep('courses')
                           }}
                           className="rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700"
                           title={t('actions.editSemester')}
@@ -914,8 +913,8 @@ export default function DegreePlanTab() {
                           size="sm"
                           variant="ghost"
                           onClick={() => {
-                            setSemesterToDelete(semester.number);
-                            setDeleteSemesterDialog(true);
+                            setSemesterToDelete(semester.number)
+                            setDeleteSemesterDialog(true)
                           }}
                           className="rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                           title={t('actions.deleteSemester')}
@@ -926,8 +925,8 @@ export default function DegreePlanTab() {
                     </div>
                     <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {semester.courses.map(course => {
-                        const isCompleted = degreePlan.completedCourses.includes(course.acronym);
-                        const prerequisitesMet = checkPrerequisites(course, semester);
+                        const isCompleted = degreePlan.completedCourses.includes(course.acronym)
+                        const prerequisitesMet = checkPrerequisites(course, semester)
 
                         return (
                           <div
@@ -936,8 +935,8 @@ export default function DegreePlanTab() {
                               isCompleted
                                 ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700'
                                 : prerequisitesMet
-                                ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
-                                : 'border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800'
+                                  ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
+                                  : 'border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800'
                             }`}
                             onClick={() => toggleCourseCompletion(course.acronym)}
                           >
@@ -946,8 +945,8 @@ export default function DegreePlanTab() {
                                 isCompleted
                                   ? 'line-through text-green-700 dark:text-green-400'
                                   : prerequisitesMet
-                                  ? 'text-blue-700 dark:text-blue-400'
-                                  : 'text-gray-500 dark:text-gray-400'
+                                    ? 'text-blue-700 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400'
                               }`}
                             >
                               {course.acronym}
@@ -958,8 +957,8 @@ export default function DegreePlanTab() {
                                 isCompleted
                                   ? 'line-through text-green-600 dark:text-green-300'
                                   : prerequisitesMet
-                                  ? 'text-blue-600 dark:text-blue-300'
-                                  : 'text-gray-400 dark:text-gray-500'
+                                    ? 'text-blue-600 dark:text-blue-300'
+                                    : 'text-gray-400 dark:text-gray-500'
                               }`}
                             >
                               {course.name}
@@ -968,7 +967,7 @@ export default function DegreePlanTab() {
                               {t('course.creditsShort', { count: parseInt(course.credits || '0') })}
                             </div>
                           </div>
-                        );
+                        )
                       })}
                       {semester.courses.length === 0 && (
                         <div className="text-center text-zinc-400 dark:text-zinc-500 py-4">
@@ -988,7 +987,7 @@ export default function DegreePlanTab() {
                     percent: Math.round(
                       (degreePlan.completedCourses.length /
                         Math.max(1, degreePlan.semesters.flatMap(s => s.courses).length)) *
-                        100
+                        100,
                     ),
                   })}
                 </div>
@@ -1043,8 +1042,8 @@ export default function DegreePlanTab() {
             <Button
               variant="destructive"
               onClick={() => {
-                resetDegreePlan();
-                setResetConfirmDialog(false);
+                resetDegreePlan()
+                setResetConfirmDialog(false)
               }}
               className="rounded-xl"
             >
@@ -1074,8 +1073,8 @@ export default function DegreePlanTab() {
             <Button
               variant="destructive"
               onClick={() => {
-                resetDegreePlan();
-                setClearConfirmDialog(false);
+                resetDegreePlan()
+                setClearConfirmDialog(false)
               }}
               className="rounded-xl"
             >
@@ -1094,7 +1093,8 @@ export default function DegreePlanTab() {
               {t('confirmations.deleteSemester.title')}
             </DialogTitle>
             <DialogDescription className="text-zinc-600 dark:text-zinc-400">
-              {semesterToDelete && degreePlan.semesters.find(s => s.number === semesterToDelete)?.courses.length > 0
+              {semesterToDelete &&
+              (degreePlan.semesters.find(s => s.number === semesterToDelete)?.courses.length ?? 0) > 0
                 ? t('confirmations.deleteSemester.descriptionWithCourses', { number: semesterToDelete })
                 : t('confirmations.deleteSemester.description', { number: semesterToDelete })}
             </DialogDescription>
@@ -1103,8 +1103,8 @@ export default function DegreePlanTab() {
             <Button
               variant="outline"
               onClick={() => {
-                setDeleteSemesterDialog(false);
-                setSemesterToDelete(null);
+                setDeleteSemesterDialog(false)
+                setSemesterToDelete(null)
               }}
               className="rounded-xl border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
@@ -1114,10 +1114,10 @@ export default function DegreePlanTab() {
               variant="destructive"
               onClick={() => {
                 if (semesterToDelete) {
-                  removeSemester(semesterToDelete);
+                  removeSemester(semesterToDelete)
                 }
-                setDeleteSemesterDialog(false);
-                setSemesterToDelete(null);
+                setDeleteSemesterDialog(false)
+                setSemesterToDelete(null)
               }}
               className="rounded-xl"
             >
@@ -1128,5 +1128,5 @@ export default function DegreePlanTab() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
