@@ -33,7 +33,6 @@ export const ItemEventSchema = z
     recurrence: EventRecurrenceSchema.optional(),
     location: z.string().optional(),
     googleCalendarEventId: z.string().optional(),
-    googleCalendarEventError: z.string().optional(),
   })
   .refine(data => data.endsAt > data.startsAt, {
     message: t('items:event.validation.endAfterStart'),

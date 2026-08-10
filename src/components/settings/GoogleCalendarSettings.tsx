@@ -113,10 +113,13 @@ export default function GoogleCalendarSettings() {
 
       const results = await googleCalendarSync.bulkSyncItems(
         appState.items as unknown as Item[],
-        googleCalendar.accessToken,
-        googleCalendar.calendarId,
-        coursesMap,
-        projectsMap,
+        {
+          accessToken: googleCalendar.accessToken,
+          calendarId: googleCalendar.calendarId,
+          syncEnabled: googleCalendar.syncEnabled,
+          courses: coursesMap,
+          projects: projectsMap,
+        },
         (current, total) => {
           setBulkProgress({ current, total });
         }

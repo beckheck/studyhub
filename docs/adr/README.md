@@ -45,3 +45,7 @@ stops future architecture reviews from re-litigating the same ground.)
 
 - [ADR 0001: Calendar queries return CalendarEntry, not Item](./0001-calendar-entry-return-shape.md)
 - [ADR 0002: Sync module does not write store](./0002-sync-module-does-not-write-store.md)
+- [ADR 0003: Lib modules do not import the store](./0003-lib-modules-do-not-import-store.md)
+- [ADR 0004: Repository seam for app state](./0004-repository-seam-for-app-state.md)
+- [ADR 0005: Migration pipeline](./0005-migration-pipeline.md)
+- [ADR 0006: Google Calendar sync is web-only by design](./0006-google-calendar-sync-web-only.md)

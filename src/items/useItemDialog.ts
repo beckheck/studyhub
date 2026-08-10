@@ -7,7 +7,7 @@ import {
 import { Item } from '@/items/models';
 import { useItems, useGoogleCalendar } from '@/hooks/useStore';
 import { useAppState } from '@/hooks/useStore';
-import { googleCalendarSync } from '@/lib/google-calendar-sync';
+import { SyncItemContext, googleCalendarSync } from '@/lib/google-calendar-sync';
 import { useItemDialogState } from './useItemDialogState';
 
 export type { ItemFormFieldFlags } from '@/items/forms';
@@ -33,15 +33,13 @@ export function useItemDialog() {
   const { addItem, updateItem, deleteItem } = useItems();
   const { googleCalendar } = useGoogleCalendar();
   const appState = useAppState();
-  const getCourseNameById = (courseId: string) => appState.courses.find(c => c.id === courseId)?.title;
-  const getProjectNameById = (projectId: string) => appState.projects.find(p => p.id === projectId)?.title;
 
-  const buildSyncCtx = (item: Item) => ({
+  const buildSyncCtx = (): SyncItemContext => ({
     accessToken: googleCalendar.accessToken,
     calendarId: googleCalendar.calendarId,
     syncEnabled: googleCalendar.syncEnabled,
-    courseName: item.courseId ? getCourseNameById(item.courseId) : undefined,
-    projectName: item.projectId ? getProjectNameById(item.projectId) : undefined,
+    courses: Object.fromEntries(appState.courses.map(c => [c.id, c.title])),
+    projects: Object.fromEntries(appState.projects.map(p => [p.id, p.title])),
   });
 
   const handleSave = (validatedData?: ItemForm) => {
@@ -69,7 +67,7 @@ export function useItemDialog() {
   };
 
   const syncItemToGoogle = async (item: Item) => {
-    const ctx = buildSyncCtx(item);
+    const ctx = buildSyncCtx();
     try {
       const result = await googleCalendarSync.syncItem(item, ctx);
       if (result.success && result.googleEventId) {
@@ -85,7 +83,7 @@ export function useItemDialog() {
   const handleDeleteItem = (item: Item) => {
     deleteItem(item.id);
 
-    const ctx = buildSyncCtx(item);
+    const ctx = buildSyncCtx();
     googleCalendarSync
       .deleteItem(item, ctx)
       .catch(error => console.error('Error deleting from Google Calendar:', error));

@@ -12,6 +12,7 @@ const mocked = vi.hoisted(() => ({
   updateItem: vi.fn(),
   deleteItemLocal: vi.fn(),
   useStoreMocked: false as boolean,
+  appState: { courses: [], projects: [] },
 }));
 
 vi.mock('@/lib/google-calendar-sync', () => ({
@@ -43,7 +44,7 @@ vi.mock('@/hooks/useStore', async importOriginal => {
     },
     useAppState: () => {
       if (mocked.useStoreMocked) {
-        return { courses: [], projects: [] };
+        return mocked.appState;
       }
       return actual.useAppState();
     },
@@ -98,6 +99,7 @@ describe('useItemDialog handleSave sync wiring', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocked.useStoreMocked = false;
+    mocked.appState = { courses: [], projects: [] };
   });
 
   afterEach(() => {
@@ -125,7 +127,37 @@ describe('useItemDialog handleSave sync wiring', () => {
     const [syncedItem, ctx] = mocked.syncItem.mock.calls[0];
     expect(syncedItem.type).toBe('task');
     expect(ctx.syncEnabled).toBe(false);
-    expect(ctx.courseName).toBeUndefined();
+    expect(ctx.courses).toBeDefined();
+  });
+
+  it('builds course and project name maps into the sync context', async () => {
+    mocked.useStoreMocked = true;
+    mocked.appState = {
+      courses: [{ id: 'course-1', title: 'Calculus 101' }],
+      projects: [{ id: 'project-1', title: 'Project X' }],
+    };
+    mocked.addItem.mockImplementation((item: any) => ({ ...item, id: 'test-uuid-123' }));
+
+    const { result } = renderHook(() => useItemDialog());
+
+    act(() => {
+      result.current.openAddDialog('task', { title: 'Test Task', courseId: 'course-1' });
+    });
+
+    mocked.syncItem.mockResolvedValue({ success: true, googleEventId: 'g-1' });
+
+    await act(async () => {
+      await result.current.handleSave(taskForm);
+    });
+
+    await waitFor(() => {
+      expect(mocked.syncItem).toHaveBeenCalledTimes(1);
+    });
+
+    const [, ctx] = mocked.syncItem.mock.calls[0];
+    expect(ctx.courses).toEqual({ 'course-1': 'Calculus 101' });
+    expect(ctx.projects).toEqual({ 'project-1': 'Project X' });
+    expect(ctx.syncEnabled).toBe(false);
   });
 
   it('stamps googleEventId via updateItem on success when googleEventId is present', async () => {
@@ -241,6 +273,7 @@ describe('useItemDialog handleDelete sync wiring', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocked.useStoreMocked = false;
+    mocked.appState = { courses: [], projects: [] };
   });
 
   afterEach(() => {
@@ -269,7 +302,7 @@ describe('useItemDialog handleDelete sync wiring', () => {
     const [deletedItem, ctx] = mocked.deleteItem.mock.calls[0];
     expect(deletedItem.type).toBe('event');
     expect(ctx.syncEnabled).toBe(false);
-    expect(ctx.courseName).toBeUndefined();
+    expect(ctx.courses).toBeDefined();
   });
 
   it('does not throw when deleteItem returns skipped', async () => {

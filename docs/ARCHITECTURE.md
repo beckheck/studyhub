@@ -1,6 +1,6 @@
 # StudyHub Architecture Baseline
 
-> A description of the system **as it is today**, not as it should be. This document is the shared reference for future architecture work. Deepening opportunities are tracked separately in [architecture-review-candidates.md](./architecture-review-candidates.md).
+> A description of the system **as it is today**, not as it should be. This document is the shared reference for future architecture work.
 >
 > Vocabulary follows [`codebase-design`](https://github.com/...): **module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**. Do not use "component/service/API/boundary." Domain terms follow [`CONTEXT.md`](../CONTEXT.md): **Item**, **Task**, **Exam**, **Event**, **Timetable**, **Course**, **Degree Plan**, **Study Session**, **Project**, **Wellness**, **Container Mode**.
 
@@ -143,7 +143,6 @@ src/items/
 ```
 
 - **Depth:** the core (zod schemas per subtype, form schemas, model<->form converters) is real and deep. One `Item` union, one `parseItem`-shaped interface, four adapters. A single `<ItemDialogProvider>` in `App.tsx` mounts the one `<ItemDialog>` and exposes `useItemDialog()` as a context consumer. Every tab and component that creates or edits items calls `useItemDialog()` from context and renders zero dialog JSX. `useItemDialogState` holds the pure dialog state (open/close/form transitions, no store, no sync). `useItemDialog` wraps it with the `handleSave`/`handleDelete` wiring that calls `googleCalendarSync.syncItem`/`deleteItem` and stamps the returned `googleEventId` via `updateItem`. The dialog survives tab switches because one provider instance backs the whole app. `ItemDialogTrigger.tsx` is gone (it was a shallow `<div onClick>` wrapper).
-- **See [candidates doc](./architecture-review-candidates.md)** for the remaining deepening proposals.
 
 ### Lib (`src/lib/`)
 
@@ -152,8 +151,8 @@ src/items/
 | `hybrid-storage.ts` | `StorageAdapter` + `HybridStorage` + 4 adapters | Persistence transport | 750 lines. `BrowserStorageAdapter` (ext), `IndexedDBAdapter` (web), `LocalStorageAdapter` (fallback), `InMemoryAdapter` (tests) |
 | `data-transfer.ts` | `DataTransfer` class: `exportData`/`importData`/`exportFile`/`importFile` | Serialization to `ExchangeFormatV2` + legacy migration | 664 lines. Owns `XItem*` parallel types (Date<->number), `convertLegacyItems` |
 | `study-session-timer-manager.ts` | `StudySessionTimerManager` class: `handleMessage`, `getTimerState`, `startTimer`, `stopTimer`, `resetTimer`, `onStateChange` | Focus timer: phases, transitions, site blocking, notifications, audio, persistence | 453 lines. **Deep internally**, but imports `store` + `hybridStorage` + `notifications` + `site-blocking` at module top |
-| `google-calendar-sync.ts` | `GoogleCalendarSync` class: `syncItem`/`deleteItem` (type-dispatch entry points) + `syncNewEvent`/`updateEvent`/`syncTaskToGoogle`/`syncExamToGoogle`/`deleteEvent`/`bulkSyncItems`/`fetchCalendars` | Google Calendar API adapter | 607 lines. `syncItem`/`deleteItem` dispatch on `item.type` and own the sync-disabled guard. 4 near-identical `sync*` methods underneath (Candidate F, deferred). Instance-level `retryAttempts` |
-| `google-oauth.ts` | `GoogleOAuthManager`: `startOAuthFlow`/`refreshAccessToken`/`revokeToken`/`isTokenExpired` | OAuth via popup + `postMessage` handshake | 197 lines. **Hardcodes `REDIRECT_URI = 'http://localhost:5173/'`**. Web-only by construction |
+| `google-calendar-sync.ts` | `GoogleCalendarSync` class: `syncItem`/`deleteItem`/`bulkSyncItems` (type-dispatch entry points) + `deleteEvent`/`fetchCalendars`/`fetchEventsFromCalendar` + exported `convertRecurrenceToRRule` | Google Calendar API adapter | 403 lines. One `convertItemToGoogleEvent` switch path for all item types; per-call retry in `makeApiRequest` (no shared instance state); `courses`/`projects` name-map context. |
+| `google-oauth.ts` | `GoogleOAuthManager`: `startOAuthFlow`/`refreshAccessToken`/`revokeToken`/`isTokenExpired` | OAuth via popup + `postMessage` handshake | 197 lines. **Hardcodes `REDIRECT_URI = 'http://localhost:5173/'`**. Web-only by decision (see [ADR 0006](./adr/0006-google-calendar-sync-web-only.md)) |
 | `file-attachment-storage.ts` | `fileAttachmentStorage` singleton: `storeFile`/`getFile`/`deleteFile`/`cleanupOrphanedFiles` | File attachment LRU + metadata | 213 lines. Stores base64 in `store.fileAttachments.files` (in-memory + persisted) |
 | `site-blocking.ts` | `isSiteBlocked`/`cleanSites`/`enactSiteBlockingStrategy`/`enactSiteBlockingStrategyInTab` | Domain/path matching + tab messaging | 181 lines. Pure-ish matching + extension-only orchestration |
 | `recurrence-utils.ts` | `isRecurrenceMatch`/`generateRecurrenceOccurrences`/`getNextOccurrence` | Recurrence expansion (daily/weekly/monthly/yearly, count/until, byWeekday) | 715 lines. Wired into `calendar-queries.ts` (`generateRecurrenceOccurrences` called when `expandRecurrence` is true). Tested (964 lines) |
@@ -202,7 +201,7 @@ Item = ItemTask | ItemExam | ItemEvent | ItemTimetable   (src/items/models.ts)
 
 Each subtype has a zod schema (`*/modelSchema.ts`), a form schema (`*/formSchema.ts`), methods (`*/methods.tsx`: icon/color/metadata), and a form (`*/form.tsx`). `forms.ts` aggregates per-type maps for form schema/defaults/hidden/disabled/converter. `models.ts` exports `itemTypeToSchemaMap` and `ITEM_TYPES`.
 
-**Recurrence** is modeled on `ItemEvent` (`event/modelSchema.ts:5-25`: `frequency`/`interval`/`byWeekday`/`count`/`until`) and collected by the form, but **no calendar view expands it**. See [Calendar / Planner](#calendar-planner) and the [candidates doc](./architecture-review-candidates.md).
+**Recurrence** is modeled on `ItemEvent` (`event/modelSchema.ts:5-25`: `frequency`/`interval`/`byWeekday`/`count`/`until`) and collected by the form, but **no calendar view expands it**. See [Calendar / Planner](#calendar-planner).
 
 <a id="persistence-path"></a>
 ### Persistence path
@@ -265,13 +264,13 @@ Drag-and-drop rescheduling in `PlannerTab.tsx:136-163` branches on `item.type` a
 
 ### Google Calendar sync
 
-- **`google-oauth.ts`**: popup + `postMessage` handshake. **`REDIRECT_URI = 'http://localhost:5173/'`** hardcoded (line 4). This is the **web-app OAuth flow**. In extension mode the UI runs at `chrome-extension://<id>/popup.html`, not `localhost:5173`, so the redirect would not land back in the extension. Unless a separate `chrome.identity.launchWebAuthFlow` path exists (none found in `google-oauth.ts`), **Google Calendar sync is effectively web-only by construction**. `GOOGLE_CLIENT_SECRET` sits in `import.meta.env` (client-side secret. Should use PKCE). Open question: is sync intended to work in extension mode? See [Candidate F](./architecture-review-candidates.md#candidate-f) in the candidates doc.
-- **`google-calendar-sync.ts`**: 607-line class. `convertItemToGoogleEvent` + 4 `sync*` methods (one per item type that syncs) + `deleteEvent` + `bulkSyncItems` + `fetchCalendars`/`fetchEventsFromCalendar` + private `makeApiRequest` (with retry). `retryAttempts` is instance-level (concurrent calls share it. Latent bug). `convertRecurrenceToRRule` is real, non-shallow, private, untested. Two public dispatch methods sit on top of the 4 `sync*` methods: `syncItem(item, ctx)` and `deleteItem(item, ctx)`. They own the "sync disabled" guard (`ctx.syncEnabled` / `accessToken` / `calendarId`), skip `Timetable` items (weekly patterns, not dated events), and return `{ success, skipped?, googleEventId?, error? }` without writing the store. The caller stamps the returned `googleEventId` via `updateItem`. This "sync returns the id, caller stamps it" seam is recorded in [ADR 0002](./adr/0002-sync-module-does-not-write-store.md). The 4 underlying `sync*` methods stay untouched (their internal collapse is [Candidate F](./architecture-review-candidates.md#candidate-f), deferred).
-- **`useItemDialog.ts`**: the caller's `handleSave` calls `googleCalendarSync.syncItem(item, ctx)`, stamps the returned `googleEventId` via a single `updateItem` on success, and logs errors silently. `handleDelete` calls `googleCalendarSync.deleteItem(item, ctx)`. The 75-line inline `syncItemToGoogle` and the duplicated type-dispatch are gone. See [Candidate A](./architecture-review-candidates.md#candidate-a) (implemented) and [Candidate F](./architecture-review-candidates.md#candidate-f) in the candidates doc.
+- **`google-oauth.ts`**: popup + `postMessage` handshake. **`REDIRECT_URI = 'http://localhost:5173/'`** hardcoded (line 4). This is the **web-app OAuth flow**. Sync is **web-only by decision**: the extension has no `chrome.identity.launchWebAuthFlow` adapter and the Google Calendar settings section is hidden in extension mode. See [ADR 0006](./adr/0006-google-calendar-sync-web-only.md). `GOOGLE_CLIENT_SECRET` sits in `import.meta.env` (client-side secret. Should use PKCE). The OAuth client hardening (dynamic redirect URI, PKCE, per-call refresh attempts) is deferred to a separate OAuth session.
+- **`google-calendar-sync.ts`**: 403-line class. One `syncItem(item, ctx)` path replaces the 4 per-type `sync*` methods; it converts the item with the private `convertItemToGoogleEvent` switch, POSTs for a new item and PUTs when the item already carries a `googleCalendarEventId`, and skips `Timetable` items (weekly patterns, not dated events). `deleteItem` deletes for any item type (not just events). `bulkSyncItems` upserts by routing each item through `syncItem`. Retry is per call in `makeApiRequest` (an instance-level `retryAttempts` counter used to exist and was a concurrency bug; it is gone). The context carries `courses`/`projects` name maps instead of resolved names, so callers do not resolve names per item. `convertRecurrenceToRRule` is exported and tested. The callers stamp the returned `googleEventId` via `updateItem`. This "sync returns the id, caller stamps it" seam is recorded in [ADR 0002](./adr/0002-sync-module-does-not-write-store.md)..
+- **`useItemDialog.ts`**: the caller's `handleSave` calls `googleCalendarSync.syncItem(item, ctx)`, stamps the returned `googleEventId` via a single `updateItem` on success, and logs errors silently. `handleDelete` calls `googleCalendarSync.deleteItem(item, ctx)`. The 75-line inline `syncItemToGoogle` and the duplicated type-dispatch are gone.
 
 ### File attachments
 
-`file-attachment-storage.ts` stores **base64 in `store.fileAttachments.files`** (in-memory, in the valtio proxy). Every `persistStore` serializes all base64 files into `ExchangeFormatV2.fileAttachments`. An LRU cache helps reads, not the persistence bloat. `performGarbageCollection` (`stores/app.ts:356-405`) scans rich-text HTML (`[data-type="file-attachment"]`/`[data-file-id]`) in item notes + `course.syllabusFileId` and calls `cleanupOrphanedFiles`. The GC logic (HTML structure knowledge) lives in the store module, not the file-attachment module. This is a locality problem. See [Candidate D](./architecture-review-candidates.md#candidate-d) and [Candidate G](./architecture-review-candidates.md#candidate-g) in the candidates doc.
+`file-attachment-storage.ts` stores **base64 in `store.fileAttachments.files`** (in-memory, in the valtio proxy). Every `persistStore` serializes all base64 files into `ExchangeFormatV2.fileAttachments`. An LRU cache helps reads, not the persistence bloat. `performGarbageCollection` (`stores/app.ts:356-405`) scans rich-text HTML (`[data-type="file-attachment"]`/`[data-file-id]`) in item notes + `course.syllabusFileId` and calls `cleanupOrphanedFiles`. The GC logic (HTML structure knowledge) lives in the store module, not the file-attachment module. This is a locality problem. See [Candidate G](./architecture-review-candidates.md#candidate-g) in the candidates doc.
 
 ### Localization
 
@@ -321,21 +320,8 @@ These describe the **current** conventions rather than aspirations. Future work 
 
 ---
 
-<a id="open-questions"></a>
-## Open architectural questions
-
-Surfaces where the baseline is unresolved or where a decision is pending. These are candidates for ADRs during grilling.
-
-1. **Is Google Calendar sync intended to work in extension mode?** The OAuth `REDIRECT_URI` is hardcoded to `localhost:5173` (web). If extension sync is in scope, the `OAuthClient` needs a `chrome.identity.launchWebAuthFlow` adapter (a second adapter at the OAuth seam). If out of scope, record it as an ADR so future reviews do not re-flag it.
-2. **Should `XItem*` types in `data-transfer.ts` be derived from the zod schemas?** The parallel type system can drift. A schema-driven exchange format would close the gap. Deferred from the [Candidate E](./architecture-review-candidates.md#candidate-e) grilling session (see [ADR 0004](./adr/0004-repository-seam-for-app-state.md)); the repository seam was accepted without touching the exchange format shape.
-3. **Should file attachments live in `store` (base64) or in storage (per-file keys)?** The current design bloats every persist with all base64. Moving to per-key storage is a real seam change.
-4. **Where does `performGarbageCollection` belong?** It sits in `stores/app.ts` but knows about rich-text HTML structure. Moving it to `file-attachment-storage.ts` would co-locate file lifecycle.
-
----
-
 ## How to use this document
 
 - **Before proposing a refactor:** check [Principles in force](#principles-in-force) and [The architectural key constraint](#dual-surface) plus [Execution contexts and state ownership](#execution-contexts). If your proposal contradicts either, it needs an ADR (see [Open architectural questions](#open-questions)) explaining why.
 - **When naming a new module:** use `CONTEXT.md` domain terms + `codebase-design` architecture terms. Do not invent synonyms.
 - **When evaluating depth:** apply the deletion test. Would deleting the module concentrate complexity (earns its keep) or just move it (shallow)?
-- **Deepening opportunities** are tracked in [architecture-review-candidates.md](./architecture-review-candidates.md), not here. This doc describes the baseline. That doc proposes changes.

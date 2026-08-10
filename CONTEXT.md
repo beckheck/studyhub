@@ -64,6 +64,10 @@ _Avoid_: Self-Care, Mind & Body, Daily Check-In
 How the app is rendered — popup, sidepanel, newtab, tab, overlay, or web. Determines available dimensions and behavior.
 _Avoid_: Mode (alone), Surface, Context (collides with React)
 
+**Google Calendar Sync**:
+A mechanism that pushes a dated Item (Event, Task, or Exam) to a Google Calendar Event so the two stay in step. A Timetable never syncs because it defines a pattern, not concrete dates. The reverse direction, a Google Calendar Event into the app, is an Import.
+_Avoid_: Export (for the automatic push), Google Sync
+
 ## Calendar
 
 **Occurrence**:
