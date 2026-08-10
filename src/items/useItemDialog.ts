@@ -1,85 +1,41 @@
 import {
   convertItemFormToModel,
   convertItemModelToForm,
-  defaultItemDisabledMap,
-  defaultItemHiddenMap,
   getDefaultItemFormForType,
   ItemForm,
 } from '@/items/forms';
-import { ITEM_TYPES, ItemType, Item } from '@/items/models';
+import { Item } from '@/items/models';
 import { useItems, useGoogleCalendar } from '@/hooks/useStore';
 import { useCourses } from '@/hooks/useStore';
 import { useAppState } from '@/hooks/useStore';
-import { useState } from 'react';
-import { ItemEventForm } from './event/formSchema';
-import { ItemExamForm } from './exam/formSchema';
-import { DEFAULT_ITEM_TASK_FORM, ItemTaskForm } from './task/formSchema';
-import { ItemTimetableForm } from './timetable/formSchema';
 import { googleCalendarSync } from '@/lib/google-calendar-sync';
+import { useItemDialogState } from './useItemDialogState';
 
-type AllFormFields = 'type' | keyof ItemTaskForm | keyof ItemExamForm | keyof ItemEventForm | keyof ItemTimetableForm;
-
-export type ItemFormFieldFlags = Partial<Record<AllFormFields, boolean>>;
-
-export interface ItemDialogOptions {
-  hidden?: ItemFormFieldFlags;
-  disabled?: ItemFormFieldFlags;
-  availableItemTypes?: ItemType[];
-}
+export type { ItemFormFieldFlags } from '@/items/forms';
+export type { ItemDialogOptions } from './useItemDialogState';
 
 export function useItemDialog() {
-  const [open, setOpen] = useState<boolean>(false);
-  const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [itemType, setItemType] = useState<ItemType>('task');
-  const [form, setForm] = useState<ItemForm>(DEFAULT_ITEM_TASK_FORM);
-  const [hidden, setHidden] = useState<ItemFormFieldFlags>({});
-  const [disabled, setDisabled] = useState<ItemFormFieldFlags>({});
-  const [availableItemTypes, setAvailableItemTypes] = useState<ItemType[]>(ITEM_TYPES);
+  const {
+    open,
+    editingItem,
+    itemType,
+    form,
+    setForm,
+    hidden,
+    disabled,
+    availableItemTypes,
+    openAddDialog,
+    openEditDialog,
+    closeDialog,
+    handleChangeItemType,
+    onOpenChange,
+  } = useItemDialogState();
+
   const { addItem, updateItem, deleteItem } = useItems();
   const { googleCalendar } = useGoogleCalendar();
   const appState = useAppState();
   const getCourseNameById = (courseId: string) => appState.courses.find(c => c.id === courseId)?.title;
   const getProjectNameById = (projectId: string) => appState.projects.find(p => p.id === projectId)?.title;
-
-  const openAddDialog = (type: ItemType, initialData?: Partial<ItemForm>, options?: ItemDialogOptions) => {
-    const defaultForm = getDefaultItemFormForType(type);
-    setItemType(type);
-    setForm({
-      ...defaultForm,
-      ...initialData,
-    });
-    setEditingItem(null);
-
-    // Set available types (default to all types if not specified)
-    const typesToSet = options?.availableItemTypes || ITEM_TYPES;
-    setAvailableItemTypes(typesToSet);
-
-    // Set hidden and disabled states
-    setHidden({ ...defaultItemHiddenMap[type], ...{ type: true, isCompleted: true }, ...options?.hidden });
-    setDisabled({ ...defaultItemDisabledMap[type], ...options?.disabled });
-
-    setOpen(true);
-  };
-
-  const openEditDialog = (item: Item, options?: ItemDialogOptions) => {
-    setEditingItem(item);
-    setItemType(item.type);
-    setForm(convertItemModelToForm(item));
-
-    // Set available types (default to all types if not specified)
-    const typesToSet = options?.availableItemTypes || ITEM_TYPES;
-    setAvailableItemTypes(typesToSet);
-
-    // Set hidden and disabled states
-    setHidden({ ...defaultItemHiddenMap[item.type], ...{ type: true }, ...options?.hidden });
-    setDisabled({ ...defaultItemDisabledMap[item.type], ...options?.disabled });
-
-    setOpen(true);
-  };
-
-  const closeDialog = () => {
-    setOpen(false);
-  };
 
   const handleSave = (validatedData?: ItemForm) => {
     const dataToSave = validatedData || form;
@@ -192,41 +148,6 @@ export function useItemDialog() {
     }
   };
 
-  const handleChangeItemType = (newType: ItemType, currentFormData?: ItemForm) => {
-    if (disabled.type || newType === itemType || !availableItemTypes.includes(newType)) return;
-
-    const newDefaultForm = getDefaultItemFormForType(newType);
-
-    // Use currentFormData if provided (from dialog), otherwise fall back to form state
-    const sourceForm = currentFormData || form;
-
-    // Create a flexible object for compatible fields
-    const compatibleFields: Record<string, any> = {};
-
-    for (const field of Object.keys(newDefaultForm)) {
-      if (field in sourceForm) {
-        compatibleFields[field] = sourceForm[field];
-      }
-    }
-
-    for (const fields of [['startsAt', 'dueAt']]) {
-      const [fieldA, fieldB] = fields;
-      if (fieldA in sourceForm && fieldB in newDefaultForm) {
-        compatibleFields[fieldB] = sourceForm[fieldA];
-      }
-      if (fieldB in sourceForm && fieldA in newDefaultForm) {
-        compatibleFields[fieldA] = sourceForm[fieldB];
-      }
-    }
-
-    // Set the new form with preserved common fields and compatible fields
-    setItemType(newType);
-    setForm({
-      ...newDefaultForm,
-      ...compatibleFields,
-    } as ItemForm);
-  };
-
   return {
     // State
     open,
@@ -253,12 +174,6 @@ export function useItemDialog() {
     convertItemModelToForm,
 
     // Dialog handlers
-    onOpenChange: (open: boolean) => {
-      if (!open) {
-        closeDialog();
-      } else {
-        setOpen(open);
-      }
-    },
+    onOpenChange,
   };
 }
