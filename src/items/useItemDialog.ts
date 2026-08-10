@@ -1,8 +1,8 @@
 import { convertItemFormToModel, convertItemModelToForm, getDefaultItemFormForType, ItemForm } from '@/items/forms'
 import { Item } from '@/items/models'
-import { useItems, useGoogleCalendar } from '@/hooks/useStore'
-import { useAppState } from '@/hooks/useStore'
-import { SyncItemContext, googleCalendarSync } from '@/lib/google-calendar-sync'
+import { useItems, useGoogleCalendar, useAppState } from '@/hooks/useStore'
+import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync'
+import { SyncItemContext } from '@/lib/google-calendar-sync'
 import { useItemDialogState } from './useItemDialogState'
 
 export type { ItemFormFieldFlags } from '@/items/forms'
@@ -28,6 +28,7 @@ export function useItemDialog() {
   const { addItem, updateItem, deleteItem } = useItems()
   const { googleCalendar } = useGoogleCalendar()
   const appState = useAppState()
+  const { syncItem, deleteItem: syncDeleteItem } = useGoogleCalendarSync()
 
   const buildSyncCtx = (): SyncItemContext => ({
     accessToken: googleCalendar.accessToken ?? '',
@@ -64,7 +65,7 @@ export function useItemDialog() {
   const syncItemToGoogle = async (item: Item) => {
     const ctx = buildSyncCtx()
     try {
-      const result = await googleCalendarSync.syncItem(item, ctx)
+      const result = await syncItem(item, ctx)
       if (result.success && result.googleEventId) {
         updateItem(item.id, { googleCalendarEventId: result.googleEventId } as Partial<Item>)
       } else if (!result.success && !result.skipped) {
@@ -79,9 +80,7 @@ export function useItemDialog() {
     deleteItem(item.id)
 
     const ctx = buildSyncCtx()
-    googleCalendarSync
-      .deleteItem(item, ctx)
-      .catch(error => console.error('Error deleting from Google Calendar:', error))
+    syncDeleteItem(item, ctx).catch(error => console.error('Error deleting from Google Calendar:', error))
   }
 
   return {

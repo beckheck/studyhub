@@ -12,11 +12,11 @@ const mocked = vi.hoisted(() => ({
   deleteItemLocal: vi.fn(),
 }))
 
-vi.mock('@/lib/google-calendar-sync', () => ({
-  googleCalendarSync: {
+vi.mock('@/hooks/useGoogleCalendarSync', () => ({
+  useGoogleCalendarSync: () => ({
     syncItem: mocked.syncItem,
     deleteItem: mocked.deleteItem,
-  },
+  }),
 }))
 
 vi.mock('@/items/base/dialog', () => ({

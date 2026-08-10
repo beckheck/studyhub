@@ -72,9 +72,11 @@ export function convertRecurrenceToRRule(recurrence: EventRecurrence): string {
 export class GoogleCalendarSync {
   private apiBaseUrl = 'https://www.googleapis.com/calendar/v3'
   private retryDelays: number[]
+  private getValidAccessToken?: () => Promise<string>
 
-  constructor(retryDelays: number[] = [1000, 2000, 4000]) {
+  constructor(retryDelays: number[] = [1000, 2000, 4000], getValidAccessToken?: () => Promise<string>) {
     this.retryDelays = retryDelays
+    this.getValidAccessToken = getValidAccessToken
   }
 
   /**
@@ -249,12 +251,13 @@ export class GoogleCalendarSync {
     accessToken: string,
     retryCount = 0,
   ): Promise<Response> {
+    const resolvedToken = this.getValidAccessToken ? await this.getValidAccessToken() : accessToken
     const url = `${this.apiBaseUrl}${endpoint}`
 
     const options: RequestInit = {
       method,
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${resolvedToken}`,
         'Content-Type': 'application/json',
       },
     }

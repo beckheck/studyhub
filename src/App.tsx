@@ -15,7 +15,6 @@ import useDarkModeStyles from '@/hooks/useDarkModeStyles'
 import useModeAwareTab from '@/hooks/useModeAwareTab'
 import { useScrollToTop } from '@/hooks/useScrollToTop'
 import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore'
-import { useOAuthRedirect } from '@/hooks/useOAuthRedirect'
 import { ItemDialogProvider } from '@/items/ItemDialogProvider'
 import { handleNavigationClick } from '@/lib/navigation-utils'
 import { runFileAttachmentGC } from '@/lib/file-attachment-gc'
@@ -77,9 +76,6 @@ function AppSubtitle() {
 }
 
 export default function StudyPortal(): React.JSX.Element {
-  // Handle OAuth redirects from Google
-  useOAuthRedirect()
-
   // Translation hook
   const { t } = useTranslation('common')
 

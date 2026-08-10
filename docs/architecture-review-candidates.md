@@ -8,31 +8,9 @@
 
 ## Summary table
 
-| ID  | Candidate                                                                                      | Strength                       |
-| --- | ---------------------------------------------------------------------------------------------- | ------------------------------ |
-| F   | Google Calendar OAuth client hardening (dynamic redirect URI, PKCE, per-call refresh) deferred | **Worth exploring** (deferred) |
-| G   | File attachments store base64 in valtio, persisted on every mutation                           | Worth exploring                |
-
----
-
-<a id="candidate-f"></a>
-
-## Candidate F: Google Calendar OAuth client hardening (deferred)
-
-**Status:** Deferred to a separate OAuth session.
-
-**Files:** `src/lib/google-oauth.ts` (197 lines, `REDIRECT_URI` at line 4)
-
-### Problem
-
-- `REDIRECT_URI = 'http://localhost:5173/'` is hardcoded (`google-oauth.ts:4`). Production on any other origin breaks.
-- `GOOGLE_CLIENT_SECRET` in `import.meta.env` is a client-side secret. PKCE should replace it.
-
-### Deepened version
-
-`REDIRECT_URI = window.location.origin + '/'` (or config). PKCE instead of client secret. `refreshAttempts` per call.
-
-**Recommendation: Worth exploring. Deferred to a dedicated OAuth session.**
+| ID  | Candidate                                                            | Strength        |
+| --- | -------------------------------------------------------------------- | --------------- |
+| G   | File attachments store base64 in valtio, persisted on every mutation | Worth exploring |
 
 ---
 

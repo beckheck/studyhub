@@ -525,8 +525,6 @@ export interface Soundtrack {
 export interface GoogleCalendarConfig {
   /** OAuth access token */
   accessToken?: string
-  /** OAuth refresh token */
-  refreshToken?: string
   /** Token expiration timestamp */
   tokenExpiresAt?: number
   /** Selected Google Calendar ID */

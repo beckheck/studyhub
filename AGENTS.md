@@ -27,7 +27,7 @@ Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vit
   - Extension: WXT (`wxt.config.ts`, `src/entrypoints/*`). WXT wraps Vite; `@wxt-dev/module-react` adds React.
 - **Path alias `@` → `src`** in both `vite.config.js` and `wxt.config.ts` (and `tsconfig.json`). Use `@/...` imports.
 - **Feature flags** (env, set in `.env.local`): `VITE_FEATURE_UGLY_CALENDAR`, `VITE_FEATURE_TESTING` gate optional tabs in `App.tsx`.
-- **Google OAuth env:** `VITE_GOOGLE_CLIENT_ID` (see `.env.example`). The OAuth `REDIRECT_URI` is hardcoded to `http://localhost:5173/` in `src/lib/google-oauth.ts` — Google Calendar sync is **web-only by construction**; do not assume it works in extension mode without adding a `chrome.identity.launchWebAuthFlow` adapter.
+- **Google OAuth env:** `VITE_GOOGLE_CLIENT_ID` (see `.env.example`). OAuth uses Google Identity Services (GIS) with PKCE. No client secret. Google Calendar sync is **web-only by construction**; do not assume it works in extension mode without adding a `chrome.identity.launchWebAuthFlow` adapter. See ADR 0006 and ADR 0007.
 
 ## TypeScript
 

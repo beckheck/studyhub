@@ -460,3 +460,52 @@ describe('GoogleCalendarSync.bulkSyncItems', () => {
     expect(result.errors).toEqual(['Test Event: bad event'])
   })
 })
+
+describe('GoogleCalendarSync getValidAccessToken callback', () => {
+  let fetchMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    fetchMock = vi.fn()
+    global.fetch = fetchMock as any
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('uses the token from getValidAccessToken instead of ctx.accessToken when the callback is present', async () => {
+    const freshToken = 'fresh-token-from-callback'
+    const getValidAccessToken = vi.fn().mockResolvedValue(freshToken)
+    const sync = new GoogleCalendarSync([1, 1], getValidAccessToken)
+
+    fetchMock.mockResolvedValue(okResponse('g-evt-1'))
+
+    await sync.syncItem(makeEvent(), { ...CTX, accessToken: 'stale-token' })
+
+    expect(getValidAccessToken).toHaveBeenCalledTimes(1)
+    const options = fetchMock.mock.calls[0][1] as RequestInit
+    expect((options.headers as any).Authorization).toBe(`Bearer ${freshToken}`)
+  })
+
+  it('uses ctx.accessToken directly when the callback is absent', async () => {
+    const sync = new GoogleCalendarSync([1, 1])
+
+    fetchMock.mockResolvedValue(okResponse('g-evt-1'))
+
+    await sync.syncItem(makeEvent(), CTX)
+
+    const options = fetchMock.mock.calls[0][1] as RequestInit
+    expect((options.headers as any).Authorization).toBe(`Bearer ${CTX.accessToken}`)
+  })
+
+  it('surfaces the callback error when getValidAccessToken throws', async () => {
+    const getValidAccessToken = vi.fn().mockRejectedValue(new Error('Token expired, please reconnect'))
+    const sync = new GoogleCalendarSync([1, 1], getValidAccessToken)
+
+    const result = await sync.syncItem(makeEvent(), CTX)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Token expired, please reconnect')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})

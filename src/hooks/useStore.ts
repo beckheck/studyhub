@@ -815,9 +815,6 @@ export function useGoogleCalendar() {
       store.googleCalendar.accessToken = token
       store.googleCalendar.tokenExpiresAt = expiresAt
     },
-    setRefreshToken: (token: string) => {
-      store.googleCalendar.refreshToken = token
-    },
     setCalendars: (calendars: Array<{ id: string; summary: string }>) => {
       store.googleCalendar.calendars = calendars
     },

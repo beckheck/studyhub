@@ -4,9 +4,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useGoogleCalendar, useItems } from '@/hooks/useStore'
 import { useAppState } from '@/hooks/useStore'
+import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync'
 import { useTranslation } from 'react-i18next'
 import { googleOAuthManager } from '@/lib/google-oauth'
-import { googleCalendarSync } from '@/lib/google-calendar-sync'
 import { Loader2, LogOut, Upload, Download } from 'lucide-react'
 import { Item } from '@/items/models'
 
@@ -16,6 +16,7 @@ export default function GoogleCalendarSettings() {
     useGoogleCalendar()
   const appState = useAppState()
   const { addItem } = useItems()
+  const { fetchCalendars, bulkSyncItems, fetchEventsFromCalendar } = useGoogleCalendarSync()
   const [loading, setLoading] = useState(false)
   const [bulkExporting, setBulkExporting] = useState(false)
   const [bulkImporting, setBulkImporting] = useState(false)
@@ -45,14 +46,13 @@ export default function GoogleCalendarSettings() {
       // Store tokens
       setGoogleCalendarConfig({
         accessToken: tokenState.accessToken,
-        refreshToken: tokenState.refreshToken,
         tokenExpiresAt: tokenState.expiresAt,
         syncEnabled: true,
       })
 
       // Fetch calendars
       console.log('Fetching calendars...')
-      const calendars = await googleCalendarSync.fetchCalendars(tokenState.accessToken)
+      const calendars = await fetchCalendars()
       console.log('Calendars fetched:', calendars)
 
       if (calendars && calendars.length > 0) {
@@ -111,10 +111,9 @@ export default function GoogleCalendarSettings() {
         projectsMap[p.id] = p.title
       })
 
-      const results = await googleCalendarSync.bulkSyncItems(
+      const results = await bulkSyncItems(
         appState.items as unknown as Item[],
         {
-          accessToken: googleCalendar.accessToken,
           calendarId: googleCalendar.calendarId,
           syncEnabled: googleCalendar.syncEnabled,
           courses: coursesMap,
@@ -160,11 +159,7 @@ export default function GoogleCalendarSettings() {
       // Fetch events from exactly 30 days ago and into the future
       const timeMin = new Date()
       timeMin.setDate(timeMin.getDate() - 30)
-      const events = await googleCalendarSync.fetchEventsFromCalendar(
-        googleCalendar.accessToken,
-        googleCalendar.calendarId,
-        timeMin,
-      )
+      const events = await fetchEventsFromCalendar(googleCalendar.calendarId, timeMin)
 
       setBulkProgress({ current: 0, total: events.length })
 
