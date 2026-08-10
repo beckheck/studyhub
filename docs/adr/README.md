@@ -44,3 +44,4 @@ stops future architecture reviews from re-litigating the same ground.)
 ## Index
 
 - [ADR 0001: Calendar queries return CalendarEntry, not Item](./0001-calendar-entry-return-shape.md)
+- [ADR 0002: Sync module does not write store](./0002-sync-module-does-not-write-store.md)
