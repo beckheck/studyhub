@@ -4,11 +4,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useCourses, useItems } from '@/hooks/useStore';
-import { ItemDialogTrigger } from '@/items/ItemDialogTrigger';
-import { ItemDialog } from '@/items/base/dialog';
 import { Item } from '@/items/models';
 import { getTimetableInstancesBetween, ItemTimetable } from '@/items/timetable/modelSchema';
-import { useItemDialog } from '@/items/useItemDialog';
+import { useItemDialog } from '@/items/ItemDialogProvider';
 import { getItemsInRange, type CalendarEntry } from '@/lib/calendar-queries';
 import { getDateString } from '@/lib/date-utils';
 import { addDays, endOfMonth, endOfWeek, format, getDay, parse, startOfMonth, startOfWeek } from 'date-fns';
@@ -331,12 +329,10 @@ export default function UglyCalendarPlannerTab() {
               {t('planner:filters.showMultiDayEvents')}
             </Label>
           </div>
-          <ItemDialogTrigger itemType="event" onOpenDialog={() => itemDialog.openAddDialog('event')}>
-            <Button className="rounded-xl">
-              <Plus className="w-4 h-4 mr-2" />
-              {t('items:event.actions.add')}
-            </Button>
-          </ItemDialogTrigger>
+          <Button className="rounded-xl" onClick={() => itemDialog.openAddDialog('event')}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('items:event.actions.add')}
+          </Button>
         </div>
       </div>
     );
@@ -381,20 +377,6 @@ export default function UglyCalendarPlannerTab() {
           }}
         />
       </div>
-
-      <ItemDialog
-        open={itemDialog.open}
-        onOpenChange={itemDialog.onOpenChange}
-        editingItem={itemDialog.editingItem}
-        itemType={itemDialog.itemType}
-        form={itemDialog.form}
-        hidden={itemDialog.hidden}
-        disabled={itemDialog.disabled}
-        availableItemTypes={itemDialog.availableItemTypes}
-        onTypeChange={itemDialog.handleChangeItemType}
-        onSave={itemDialog.handleSave}
-        onDelete={itemDialog.handleDelete}
-      />
     </div>
   );
 }

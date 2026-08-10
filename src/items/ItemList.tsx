@@ -2,9 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useItems } from '@/hooks/useStore';
 import { t } from '@/i18n/config';
-import { ItemDialog } from '@/items/base/dialog';
 import { Item } from '@/items/models';
-import { useItemDialog } from '@/items/useItemDialog';
+import { useItemDialog } from '@/items/ItemDialogProvider';
 import { cn } from '@/lib/utils';
 import { Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -136,21 +135,6 @@ export function ItemList({ className }: ItemListProps) {
           })
         )}
       </div>
-
-      {/* Item Dialog */}
-      <ItemDialog
-        open={itemDialog.open}
-        onOpenChange={itemDialog.onOpenChange}
-        editingItem={itemDialog.editingItem}
-        itemType={itemDialog.itemType}
-        form={itemDialog.form}
-        hidden={itemDialog.hidden}
-        disabled={itemDialog.disabled}
-        availableItemTypes={itemDialog.availableItemTypes}
-        onTypeChange={itemDialog.handleChangeItemType}
-        onSave={itemDialog.handleSave}
-        onDelete={itemDialog.handleDelete}
-      />
     </div>
   );
 }

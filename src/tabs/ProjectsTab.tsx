@@ -6,10 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useItems, useProjects } from '@/hooks/useStore';
-import { ItemDialog } from '@/items/base/dialog';
 import { ItemEvent } from '@/items/event/modelSchema';
 import { ItemTask } from '@/items/task/modelSchema';
-import { useItemDialog } from '@/items/useItemDialog';
+import { useItemDialog } from '@/items/ItemDialogProvider';
 import { Project, ProjectIconName, ProjectMember, ProjectType, ProjectVisualType } from '@/types';
 import { motion } from 'framer-motion';
 import {
@@ -1017,20 +1016,6 @@ export default function ProjectsTab() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <ItemDialog
-        open={itemDialog.open}
-        onOpenChange={itemDialog.onOpenChange}
-        editingItem={itemDialog.editingItem}
-        itemType={itemDialog.itemType}
-        form={itemDialog.form}
-        hidden={itemDialog.hidden}
-        disabled={itemDialog.disabled}
-        availableItemTypes={itemDialog.availableItemTypes}
-        onTypeChange={itemDialog.handleChangeItemType}
-        onSave={itemDialog.handleSave}
-        onDelete={itemDialog.handleDelete}
-      />
     </div>
   );
 }

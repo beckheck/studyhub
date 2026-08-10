@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { ItemDialog } from '@/items/base/dialog';
 import { Item } from '@/items/models';
-import { useItemDialog } from '@/items/useItemDialog';
+import { useItemDialog } from '@/items/ItemDialogProvider';
 import { ITEM_TIMETABLE_ACTIVITY_TYPES, TIME_BLOCKS } from './timetable/modelSchema';
 
 export function ItemDialogExample() {
@@ -226,20 +225,6 @@ export function ItemDialogExample() {
           </div>
         </div>
       </div>
-
-      <ItemDialog
-        open={itemDialog.open}
-        onOpenChange={itemDialog.onOpenChange}
-        editingItem={itemDialog.editingItem}
-        itemType={itemDialog.itemType}
-        form={itemDialog.form}
-        hidden={itemDialog.hidden}
-        disabled={itemDialog.disabled}
-        availableItemTypes={itemDialog.availableItemTypes}
-        onTypeChange={itemDialog.handleChangeItemType}
-        onSave={itemDialog.handleSave}
-        onDelete={itemDialog.handleDelete}
-      />
     </div>
   );
 }

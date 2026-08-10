@@ -6,9 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useItems } from '@/hooks/useStore';
-import { ItemDialogTrigger } from '@/items/ItemDialogTrigger';
-import { ItemDialog } from '@/items/base/dialog';
-import { ItemDialogOptions, useItemDialog } from '@/items/useItemDialog';
+import { ItemDialogOptions, useItemDialog } from '@/items/ItemDialogProvider';
 import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries';
 import { getDateString, isMultiDayEvent } from '@/lib/date-utils';
 import { CalendarView, Item } from '@/types';
@@ -23,11 +21,6 @@ import { useTranslation } from 'react-i18next';
 const addItemDialogOptions: ItemDialogOptions = {
   hidden: { type: false },
   availableItemTypes: ['event', 'exam', 'task'],
-};
-
-const editItemDialogOptions: ItemDialogOptions = {
-  hidden: { type: false },
-  availableItemTypes: ['event', 'exam'],
 };
 
 export default function PlannerTab() {
@@ -230,29 +223,13 @@ export default function PlannerTab() {
               </Label>
             </div>
           )}
-          <ItemDialogTrigger
-            itemType="event"
-            onOpenDialog={() => itemDialog.openAddDialog('event', null, addItemDialogOptions)}
+          <Button
+            className="rounded-xl"
+            onClick={() => itemDialog.openAddDialog('event', null, addItemDialogOptions)}
           >
-            <Button className="rounded-xl">
-              <Plus className="w-4 h-4 mr-2" />
-              {t('items:event.actions.add')}
-            </Button>
-          </ItemDialogTrigger>
-
-          <ItemDialog
-            open={itemDialog.open}
-            onOpenChange={itemDialog.onOpenChange}
-            editingItem={itemDialog.editingItem}
-            itemType={itemDialog.itemType}
-            form={itemDialog.form}
-            hidden={itemDialog.hidden}
-            disabled={itemDialog.disabled}
-            availableItemTypes={itemDialog.availableItemTypes}
-            onTypeChange={itemDialog.handleChangeItemType}
-            onSave={itemDialog.handleSave}
-            onDelete={itemDialog.handleDelete}
-          />
+            <Plus className="w-4 h-4 mr-2" />
+            {t('items:event.actions.add')}
+          </Button>
         </div>
       </div>
 
@@ -262,8 +239,6 @@ export default function PlannerTab() {
           startOfWeek={startOfWeek}
           getAllEventsForDate={getAllEventsForDate}
           handleDayClick={handleDayClick}
-          itemDialog={itemDialog}
-          editItemDialogOptions={editItemDialogOptions}
           handleEventDrop={handleEventDrop}
         />
       ) : (
@@ -275,8 +250,6 @@ export default function PlannerTab() {
           getAllEventsForDate={getAllEventsForDate}
           getAllEventsForTooltip={getAllEventsForTooltip}
           handleDayClick={handleDayClick}
-          itemDialog={itemDialog}
-          editItemDialogOptions={editItemDialogOptions}
           handleEventDrop={handleEventDrop}
         />
       )}

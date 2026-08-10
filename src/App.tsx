@@ -16,6 +16,7 @@ import useModeAwareTab from '@/hooks/useModeAwareTab';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore';
 import { useOAuthRedirect } from '@/hooks/useOAuthRedirect';
+import { ItemDialogProvider } from '@/items/ItemDialogProvider';
 import { handleNavigationClick } from '@/lib/navigation-utils';
 import CourseManagerTab from '@/tabs/CourseManagerTab';
 import DashboardTab from '@/tabs/DashboardTab';
@@ -355,6 +356,7 @@ export default function StudyPortal(): React.JSX.Element {
               </div>
             )}
 
+            <ItemDialogProvider>
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               {/* Desktop tabs with overflow handling - hidden on mobile */}
               <div className="hidden md:flex justify-center">
@@ -415,6 +417,7 @@ export default function StudyPortal(): React.JSX.Element {
                 </TabsContent>
               )}
             </Tabs>
+            </ItemDialogProvider>
 
             {/* Single Soundtrack Card - Always mounted, position controlled by prop */}
             {soundtrack.embed && (

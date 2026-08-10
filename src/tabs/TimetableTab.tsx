@@ -2,9 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useItems } from '@/hooks/useStore';
-import { ItemDialog } from '@/items/base/dialog';
 import { ITEM_TIMETABLE_ACTIVITY_TYPES, ItemTimetable, TIME_BLOCKS } from '@/items/timetable/modelSchema';
-import { useItemDialog } from '@/items/useItemDialog';
+import { useItemDialog } from '@/items/ItemDialogProvider';
 import { Plus } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -279,21 +278,6 @@ export default function TimetableTab() {
           ))}
         </CardContent>
       </Card>
-
-      {/* Unified Item Dialog */}
-      <ItemDialog
-        open={itemDialog.open}
-        onOpenChange={itemDialog.onOpenChange}
-        editingItem={itemDialog.editingItem}
-        itemType={itemDialog.itemType}
-        form={itemDialog.form}
-        hidden={itemDialog.hidden}
-        disabled={itemDialog.disabled}
-        availableItemTypes={itemDialog.availableItemTypes}
-        onTypeChange={itemDialog.handleChangeItemType}
-        onSave={itemDialog.handleSave}
-        onDelete={itemDialog.handleDelete}
-      />
     </div>
   );
 }

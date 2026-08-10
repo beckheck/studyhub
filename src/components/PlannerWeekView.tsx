@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useItems, useWeeklyGoals } from '@/hooks/useStore';
+import { useItemDialog } from '@/items/ItemDialogProvider';
+import { ItemDialogOptions } from '@/items/useItemDialogState';
 import { Plus, Target, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,12 +18,15 @@ import Confetti from './ui/confetti';
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 type DayName = (typeof DAYS)[number];
 
+const editItemDialogOptions: ItemDialogOptions = {
+  hidden: { type: false },
+  availableItemTypes: ['event', 'exam'],
+};
+
 interface PlannerWeekViewProps {
   startOfWeek: Date;
   getAllEventsForDate: (date: Date) => any[];
   handleDayClick: (date: Date) => void;
-  itemDialog: any;
-  editItemDialogOptions?: any;
   handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void;
 }
 
@@ -29,13 +34,12 @@ export function PlannerWeekView({
   startOfWeek,
   getAllEventsForDate,
   handleDayClick,
-  itemDialog,
-  editItemDialogOptions,
   handleEventDrop,
 }: PlannerWeekViewProps) {
   const { getCourseTitle } = useCourses();
   const { weeklyGoals, addGoal, toggleGoal, deleteGoal, clearAllGoals } = useWeeklyGoals();
   const { updateItem } = useItems();
+  const itemDialog = useItemDialog();
   const { t } = useTranslation('planner');
   const { getShortDayNames } = useLocalization();
 

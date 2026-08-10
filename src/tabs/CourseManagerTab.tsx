@@ -14,11 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useConfetti } from '@/hooks/useConfetti';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useExamGrades, useItems } from '@/hooks/useStore';
-import { ItemDialog } from '@/items/base/dialog';
 import { ItemExam } from '@/items/exam/modelSchema';
 import { getItemTaskPriorityColor } from '@/items/task/methods';
 import { ItemTask } from '@/items/task/modelSchema';
-import { useItemDialog } from '@/items/useItemDialog';
+import { useItemDialog } from '@/items/ItemDialogProvider';
 import { compareDates } from '@/lib/date-utils';
 import { motion } from 'framer-motion';
 import {
@@ -1275,21 +1274,6 @@ export default function CourseManagerTab() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Item Dialog for editing tasks and exams */}
-      <ItemDialog
-        open={itemDialog.open}
-        onOpenChange={itemDialog.onOpenChange}
-        editingItem={itemDialog.editingItem}
-        itemType={itemDialog.itemType}
-        form={itemDialog.form}
-        hidden={itemDialog.hidden}
-        disabled={itemDialog.disabled}
-        availableItemTypes={itemDialog.availableItemTypes}
-        onTypeChange={itemDialog.handleChangeItemType}
-        onSave={itemDialog.handleSave}
-        onDelete={itemDialog.handleDelete}
-      />
     </div>
   );
 }

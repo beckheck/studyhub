@@ -29,7 +29,7 @@ vi.mock('@/items/base/dialog', () => ({
   ),
 }));
 
-vi.mock('@/items/useItemDialog', () => ({
+vi.mock('@/items/ItemDialogProvider', () => ({
   useItemDialog: () => ({
     open: false,
     editingItem: null,

@@ -4,12 +4,20 @@ import { Badge } from '@/components/ui/badge';
 import { RichTextDisplay } from '@/components/ui/rich-text-editor';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useCourses, useItems } from '@/hooks/useStore';
+import { useItemDialog } from '@/items/ItemDialogProvider';
+import { Item } from '@/items/models';
+import { ItemDialogOptions } from '@/items/useItemDialogState';
 import { compareDates, isMultiDayEvent } from '@/lib/date-utils';
 import { useTranslation } from 'react-i18next';
 import { CalendarView } from '../types';
 import { useState } from 'react';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+
+const editItemDialogOptions: ItemDialogOptions = {
+  hidden: { type: false },
+  availableItemTypes: ['event', 'exam'],
+};
 
 interface PlannerMonthViewProps {
   monthView: CalendarView;
@@ -19,8 +27,6 @@ interface PlannerMonthViewProps {
   getAllEventsForDate: (date: Date) => any[];
   getAllEventsForTooltip: (date: Date) => any[];
   handleDayClick: (date: Date) => void;
-  itemDialog: any;
-  editItemDialogOptions?: any;
   handleEventDrop: (itemId: string, itemType: string, targetDate: Date) => void;
 }
 
@@ -32,12 +38,11 @@ export function PlannerMonthView({
   getAllEventsForDate,
   getAllEventsForTooltip,
   handleDayClick,
-  itemDialog,
-  editItemDialogOptions,
   handleEventDrop,
 }: PlannerMonthViewProps) {
   const { getCourseTitle } = useCourses();
   const { getItemsByType, updateItem } = useItems();
+  const itemDialog = useItemDialog();
   const { t } = useTranslation('planner');
   const { getShortDayNames, formatDate: localizedFormatDate, formatDateDDMMYYYY } = useLocalization();
 
@@ -283,7 +288,7 @@ export function PlannerMonthView({
                       style={{ borderTopColor: item.color || '#6366f1' }}
                       onClick={e => {
                         e.stopPropagation();
-                        itemDialog.openEditDialog(item, editItemDialogOptions);
+                        itemDialog.openEditDialog(item as Item, editItemDialogOptions);
                       }}
                       title={t('messages.clickToEdit')}
                     >
