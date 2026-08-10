@@ -2,17 +2,16 @@ import { FileAttachmentStorage, type FileRepository } from '@/lib/file-attachmen
 import { uid } from '@/lib/utils';
 import i18next from 'i18next';
 import { proxy, snapshot, subscribe } from 'valtio';
-import { DataTransfer } from '../lib/data-transfer';
+import { createRepository } from '../lib/repository';
+import { deserialize, serialize } from '../lib/data-transfer';
+import { migrateV1ToV2 } from '../lib/migrations/v1-to-v2';
 import { hybridStorage } from '../lib/hybrid-storage';
 import type {
   AppState,
   DegreePlan,
   FileAttachmentMetadata,
-  MoodEmojis,
   StoredFileAttachment,
   WeatherLocation,
-  FocusTimerConfig,
-  GoogleCalendarConfig,
   SemesterDates,
 } from '../types';
 
@@ -35,50 +34,8 @@ const DEFAULT_COURSES = [
   emoji: DEFAULT_COURSE_EMOJIS[index] ?? '📚',
 }));
 
-export const DEFAULT_MOOD_EMOJIS: MoodEmojis = {
-  angry: { emoji: '😠', color: '#ff6b6b', word: 'Angry' },
-  sad: { emoji: '😔', color: '#ff9f43', word: 'Sad' },
-  neutral: { emoji: '😐', color: '#f7dc6f', word: 'Neutral' },
-  happy: { emoji: '🙂', color: '#45b7d1', word: 'Happy' },
-  excited: { emoji: '😁', color: '#10ac84', word: 'Excited' },
-};
-
-export const DEFAULT_HYDRATION_SETTINGS = {
-  useCups: true,
-  cupSizeML: 250,
-  cupSizeOZ: 8.5,
-  dailyGoalML: 2000,
-  dailyGoalOZ: 67.6,
-  unit: 'metric' as const,
-};
-
-export const DEFAULT_FOCUS_TIMER_CONFIG: FocusTimerConfig = {
-  audioEnabled: true,
-  audioVolume: 0.6,
-  notificationsEnabled: true,
-  showCountdown: false,
-  blockingStrategy: 'disabled',
-  sites: [
-    '4chan.org',
-    'amazon.com',
-    'buzzfeed.com',
-    'discord.com',
-    'disneyplus.com',
-    'facebook.com',
-    'instagram.com',
-    'netflix.com',
-    'pinterest.com',
-    'primevideo.com',
-    'reddit.com',
-    'steampowered.com',
-    'telegram.org',
-    'tiktok.com',
-    'twitch.tv',
-    'whatsapp.com',
-    'x.com',
-    'youtube.com',
-  ].join('\n'),
-};
+export { DEFAULT_FOCUS_TIMER_CONFIG, DEFAULT_HYDRATION_SETTINGS, DEFAULT_MOOD_EMOJIS } from '@/lib/defaults';
+import { DEFAULT_FOCUS_TIMER_CONFIG, DEFAULT_HYDRATION_SETTINGS, DEFAULT_MOOD_EMOJIS } from '@/lib/defaults';
 
 const DEFAULT_DEGREE_PLAN: DegreePlan = {
   name: 'Degree Plan',
@@ -216,37 +173,30 @@ export const storeLoadingState = proxy<{
   status: tLoadingScreen('initializingStorage'),
 });
 
+// Create the repository for app state persistence.
+// See ADR 0004: repository seam for app state.
+const repo = createRepository<AppState>({
+  storage: hybridStorage,
+  storageKey: STORAGE_KEY,
+  serialize,
+  deserialize,
+  migrations: [{ from: '2', to: '2', migrate: migrateV1ToV2 }],
+});
+
+// Flag to track if we're currently applying changes from storage
+let isApplyingFromStorage = false;
+let isStoreReady = false;
+
 // Load state from hybrid storage (IndexedDB/BrowserStorage or localStorage) or create initial state
 async function loadState(): Promise<AppState> {
-  let state = createInitialState();
-  try {
-    // Check if we're in browser environment
-    if (typeof window === 'undefined') {
-      console.log('Not in browser environment, returning initial state');
-      return createInitialState();
-    }
-
-    storeLoadingState.status = tLoadingScreen('loadingFromStorage', { adapter: hybridStorage.adapterName });
-
-    // Try to load from hybrid storage
-    let exchangeData: any = null;
-    exchangeData = await hybridStorage.getItem(STORAGE_KEY);
-
-    if (exchangeData) {
-      const dataTransfer: DataTransfer = new DataTransfer(
-        () => state,
-        newState => {
-          state = { ...state, ...newState };
-        },
-      );
-      storeLoadingState.status = tLoadingScreen('restoringData');
-      dataTransfer.importData(exchangeData);
-    } else {
-      console.error('Failed to load state from storage');
-    }
-  } catch (error) {
-    console.error('Failed to load state from storage:', error);
+  if (typeof window === 'undefined') {
+    console.log('Not in browser environment, returning initial state');
+    return createInitialState();
   }
+
+  storeLoadingState.status = tLoadingScreen('loadingFromStorage', { adapter: hybridStorage.adapterName });
+  const state = await repo.load(createInitialState);
+  storeLoadingState.status = tLoadingScreen('restoringData');
   return state;
 }
 
@@ -260,7 +210,7 @@ loadState()
   .then(loadedState => {
     storeLoadingState.status = tLoadingScreen('updatingApplicationState');
     isApplyingFromStorage = true; // Prevent persistence during initial load
-    updateProxyFromState(store, loadedState, false);
+    repo.patch(store, loadedState);
     isApplyingFromStorage = false;
 
     storeLoadingState.isLoading = false;
@@ -293,26 +243,11 @@ loadState()
 
 // Function to update the store state (for data import)
 export const patchStoreState = (newState: Partial<AppState>) => {
-  updateProxyFromState(store, newState, true);
+  repo.patch(store, { ...snapshot(store) as any, ...newState });
 };
 
-// Data transfer instance for import/export
-export const dataTransfer: DataTransfer = new DataTransfer(
-  // Get state callback - return the current state snapshot
-  () => snapshot(store) as any,
-  // Set state callback - update the entire store state using patchStoreState
-  newState => {
-    patchStoreState(newState);
-  },
-);
-
-// Flag to track if we're currently applying changes from storage
-let isApplyingFromStorage = false;
-let isStoreReady = false;
-
-// Subscribe to changes and persist to localStorage (only after store is ready)
+// Subscribe to changes and persist to storage (only after store is ready)
 subscribe(store, () => {
-  // Skip persistence if this change came from a storage event or store is not ready yet
   if (isApplyingFromStorage || !isStoreReady) {
     return;
   }
@@ -325,42 +260,23 @@ export function persistStore(): Promise<void> {
   if (!isStoreReady) {
     return Promise.reject(new Error('Store not ready yet'));
   }
-  return new Promise((resolve, reject) => {
-    try {
-      const exchangeData = dataTransfer.exportData();
-
-      // Use hybrid storage for all contexts (extension and web)
-      hybridStorage
-        .setItem(STORAGE_KEY, exchangeData)
-        .then(() => {
-          resolve();
-        })
-        .catch(error => {
-          console.error('Failed to persist state to hybrid storage:', error);
-          reject(error);
-        });
-    } catch (error) {
-      console.error('Failed to persist state:', error);
-      reject(error);
-    }
-  });
+  return repo.save(snapshot(store) as AppState);
 }
 
-// Function to set up storage synchronization between tabs/contexts
+// Cross-context synchronization.
+// See ADR 0004: the setTimeout(0) is kept to match the proven synchronization pattern.
 function setupStorageSynchronization() {
-  hybridStorage.addChangeListener((key: string, newValue: any) => {
-    if (key === STORAGE_KEY && newValue && isStoreReady) {
-      try {
-        isApplyingFromStorage = true;
-        // newValue is already the native object from storage adapters
-        dataTransfer.importData(newValue);
-      } catch (error) {
-        console.error('Failed to handle storage sync:', error);
-      } finally {
-        setTimeout(() => {
-          isApplyingFromStorage = false;
-        }, 0);
-      }
+  repo.subscribe(state => {
+    if (!isStoreReady) return;
+    try {
+      isApplyingFromStorage = true;
+      repo.patch(store, state);
+    } catch (error) {
+      console.error('Failed to handle storage sync:', error);
+    } finally {
+      setTimeout(() => {
+        isApplyingFromStorage = false;
+      }, 0);
     }
   });
 }
@@ -397,47 +313,6 @@ const fileRepository: FileRepository = {
 };
 
 export const fileAttachmentStorage = new FileAttachmentStorage(fileRepository);
-
-// Helper function to recursively update proxy properties
-function updateProxyFromState(proxy: any, newState: any, patch = false) {
-  if (!patch) {
-    // Remove properties that don't exist in newState
-    Object.keys(proxy).forEach(key => {
-      if (!(key in newState)) {
-        delete proxy[key];
-      }
-    });
-  }
-
-  // Update/add properties from newState
-  Object.keys(newState).forEach(key => {
-    const newValue = newState[key];
-    const currentValue = proxy[key];
-
-    if (Array.isArray(newValue)) {
-      // For arrays, update in place to maintain valtio reactivity
-      if (Array.isArray(currentValue)) {
-        // Clear existing array and add new items
-        currentValue.length = 0;
-        currentValue.push(...newValue);
-      } else {
-        // Replace with new array if current is not an array
-        proxy[key] = newValue;
-      }
-    } else if (newValue && typeof newValue === 'object') {
-      // For nested objects, recursively update if current value is also an object
-      if (currentValue && typeof currentValue === 'object' && !Array.isArray(currentValue)) {
-        updateProxyFromState(currentValue, newValue, patch);
-      } else {
-        // Replace with new object if current is not an object
-        proxy[key] = newValue;
-      }
-    } else {
-      // For primitive values, direct assignment
-      proxy[key] = newValue;
-    }
-  });
-}
 
 // Translation helper for store loading messages
 function tLoadingScreen(key: string, options?: { adapter?: string }) {

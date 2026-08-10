@@ -2,7 +2,9 @@ import StorageInfoCard from '@/components/StorageInfoCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/contexts/AppContext';
-import { dataTransfer, persistStore } from '@/stores/app';
+import { exportFile, importFile } from '@/lib/data-transfer';
+import { useAppState } from '@/hooks/useStore';
+import { patchStoreState, persistStore } from '@/stores/app';
 import { Download, Github } from 'lucide-react';
 import { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 export default function AboutSettings() {
   const { isExtension } = useAppContext();
   const { t } = useTranslation('settings');
+  const appState = useAppState();
 
   return (
     <div className="space-y-4 text-sm text-zinc-600 dark:text-zinc-400">
@@ -18,7 +21,7 @@ export default function AboutSettings() {
         <p>{t(isExtension ? 'about.proTipExtension' : 'about.proTip')}</p>
       </div>
       <div className="grid gap-2 lg:grid-cols-3 lg:gap-3">
-        <Button variant="outline" onClick={() => dataTransfer.exportFile()} className="w-full rounded-xl">
+        <Button variant="outline" onClick={() => exportFile(appState as any)} className="w-full rounded-xl">
           <Download className="w-4 h-4 mr-2" />
           {t('about.exportData')}
         </Button>
@@ -31,8 +34,9 @@ export default function AboutSettings() {
                 const file = e.target.files?.[0];
                 if (file) {
                   try {
-                    const success = await dataTransfer.importFile(file);
-                    if (success) {
+                    const importedState = await importFile(file);
+                    if (importedState) {
+                      patchStoreState(importedState);
                       await persistStore();
                       setTimeout(() => {
                         alert(t('about.importSuccess'));

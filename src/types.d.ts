@@ -376,14 +376,6 @@ export interface ThemeState {
 }
 
 /**
- * Data transfer functionality for settings export/import
- */
-export interface DataTransfer {
-  exportData: () => void;
-  importData: (file: File) => Promise<boolean>;
-}
-
-/**
  * Mood emoji configuration object
  */
 export interface MoodEmoji {

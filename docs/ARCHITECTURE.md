@@ -111,10 +111,10 @@ Entrypoints are **adapters** at the WXT seam. They satisfy the extension host's 
 
 ### Store (`src/stores/app.ts`)
 
-- **Interface (exported):** `store` (valtio `proxy<AppState>`), `storeLoadingState`, `persistStore()`, `patchStoreState()`, `performGarbageCollection()`, `dataTransfer`, default-config constants.
-- **Implementation:** `createInitialState()`, `loadState()` (async, reads `hybridStorage` -> `dataTransfer.importData`), `subscribe(store)` -> `persistStore`, `setupStorageSynchronization` (cross-context import on storage change), `updateProxyFromState` (recursive in-place valtio patcher for imports).
+- **Interface (exported):** `store` (valtio `proxy<AppState>`), `storeLoadingState`, `persistStore()`, `patchStoreState()`, `fileAttachmentStorage`, default-config constants (re-exported from `@/lib/defaults`).
+- **Implementation:** `createInitialState()`, `loadState()` (async, calls `repo.load()`), `subscribe(store)` -> `persistStore` (calls `repo.save()`), `setupStorageSynchronization` (calls `repo.subscribe()` for cross-context import). The repository (`@/lib/repository.ts`) owns the persistence lifecycle (load/save/subscribe/patch). See [ADR 0004](./adr/0004-repository-seam-for-app-state.md).
 
-This is the **primary state module**. Its interface is broad (many exported defaults + the proxy + lifecycle functions), reflecting that it owns the whole `AppState` shape. Depth is moderate: a lot of behavior (`loadState`, `persistStore`, cross-context sync, proxy patching) sits behind `store` + `persistStore`, but `performGarbageCollection` and `updateProxyFromState` are concerns that arguably belong to other modules (file attachments, the repository). See the [candidates doc](./architecture-review-candidates.md).
+This is the **primary state module**. Its interface is broad (the proxy + lifecycle functions), reflecting that it owns the whole `AppState` shape. Persistence lifecycle (serialization, transport, cross-context sync, proxy patching) is delegated to the repository. See [ADR 0004](./adr/0004-repository-seam-for-app-state.md).
 
 <a id="state-access-hooks"></a>
 ### State access hooks (`src/hooks/useStore.ts`)
@@ -327,7 +327,7 @@ These describe the **current** conventions rather than aspirations. Future work 
 Surfaces where the baseline is unresolved or where a decision is pending. These are candidates for ADRs during grilling.
 
 1. **Is Google Calendar sync intended to work in extension mode?** The OAuth `REDIRECT_URI` is hardcoded to `localhost:5173` (web). If extension sync is in scope, the `OAuthClient` needs a `chrome.identity.launchWebAuthFlow` adapter (a second adapter at the OAuth seam). If out of scope, record it as an ADR so future reviews do not re-flag it.
-2. **Should `XItem*` types in `data-transfer.ts` be derived from the zod schemas?** The parallel type system can drift. A schema-driven exchange format would close the gap.
+2. **Should `XItem*` types in `data-transfer.ts` be derived from the zod schemas?** The parallel type system can drift. A schema-driven exchange format would close the gap. Deferred from the [Candidate E](./architecture-review-candidates.md#candidate-e) grilling session (see [ADR 0004](./adr/0004-repository-seam-for-app-state.md)); the repository seam was accepted without touching the exchange format shape.
 3. **Should file attachments live in `store` (base64) or in storage (per-file keys)?** The current design bloats every persist with all base64. Moving to per-key storage is a real seam change.
 4. **Where does `performGarbageCollection` belong?** It sits in `stores/app.ts` but knows about rich-text HTML structure. Moving it to `file-attachment-storage.ts` would co-locate file lifecycle.
 

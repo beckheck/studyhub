@@ -5,201 +5,200 @@ import {
   DEFAULT_HYDRATION_SETTINGS,
   DEFAULT_MOOD_EMOJIS,
 } from '@/stores/app';
-import { AppState, CourseRecord, Item, SoundtrackPosition } from '@/types';
-import { createLocalMidnightDate } from './date-utils';
+import type {
+  AppState,
+  CourseRecord,
+  DashboardState,
+  Item,
+  SemesterDates,
+  SoundtrackPosition,
+} from '@/types';
 
-type StateUpdater = (updates: Partial<AppState>) => void;
-
-export class DataTransfer {
-  private getState: () => AppState;
-  private setState: StateUpdater;
-
-  constructor(getState: () => AppState, setState: StateUpdater) {
-    this.getState = getState;
-    this.setState = setState;
-  }
-
-  exportData() {
-    const state = this.getState();
-    const data: ExchangeFormatV2 = {
-      version: '2',
-      courses: state.courses,
-      sessions: state.sessions,
-      examGrades: state.examGrades,
-      sessionTasks: state.sessionTasks,
-      items: convertDatesToTimestamps(state.items, /(At|^until)$/),
-      projects: convertDatesToTimestamps(state.projects ?? [], /(At)$/),
-      weeklyGoals: state.weeklyGoals,
-      degreePlan: {
-        name: state.degreePlan.name,
-        semesters: state.degreePlan.semesters,
-        completedCourses: state.degreePlan.completedCourses,
-      },
-      wellness: state.wellness,
-      fileAttachments: state.fileAttachments,
-      dashboard: state.dashboard,
-      courseRecords: convertDatesToTimestamps(state.courseRecords ?? [], /(At)$/),
-      settings: {
-        selectedCourseId: state.selectedCourseId,
-        soundtrackEmbed: state.soundtrack.embed,
-        soundtrackPosition: state.soundtrack.position,
-        weather: state.weather,
-        focusTimer: state.focusTimer,
-        theme: {
-          darkMode: state.theme.darkMode,
-          gradient: {
-            enabled: state.theme.gradientEnabled,
-            start: state.theme.gradientStart,
-            middle: state.theme.gradientMiddle,
-            end: state.theme.gradientEnd,
-          },
-          customCursor: state.theme.customCursor,
-          accentColor: state.theme.accentColor,
-          cardOpacity: state.theme.cardOpacity,
-          bgImage: state.theme.bgImage,
-        },
-        activeTabsByMode: state.activeTabsByMode,
-      },
-    };
-    return data;
-  }
-
-  exportFile(): void {
-    const data = this.exportData();
-    try {
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const now = new Date();
-      const yyyymmdd_hhmm =
-        now.getFullYear() +
-        String(now.getMonth() + 1).padStart(2, '0') +
-        String(now.getDate()).padStart(2, '0') +
-        '_' +
-        String(now.getHours()).padStart(2, '0') +
-        String(now.getMinutes()).padStart(2, '0');
-      a.download = `studyhub_${yyyymmdd_hhmm}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error exporting data:', error);
-    }
-  }
-
-  async importFile(file: File): Promise<boolean> {
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      return this.importData(data);
-    } catch (error) {
-      console.error('Error importing data:', error);
-      return false;
-    }
-  }
-
-  importData(data: any): boolean {
-    try {
-      if (data.version === '2') {
-        this.importDataV2(data);
-      } else {
-        throw new Error('Unsupported exchange data format version');
-      }
-      return true;
-    } catch (error) {
-      console.error('Error importing data:', error);
-      return false;
-    }
-  }
-
-  private importDataV2(data: ExchangeFormatV2) {
-    const convertedItems = convertLegacyItems(data);
-
-    // Combine existing items with converted items
-    const existingItems = data.items ? (convertTimestampsToDates(data.items, /(At|^until)$/) as Item[]) : [];
-    const items = [...existingItems, ...convertedItems];
-
-    this.setState({
-      courses: data.courses,
-      degreePlan: {
-        name: data.degreePlan.name || 'Degree Plan',
-        ...data.degreePlan,
-      },
-      examGrades: data.examGrades,
-      sessionTasks: data.sessionTasks,
-      items,
-      projects: normalizeProjects(data.projects),
-      weeklyGoals: data.weeklyGoals,
-      selectedCourseId: data.settings.selectedCourseId,
-      wellness: {
-        water: data.wellness.water || 0,
-        gratitude: data.wellness.gratitude || '',
-        moodPercentages: data.wellness.moodPercentages || {},
-        hasInteracted: data.wellness.hasInteracted || false,
-        monthlyMoods: data.wellness.monthlyMoods || {},
-        showWords: data.wellness.showWords !== undefined ? data.wellness.showWords : true,
-        moodEmojis: data.wellness.moodEmojis || {
-          ...DEFAULT_MOOD_EMOJIS,
-        },
-        hydrationSettings: data.wellness.hydrationSettings || {
-          ...DEFAULT_HYDRATION_SETTINGS,
-        },
-        dailyHydration: data.wellness.dailyHydration || {},
-      },
-      soundtrack: {
-        embed: data.settings.soundtrackEmbed,
-        position: data.settings.soundtrackPosition,
-      },
-      weather: {
-        apiKey: data.settings.weather.apiKey,
-        location: data.settings.weather.location,
-      },
-      focusTimer: data.settings.focusTimer || {
-        ...DEFAULT_FOCUS_TIMER_CONFIG,
-      },
+export function serialize(state: AppState): ExchangeFormatV2 {
+  return {
+    version: '2',
+    courses: state.courses,
+    sessions: state.sessions,
+    examGrades: state.examGrades,
+    sessionTasks: state.sessionTasks,
+    items: convertDatesToTimestamps(state.items, /(At|^until)$/),
+    projects: convertDatesToTimestamps(state.projects ?? [], /(At)$/),
+    weeklyGoals: state.weeklyGoals,
+    degreePlan: {
+      name: state.degreePlan.name,
+      semesters: state.degreePlan.semesters,
+      completedCourses: state.degreePlan.completedCourses,
+    },
+    wellness: state.wellness,
+    fileAttachments: state.fileAttachments,
+    dashboard: state.dashboard,
+    courseRecords: convertDatesToTimestamps(state.courseRecords ?? [], /(At)$/),
+    settings: {
+      selectedCourseId: state.selectedCourseId,
+      soundtrackEmbed: state.soundtrack.embed,
+      soundtrackPosition: state.soundtrack.position,
+      weather: state.weather,
+      focusTimer: state.focusTimer,
       theme: {
-        darkMode: data.settings.theme.darkMode,
-        gradientEnabled: data.settings.theme.gradient.enabled,
-        gradientStart: data.settings.theme.gradient.start,
-        gradientMiddle: data.settings.theme.gradient.middle,
-        gradientEnd: data.settings.theme.gradient.end,
-        customCursor: data.settings.theme.customCursor,
-        accentColor: data.settings.theme.accentColor,
-        cardOpacity: data.settings.theme.cardOpacity,
-        bgImage: data.settings.theme.bgImage,
-      },
-      fileAttachments: data.fileAttachments || {
-        files: {},
-        metadata: {},
-      },
-      dashboard: {
-        widgetVisibility: {
-          ...DEFAULT_DASHBOARD_WIDGET_VISIBILITY,
-          ...(data.dashboard?.widgetVisibility || {}),
+        darkMode: state.theme.darkMode,
+        gradient: {
+          enabled: state.theme.gradientEnabled,
+          start: state.theme.gradientStart,
+          middle: state.theme.gradientMiddle,
+          end: state.theme.gradientEnd,
         },
-        widgetOrder: data.dashboard?.widgetOrder || [...DEFAULT_DASHBOARD_WIDGET_ORDER],
-        widgetCollapsed: data.dashboard?.widgetCollapsed || {},
-        missionText: data.dashboard?.missionText || '',
-        missionLink: data.dashboard?.missionLink || '',
+        customCursor: state.theme.customCursor,
+        accentColor: state.theme.accentColor,
+        cardOpacity: state.theme.cardOpacity,
+        bgImage: state.theme.bgImage,
       },
-      activeTabsByMode: data.settings.activeTabsByMode || {},
-      courseRecords: data.courseRecords 
-        ? (convertTimestampsToDates(data.courseRecords, /(At)$/) as CourseRecord[]) 
-        : [],
-    });
+      activeTabsByMode: state.activeTabsByMode,
+    },
+    semesterDates: state.semesterDates,
+  };
+}
 
-    this.setState({
-      sessions: data.sessions.map(o => ({
-        ...o,
-        startTs: new Date(o.startTs).getTime(),
-        endTs: new Date(o.endTs).getTime(),
-      })),
-    });
+export function exportFile(state: AppState): void {
+  const data = serialize(state);
+  try {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const now = new Date();
+    const yyyymmdd_hhmm =
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      '_' +
+      String(now.getHours()).padStart(2, '0') +
+      String(now.getMinutes()).padStart(2, '0');
+    a.download = `studyhub_${yyyymmdd_hhmm}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error exporting data:', error);
   }
 }
 
-interface ExchangeFormatV2 {
+export async function importFile(file: File): Promise<AppState | null> {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    return deserialize(data);
+  } catch (error) {
+    console.error('Error importing data:', error);
+    return null;
+  }
+}
+
+export function deserialize(data: any): AppState {
+  if (data.version === '2') {
+    return deserializeV2(data);
+  }
+  throw new Error('Unsupported exchange data format version');
+}
+
+function deserializeV2(data: ExchangeFormatV2): AppState {
+  const existingItems = data.items ? (convertTimestampsToDates(data.items, /(At|^until)$/) as Item[]) : [];
+  const items = existingItems;
+
+  const courseRecords: CourseRecord[] = data.courseRecords
+    ? (convertTimestampsToDates(data.courseRecords, /(At)$/) as CourseRecord[])
+    : [];
+
+  const sessions = data.sessions.map(o => ({
+    ...o,
+    startTs: new Date(o.startTs).getTime(),
+    endTs: new Date(o.endTs).getTime(),
+  }));
+
+  return {
+    courses: data.courses,
+    degreePlan: {
+      name: data.degreePlan.name || 'Degree Plan',
+      ...data.degreePlan,
+    },
+    examGrades: data.examGrades,
+    sessionTasks: data.sessionTasks,
+    items,
+    projects: normalizeProjects(data.projects),
+    weeklyGoals: data.weeklyGoals,
+    selectedCourseId: data.settings.selectedCourseId,
+    wellness: {
+      water: data.wellness.water || 0,
+      gratitude: data.wellness.gratitude || '',
+      moodPercentages: data.wellness.moodPercentages || {},
+      hasInteracted: data.wellness.hasInteracted || false,
+      monthlyMoods: data.wellness.monthlyMoods || {},
+      showWords: data.wellness.showWords !== undefined ? data.wellness.showWords : true,
+      moodEmojis: data.wellness.moodEmojis || {
+        ...DEFAULT_MOOD_EMOJIS,
+      },
+      hydrationSettings: data.wellness.hydrationSettings || {
+        ...DEFAULT_HYDRATION_SETTINGS,
+      },
+      dailyHydration: data.wellness.dailyHydration || {},
+    },
+    soundtrack: {
+      embed: data.settings.soundtrackEmbed,
+      position: data.settings.soundtrackPosition,
+    },
+    weather: {
+      apiKey: data.settings.weather.apiKey,
+      location: data.settings.weather.location,
+    },
+    googleCalendar: {
+      syncEnabled: false,
+    },
+    focusTimer: data.settings.focusTimer || {
+      ...DEFAULT_FOCUS_TIMER_CONFIG,
+    },
+    theme: {
+      darkMode: data.settings.theme.darkMode,
+      gradientEnabled: data.settings.theme.gradient.enabled,
+      gradientStart: data.settings.theme.gradient.start,
+      gradientMiddle: data.settings.theme.gradient.middle,
+      gradientEnd: data.settings.theme.gradient.end,
+      customCursor: data.settings.theme.customCursor,
+      accentColor: data.settings.theme.accentColor,
+      cardOpacity: data.settings.theme.cardOpacity,
+      bgImage: data.settings.theme.bgImage,
+    },
+    fileAttachments: data.fileAttachments || {
+      files: {},
+      metadata: {},
+    },
+    dashboard: {
+      widgetVisibility: {
+        ...DEFAULT_DASHBOARD_WIDGET_VISIBILITY,
+        ...(data.dashboard?.widgetVisibility || {}),
+      },
+      widgetOrder: data.dashboard?.widgetOrder || [...DEFAULT_DASHBOARD_WIDGET_ORDER],
+      widgetCollapsed: data.dashboard?.widgetCollapsed || {},
+      missionText: data.dashboard?.missionText || '',
+      missionLink: data.dashboard?.missionLink || '',
+    },
+    activeTabsByMode: data.settings.activeTabsByMode || {},
+    semesterDates: {
+      firstSemesterStart: data.semesterDates?.firstSemesterStart || '',
+      firstSemesterEnd: data.semesterDates?.firstSemesterEnd || '',
+      secondSemesterStart: data.semesterDates?.secondSemesterStart || '',
+      secondSemesterEnd: data.semesterDates?.secondSemesterEnd || '',
+      finalsStart: data.semesterDates?.finalsStart || '',
+      finalsEnd: data.semesterDates?.finalsEnd || '',
+      recessWeekStart: data.semesterDates?.recessWeekStart || '',
+      recessWeekEnd: data.semesterDates?.recessWeekEnd || '',
+      winterBreakStart: data.semesterDates?.winterBreakStart || '',
+      winterBreakEnd: data.semesterDates?.winterBreakEnd || '',
+    },
+    courseRecords,
+    sessions,
+  };
+}
+
+export interface ExchangeFormatV2 {
   version: '2';
   courses: Array<{
     id: string;
@@ -432,6 +431,8 @@ interface ExchangeFormatV2 {
     createdAt: number;
     updatedAt: number;
   }>;
+  dashboard?: DashboardState;
+  semesterDates?: SemesterDates;
 }
 
 // Inlined Item type definitions
@@ -486,124 +487,6 @@ type XItemTimetable = XItemBase & {
 };
 
 type XItem = XItemTask | XItemExam | XItemEvent | XItemTimetable;
-
-function convertLegacyItems(data: ExchangeFormatV2) {
-  const convertedExamItems: Item[] = (data.exams || []).map(exam => ({
-    id: exam.id,
-    type: 'exam' as const,
-    title: exam.title,
-    courseId: exam.courseId,
-    color: undefined,
-    notes: exam.notes,
-    tags: undefined,
-    isDeleted: false,
-    createdAt: new Date(), // Use current time since we don't have original createdAt
-    updatedAt: new Date(),
-    // Exam-specific fields
-    startsAt: createLocalMidnightDate(exam.date), // Convert date string to Date object at local midnight
-    weight: exam.weight,
-    isCompleted: false, // Default to false since legacy exams don't have this field
-  }));
-
-  // Convert legacy tasks to items for migration to new item system
-  const convertedTaskItems: Item[] = (data.tasks || []).map(task => {
-    // Normalize priority to match the expected enum values
-    let priority: 'low' | 'medium' | 'high' = 'medium'; // default
-    if (task.priority) {
-      const normalizedPriority = task.priority.toLowerCase();
-      if (normalizedPriority === 'low' || normalizedPriority === 'high') {
-        priority = normalizedPriority;
-      }
-    }
-    return {
-      id: task.id,
-      type: 'task' as const,
-      title: task.title,
-      courseId: task.courseId,
-      color: undefined,
-      notes: task.notes || '',
-      tags: undefined,
-      isDeleted: false,
-      createdAt: new Date(), // Use current time since we don't have original createdAt
-      updatedAt: new Date(),
-      // Task-specific fields
-      dueAt: createLocalMidnightDate(task.due), // Convert due date string to Date object at local midnight
-      priority,
-      isCompleted: task.done,
-    };
-  });
-
-  // Convert legacy regularEvents to items for migration to new item system
-  const convertedEventItems: Item[] = (data.regularEvents || []).map(event => ({
-    id: event.id,
-    type: 'event' as const,
-    title: event.title,
-    courseId: event.courseId,
-    color: event.color,
-    notes: event.notes || '',
-    tags: undefined,
-    isDeleted: false,
-    createdAt: new Date(), // Use current time since we don't have original createdAt
-    updatedAt: new Date(),
-    // Event-specific fields
-    startsAt: createLocalMidnightDate(event.startDate), // Convert start date string to Date object at local midnight
-    endsAt: event.endDate ? createLocalMidnightDate(event.endDate) : createLocalMidnightDate(event.startDate),
-    isAllDay: true,
-    location: event.location || undefined,
-    recurrence: undefined, // Regular events don't have recurrence data in the old format
-  }));
-
-  // Convert legacy timetableEvents to items for migration to new item system
-  const convertedTimetableItems: Item[] = (data.timetableEvents || []).map(timetableEvent => {
-    // Convert eventType to activityType
-    const eventTypeMap: Record<string, string> = {
-      Cátedra: 'lecture',
-      Ayudantía: 'tutorial',
-      Taller: 'workshop',
-      Laboratorio: 'lab',
-    };
-
-    // Convert day names to weekday numbers (0=Sunday, 1=Monday, ..., 6=Saturday)
-    const dayToWeekdayMap: Record<string, number> = {
-      Sunday: 0,
-      Monday: 1,
-      Tuesday: 2,
-      Wednesday: 3,
-      Thursday: 4,
-      Friday: 5,
-      Saturday: 6,
-    };
-
-    const activityType = eventTypeMap[timetableEvent.eventType] || timetableEvent.eventType.toLowerCase();
-    const weekday = dayToWeekdayMap[timetableEvent.day] ?? 1; // Default to Monday if not found
-
-    return {
-      id: timetableEvent.id,
-      type: 'timetable' as const,
-      title: `${timetableEvent.eventType}`, // Use eventType as title since timetable items don't have explicit titles
-      courseId: timetableEvent.courseId,
-      color: timetableEvent.color,
-      notes: '',
-      tags: undefined,
-      isDeleted: false,
-      createdAt: new Date(), // Use current time since we don't have original createdAt
-      updatedAt: new Date(),
-      // Timetable-specific fields
-      blockId: timetableEvent.block,
-      weekday,
-      classroom: timetableEvent.classroom || undefined,
-      teacher: timetableEvent.teacher || undefined,
-      activityType,
-    };
-  });
-  const convertedItems = [
-    ...convertedExamItems,
-    ...convertedTaskItems,
-    ...convertedEventItems,
-    ...convertedTimetableItems,
-  ];
-  return convertedItems;
-}
 
 /**
  * Recursively converts Date objects to timestamps for properties matching the given pattern

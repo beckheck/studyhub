@@ -1,6 +1,7 @@
 import { browserRuntime, isExtension } from '@/lib/browser-runtime-stub';
 import { BrowserStorageAdapter, HybridStorage, LocalStorageAdapter } from '@/lib/hybrid-storage';
 import { showNotification, requestNotificationPermission } from '@/lib/notifications';
+import { createRepository } from '@/lib/repository';
 import { enactSiteBlockingStrategy } from '@/lib/site-blocking';
 import { getNextPhase, shouldTransitionPhase, getTechniqueConfig } from '@/lib/technique-utils';
 import { getNotificationTranslationAsync } from '@/lib/translation-utils';
@@ -12,8 +13,15 @@ import { AudioKey, playAudio } from './audio';
 
 const STORAGE_KEY = 'sp:studySessionTimerState';
 
-const storage = new HybridStorage([BrowserStorageAdapter, LocalStorageAdapter]);
-// const storage = new InMemoryAdapter();
+const timerStorage = new HybridStorage([BrowserStorageAdapter, LocalStorageAdapter]);
+
+const timerRepo = createRepository<BackgroundTimerState>({
+  storage: timerStorage,
+  storageKey: STORAGE_KEY,
+  serialize: (state: BackgroundTimerState) => state,
+  deserialize: (data: any) => data as BackgroundTimerState,
+  migrations: [],
+});
 
 export class StudySessionTimerManager {
   private timerState: BackgroundTimerState = {
@@ -58,27 +66,21 @@ export class StudySessionTimerManager {
   // Load timer state from storage on startup
   private async initializeTimerState() {
     try {
-      const result = await storage.getItem(STORAGE_KEY);
+      const result = await timerRepo.load(() => this.timerState);
       this.setStorageValue(result);
 
-      // If notifications are enabled but we haven't checked permissions, check them now
       if (this.getFocusTimerSettings().notificationsEnabled) {
         this.requestNotificationPermissionIfNeeded();
       }
 
-      // Set up storage change listener
-      const storageChangeListener = (key: string, newValue: any) => {
-        if (key === STORAGE_KEY && newValue) {
-          try {
-            this.setStorageValue(newValue);
-            this.broadcastTimerState();
-          } catch (error) {
-            console.error('Failed to handle storage change:', error);
-          }
+      timerRepo.subscribe(state => {
+        try {
+          this.setStorageValue(state);
+          this.broadcastTimerState();
+        } catch (error) {
+          console.error('Failed to handle storage change:', error);
         }
-      };
-
-      storage.addChangeListener(storageChangeListener);
+      });
     } catch (error) {
       console.error('Failed to load timer state:', error);
     }
@@ -205,7 +207,7 @@ export class StudySessionTimerManager {
   }
 
   private async saveTimerState() {
-    await storage.setItem(STORAGE_KEY, this.timerState);
+    await timerRepo.save(this.timerState);
     this.broadcastTimerState();
   }
 

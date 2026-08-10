@@ -165,7 +165,9 @@ Moving `performGarbageCollection` into `file-attachment-storage.ts` (where the H
 
 <a id="candidate-e"></a>
 
-## Candidate E: Storage has no repository seam, `XItem*` duplicates schemas, `any`-typed proxy patcher _(scoped)_
+## Candidate E: Storage has no repository seam, `XItem*` duplicates schemas, `any`-typed proxy patcher _(scoped, grilled)_
+
+**Status:** Grilled. The repository seam, the proxy patcher move, the cross-context sync race fix, and the migration pipeline are accepted (see [ADR 0004](./adr/0004-repository-seam-for-app-state.md) and [ADR 0005](./adr/0005-migration-pipeline.md)). The `XItem*` types and the regex-based date conversion were deferred from this session and remain an open question ([ARCHITECTURE.md](./ARCHITECTURE.md) open question #2). `performGarbageCollection` moved earlier under [Candidate D](#candidate-d) / [ADR 0003](./adr/0003-lib-modules-do-not-import-store.md).
 
 **Files:** `src/stores/app.ts` (451 lines: `loadState`, `persistStore`, `setupStorageSynchronization`, `updateProxyFromState`, `performGarbageCollection`), `src/lib/hybrid-storage.ts` (750 lines), `src/lib/data-transfer.ts` (664 lines: `ExchangeFormatV2`, `XItem*`, `convertDatesToTimestamps`, `convertLegacyItems`)
 
