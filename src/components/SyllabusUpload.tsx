@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { fileAttachmentStorage } from '@/lib/file-attachment-storage';
+import { fileAttachmentStorage } from '@/stores/app';
 import { Download, Eye, FileText, Upload, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +32,7 @@ export default function SyllabusUpload({
         setSyllabusMetadata(null);
       }
     };
-    
+
     loadSyllabusMetadata();
   }, [syllabusFileId]);
 
@@ -94,7 +94,7 @@ export default function SyllabusUpload({
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
-        
+
         // Clean up the blob URL after a short delay
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
@@ -149,7 +149,7 @@ export default function SyllabusUpload({
             {t('courseManager:syllabus.title')}
           </span>
         </div>
-        
+
         {!syllabusFileId && (
           <Button
             size="sm"
@@ -176,7 +176,7 @@ export default function SyllabusUpload({
                 {syllabusMetadata.fileSize} • {new Date(syllabusMetadata.uploadedAt).toLocaleDateString()}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1 ml-3">
               <Button
                 size="sm"
@@ -187,7 +187,7 @@ export default function SyllabusUpload({
               >
                 <Eye className="w-3 h-3" />
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="ghost"
@@ -197,7 +197,7 @@ export default function SyllabusUpload({
               >
                 <Download className="w-3 h-3" />
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="ghost"
@@ -208,7 +208,7 @@ export default function SyllabusUpload({
               >
                 <Upload className="w-3 h-3" />
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="ghost"
@@ -227,14 +227,8 @@ export default function SyllabusUpload({
       {!syllabusFileId && !uploading && (
         <div className="text-center py-6 border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-xl bg-zinc-50/50 dark:bg-zinc-800/50">
           <FileText className="w-8 h-8 text-zinc-400 mx-auto mb-2" />
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">
-            {t('courseManager:syllabus.noFile')}
-          </p>
-          <Button
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-xl"
-          >
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">{t('courseManager:syllabus.noFile')}</p>
+          <Button size="sm" onClick={() => fileInputRef.current?.click()} className="rounded-xl">
             <Upload className="w-3 h-3 mr-2" />
             {t('courseManager:syllabus.upload')}
           </Button>

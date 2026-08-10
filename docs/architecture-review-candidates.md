@@ -8,20 +8,21 @@
 
 ## Summary table
 
-| ID | Candidate | Strength |
-|---|---|---|
-| A | Item dialog copy-paste + sync inlined in dialog hook | **Strong** ✅ |
-| B | Calendar queries re-implemented 3+ times. Recurrence is 715 lines of dead code | **Strong** ✅ |
-| C | Timer manager untestable via `store` singleton import | Worth exploring | **Worth exploring** |
-| D | `fileAttachmentStorage` mutates store. GC lives in the wrong module | **Strong** |
-| E | Storage has no repository seam. `XItem*` duplicates schemas. `any`-typed proxy patcher | **Strong** (scoped) |
-| F | `google-calendar-sync`: 4 near-identical sync methods, instance-level retry, caller re-dispatches | Worth exploring |
-| G | File attachments store base64 in valtio, persisted on every mutation | Worth exploring |
+| ID  | Candidate                                                                                         | Strength                  |
+| --- | ------------------------------------------------------------------------------------------------- | ------------------------- |
+| A   | Item dialog copy-paste + sync inlined in dialog hook                                              | **Strong** ✅             |
+| B   | Calendar queries re-implemented 3+ times. Recurrence is 715 lines of dead code                    | **Strong** ✅             |
+| C   | Timer manager untestable via `store` singleton import                                             | Worth exploring           | **Worth exploring** |
+| D   | `fileAttachmentStorage` mutates store. GC lives in the wrong module                               | **Strong** ✅ Implemented |
+| E   | Storage has no repository seam. `XItem*` duplicates schemas. `any`-typed proxy patcher            | **Strong** (scoped)       |
+| F   | `google-calendar-sync`: 4 near-identical sync methods, instance-level retry, caller re-dispatches | Worth exploring           |
+| G   | File attachments store base64 in valtio, persisted on every mutation                              | Worth exploring           |
 
 ---
 
 <a id="candidate-a"></a>
-## Candidate A: Item dialog copy-paste + sync inlined in a dialog hook  ✅ Implemented
+
+## Candidate A: Item dialog copy-paste + sync inlined in a dialog hook ✅ Implemented
 
 **Status:** Implemented. The sync extraction earns its keep (the deepening part). The provider extraction reverses easily (gets a note, not an ADR). See [ADR 0002](./adr/0002-sync-module-does-not-write-store.md).
 
@@ -32,8 +33,8 @@
 The "unified item management system" is 23 files, but the unifying interface is missing:
 
 - `<ItemDialog {...11 props}>` is copy-pasted verbatim in **8 tab files**. No provider, no context. Each tab derives its own `addItemDialogOptions`/`editItemDialogOptions`.
-- `useItemDialog` (a *dialog-state* hook) also contains a 75-line `syncItemToGoogle` (lines 108-180) that branches on `item.type` and calls `googleCalendarSync.syncNewEvent`/`updateEvent`/`syncTaskToGoogle`/`syncExamToGoogle`, then re-saves the item with the returned `googleEventId` via a second `updateItem`. A dialog hook is acting as a Google Calendar sync orchestrator.
-- `methods.ts` is a 28-line dispatch table (`new itemMethods[item.type](item)`) hiding ~4 lines of switch logic behind a factory + abstract class + 4 subclasses. `ItemDialogTrigger.tsx` is a 30-line `<div onClick>` wrapper that callers wrap *again* with their own `<Button>`.
+- `useItemDialog` (a _dialog-state_ hook) also contains a 75-line `syncItemToGoogle` (lines 108-180) that branches on `item.type` and calls `googleCalendarSync.syncNewEvent`/`updateEvent`/`syncTaskToGoogle`/`syncExamToGoogle`, then re-saves the item with the returned `googleEventId` via a second `updateItem`. A dialog hook is acting as a Google Calendar sync orchestrator.
+- `methods.ts` is a 28-line dispatch table (`new itemMethods[item.type](item)`) hiding ~4 lines of switch logic behind a factory + abstract class + 4 subclasses. `ItemDialogTrigger.tsx` is a 30-line `<div onClick>` wrapper that callers wrap _again_ with their own `<Button>`.
 
 ### Deletion test
 
@@ -61,7 +62,8 @@ An `<ItemDialogProvider>` in `App.tsx` exposing `openAdd(type, initialData?, opt
 ---
 
 <a id="candidate-b"></a>
-## Candidate B: Calendar queries re-implemented 3+ times, recurrence is 715 lines of dead code  ✅ Implemented
+
+## Candidate B: Calendar queries re-implemented 3+ times, recurrence is 715 lines of dead code ✅ Implemented
 
 **Status:** Implemented. See [ADR 0001](./adr/0001-calendar-entry-return-shape.md).
 
@@ -75,7 +77,7 @@ Separately, `recurrence-utils.ts` exports `isRecurrenceMatch`, `generateOccurren
 
 ### Deletion test
 
-- `recurrence-utils.ts`: deleting would remove 715 + 964 lines that exercise a feature that doesn't exist in production, but the *right* fix is wiring it in, not deleting it.
+- `recurrence-utils.ts`: deleting would remove 715 + 964 lines that exercise a feature that doesn't exist in production, but the _right_ fix is wiring it in, not deleting it.
 - `getAllEventsForDate` duplicates: consolidating into a shared query module concentrates the query logic (one place to fix the multi-day bug, one place to add recurrence expansion).
 
 ### Deepened version
@@ -86,13 +88,14 @@ Separately, `recurrence-utils.ts` exports `isRecurrenceMatch`, `generateOccurren
 
 - **Locality:** the multi-day/recurrence/filter rules live in one module, not 3+ scattered implementations.
 - **Leverage:** 5+ call sites share one query.
-- **Tests:** the *bugs live in how the query is called*, not in the pure functions. Consolidating makes the wiring the test surface (the interface *is* the test surface). The 964 lines of recurrence tests finally exercise production code.
+- **Tests:** the _bugs live in how the query is called_, not in the pure functions. Consolidating makes the wiring the test surface (the interface _is_ the test surface). The 964 lines of recurrence tests finally exercise production code.
 
 **Recommendation: Strong. Top pick (pure addition, low regression risk, makes recurring events work).**
 
 ---
 
 <a id="candidate-c"></a>
+
 ## Candidate C: Timer manager untestable via `store` singleton import
 
 **Files:** `src/lib/study-session-timer-manager.ts:8,44,346`, `src/hooks/useStudyTimer.ts`, `src/entrypoints/background.ts:13`
@@ -126,7 +129,10 @@ Inject `getFocusTimerSettings: () => FocusTimerConfig` and `onNotificationPermis
 ---
 
 <a id="candidate-d"></a>
-## Candidate D: `fileAttachmentStorage` mutates store, GC lives in the wrong module  *(narrowed)*
+
+## Candidate D: `fileAttachmentStorage` mutates store, GC lives in the wrong module ✅ Implemented
+
+**Status:** Implemented. See [ADR 0003](./adr/0003-lib-modules-do-not-import-store.md).
 
 **Files:** `src/lib/file-attachment-storage.ts:6,53-54,140-141`, `src/stores/app.ts:356-405` (`performGarbageCollection`)
 
@@ -158,7 +164,8 @@ Moving `performGarbageCollection` into `file-attachment-storage.ts` (where the H
 ---
 
 <a id="candidate-e"></a>
-## Candidate E: Storage has no repository seam, `XItem*` duplicates schemas, `any`-typed proxy patcher  *(scoped)*
+
+## Candidate E: Storage has no repository seam, `XItem*` duplicates schemas, `any`-typed proxy patcher _(scoped)_
 
 **Files:** `src/stores/app.ts` (451 lines: `loadState`, `persistStore`, `setupStorageSynchronization`, `updateProxyFromState`, `performGarbageCollection`), `src/lib/hybrid-storage.ts` (750 lines), `src/lib/data-transfer.ts` (664 lines: `ExchangeFormatV2`, `XItem*`, `convertDatesToTimestamps`, `convertLegacyItems`)
 
@@ -194,6 +201,7 @@ The **real** friction:
 ---
 
 <a id="candidate-f"></a>
+
 ## Candidate F: `google-calendar-sync`: 4 near-identical sync methods, instance-level retry, caller re-dispatches
 
 **Files:** `src/lib/google-calendar-sync.ts` (607 lines), `src/items/useItemDialog.ts:108-180`, `src/components/settings/GoogleCalendarSettings.tsx:104-112`, `src/lib/google-oauth.ts` (197 lines)
@@ -226,12 +234,12 @@ Deleting the module would concentrate all Google-API interaction into callers. C
 - **Leverage:** callers call one method regardless of item type.
 - **Tests:** `syncItem` is the test surface. Inject a fake `fetch`/`makeApiRequest` and assert per-type behavior without 4 separate test setups. The concurrency bug disappears (retry is per-call).
 
-
 **Recommendation: Worth exploring (resolve the OAuth question first)**
 
 ---
 
 <a id="candidate-g"></a>
+
 ## Candidate G: File attachments store base64 in the valtio store, persisted on every mutation
 
 **Files:** `src/lib/file-attachment-storage.ts:46-54`, `src/stores/app.ts:170-174`, `src/lib/data-transfer.ts:33-34`
@@ -253,7 +261,6 @@ Files live in storage under `sp:file:{id}`. `store.fileAttachments.metadata` hol
 - **Locality:** file lifecycle (store + GC + read/write) concentrates in `file-attachment-storage.ts`.
 - **Leverage:** the store stops carrying megabytes of base64. `persistStore` gets faster.
 - **Tests:** the storage module is tested through `getFile`/`storeFile`/`deleteFile` with an `InMemoryAdapter`, no valtio involvement.
-
 
 **Recommendation: Worth exploring**
 

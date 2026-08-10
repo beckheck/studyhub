@@ -1,9 +1,20 @@
+import { FileAttachmentStorage, type FileRepository } from '@/lib/file-attachment-storage';
 import { uid } from '@/lib/utils';
 import i18next from 'i18next';
 import { proxy, snapshot, subscribe } from 'valtio';
 import { DataTransfer } from '../lib/data-transfer';
 import { hybridStorage } from '../lib/hybrid-storage';
-import type { AppState, DegreePlan, MoodEmojis, WeatherLocation, FocusTimerConfig, GoogleCalendarConfig, SemesterDates } from '../types';
+import type {
+  AppState,
+  DegreePlan,
+  FileAttachmentMetadata,
+  MoodEmojis,
+  StoredFileAttachment,
+  WeatherLocation,
+  FocusTimerConfig,
+  GoogleCalendarConfig,
+  SemesterDates,
+} from '../types';
 
 const STORAGE_KEY = 'sp:appStateExchange';
 
@@ -226,7 +237,7 @@ async function loadState(): Promise<AppState> {
         () => state,
         newState => {
           state = { ...state, ...newState };
-        }
+        },
       );
       storeLoadingState.status = tLoadingScreen('restoringData');
       dataTransfer.importData(exchangeData);
@@ -292,7 +303,7 @@ export const dataTransfer: DataTransfer = new DataTransfer(
   // Set state callback - update the entire store state using patchStoreState
   newState => {
     patchStoreState(newState);
-  }
+  },
 );
 
 // Flag to track if we're currently applying changes from storage
@@ -356,57 +367,36 @@ function setupStorageSynchronization() {
 
 // Listen for storage changes from other tabs (browser's native storage events only)
 
-// File attachment garbage collection function
-export const performGarbageCollection = async (): Promise<void> => {
-  try {
-    const { fileAttachmentStorage } = await import('../lib/file-attachment-storage');
-
-    // Scan all rich text content in the app for file attachment references
-    const referencedFileIds = new Set<string>();
-
-    // Helper function to extract file IDs from HTML content
-    const extractFileIds = (htmlContent: string) => {
-      if (!htmlContent) return;
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-      const fileAttachments = doc.querySelectorAll('[data-type="file-attachment"]');
-
-      fileAttachments.forEach(element => {
-        const fileId = element.getAttribute('data-file-id');
-        if (fileId) {
-          referencedFileIds.add(fileId);
-        }
-      });
+// File attachment storage: store-backed repository adapter.
+// See ADR 0003: lib modules do not import the store; the store supplies a repository adapter.
+const fileRepository: FileRepository = {
+  async getFile(fileId: string): Promise<StoredFileAttachment | null> {
+    return store.fileAttachments.files[fileId] || null;
+  },
+  async getFileMetadata(fileId: string): Promise<FileAttachmentMetadata | null> {
+    return store.fileAttachments.metadata[fileId] || null;
+  },
+  async putFile(stored: StoredFileAttachment): Promise<void> {
+    store.fileAttachments.files[stored.id] = stored;
+    store.fileAttachments.metadata[stored.id] = {
+      id: stored.id,
+      fileName: stored.fileName,
+      fileSize: stored.fileSize,
+      fileType: stored.fileType,
+      uploadedAt: stored.uploadedAt,
     };
-
-    // Get current store state
-    const currentStore = snapshot(store) as AppState;
-
-    // Scan items for file attachments in notes
-    currentStore.items.forEach(event => {
-      if (event.notes) {
-        extractFileIds(event.notes);
-      }
-    });
-
-    // Include syllabus files from courses
-    currentStore.courses.forEach(course => {
-      if (course.syllabusFileId) {
-        referencedFileIds.add(course.syllabusFileId);
-      }
-    });
-
-    // Perform cleanup
-    const deletedCount = await fileAttachmentStorage.cleanupOrphanedFiles(referencedFileIds);
-
-    if (deletedCount > 0) {
-      console.log(`File attachment garbage collection: Cleaned up ${deletedCount} orphaned files`);
-    }
-  } catch (error) {
-    console.error('File attachment garbage collection failed:', error);
-  }
+  },
+  async deleteFile(fileId: string): Promise<boolean> {
+    delete store.fileAttachments.files[fileId];
+    delete store.fileAttachments.metadata[fileId];
+    return true;
+  },
+  async listMetadata(): Promise<FileAttachmentMetadata[]> {
+    return Object.values(store.fileAttachments.metadata);
+  },
 };
+
+export const fileAttachmentStorage = new FileAttachmentStorage(fileRepository);
 
 // Helper function to recursively update proxy properties
 function updateProxyFromState(proxy: any, newState: any, patch = false) {

@@ -18,6 +18,10 @@ import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore';
 import { useOAuthRedirect } from '@/hooks/useOAuthRedirect';
 import { ItemDialogProvider } from '@/items/ItemDialogProvider';
 import { handleNavigationClick } from '@/lib/navigation-utils';
+import { runFileAttachmentGC } from '@/lib/file-attachment-gc';
+import { snapshot } from 'valtio';
+import { fileAttachmentStorage, store } from '@/stores/app';
+import type { AppState } from '@/types';
 import CourseManagerTab from '@/tabs/CourseManagerTab';
 import DashboardTab from '@/tabs/DashboardTab';
 import DegreePlanTab from '@/tabs/DegreePlanTab';
@@ -95,7 +99,7 @@ export default function StudyPortal(): React.JSX.Element {
         setActiveTab('dashboard');
       }
     },
-    [setSoundtrackPosition]
+    [setSoundtrackPosition],
   );
 
   // Localized tabs array
@@ -143,7 +147,7 @@ export default function StudyPortal(): React.JSX.Element {
       setActiveTab(value);
       setIsDrawerOpen(false); // Close drawer when tab is selected
     },
-    [setActiveTab, setIsDrawerOpen]
+    [setActiveTab, setIsDrawerOpen],
   );
 
   useEffect(() => {
@@ -164,8 +168,7 @@ export default function StudyPortal(): React.JSX.Element {
   useEffect(() => {
     // Run garbage collection on startup (with a small delay to let the app initialize)
     const timeoutId = setTimeout(async () => {
-      const { performGarbageCollection } = await import('./stores/app');
-      await performGarbageCollection();
+      await runFileAttachmentGC(snapshot(store) as AppState, fileAttachmentStorage);
     }, 2000);
 
     return () => clearTimeout(timeoutId);
@@ -357,66 +360,66 @@ export default function StudyPortal(): React.JSX.Element {
             )}
 
             <ItemDialogProvider>
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-              {/* Desktop tabs with overflow handling - hidden on mobile */}
-              <div className="hidden md:flex justify-center">
-                <OverflowTabs
-                  tabs={tabs}
-                  activeTab={activeTab}
-                  onTabChange={handleTabChange}
-                  className="flex flex-wrap justify-center gap-2 bg-white/70 dark:bg-white/10 backdrop-blur p-3 rounded-2xl shadow-lg"
-                  style={{ paddingTop: '8px', paddingBottom: '16px' }}
-                />
-              </div>
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+                {/* Desktop tabs with overflow handling - hidden on mobile */}
+                <div className="hidden md:flex justify-center">
+                  <OverflowTabs
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    className="flex flex-wrap justify-center gap-2 bg-white/70 dark:bg-white/10 backdrop-blur p-3 rounded-2xl shadow-lg"
+                    style={{ paddingTop: '8px', paddingBottom: '16px' }}
+                  />
+                </div>
 
-              <TabsContent value="dashboard" className="space-y-6">
-                <DashboardTab onTabChange={handleTabChange} isWidgetEditMode={isDashboardWidgetEditMode} />
-              </TabsContent>
-
-              <TabsContent value="planner">
-                <PlannerTab />
-              </TabsContent>
-
-              <TabsContent value="projects">
-                <ProjectsTab />
-              </TabsContent>
-
-              {import.meta.env.VITE_FEATURE_UGLY_CALENDAR && (
-                <TabsContent value="ugly-calendar">
-                  <UglyCalendarPlannerTab />
+                <TabsContent value="dashboard" className="space-y-6">
+                  <DashboardTab onTabChange={handleTabChange} isWidgetEditMode={isDashboardWidgetEditMode} />
                 </TabsContent>
-              )}
 
-              <TabsContent value="timetable">
-                <TimetableTab />
-              </TabsContent>
-
-              <TabsContent value="courses">
-                <CourseManagerTab />
-              </TabsContent>
-
-              <TabsContent value="degree-plan" className="space-y-6">
-                <DegreePlanTab />
-              </TabsContent>
-
-              <TabsContent value="study">
-                <StudyTrackerTab />
-              </TabsContent>
-
-              <TabsContent value="wellness">
-                <WellnessTab />
-              </TabsContent>
-
-              <TabsContent value="settings">
-                <SettingsTab />
-              </TabsContent>
-
-              {import.meta.env.VITE_FEATURE_TESTING && (
-                <TabsContent value="test">
-                  <TestTab />
+                <TabsContent value="planner">
+                  <PlannerTab />
                 </TabsContent>
-              )}
-            </Tabs>
+
+                <TabsContent value="projects">
+                  <ProjectsTab />
+                </TabsContent>
+
+                {import.meta.env.VITE_FEATURE_UGLY_CALENDAR && (
+                  <TabsContent value="ugly-calendar">
+                    <UglyCalendarPlannerTab />
+                  </TabsContent>
+                )}
+
+                <TabsContent value="timetable">
+                  <TimetableTab />
+                </TabsContent>
+
+                <TabsContent value="courses">
+                  <CourseManagerTab />
+                </TabsContent>
+
+                <TabsContent value="degree-plan" className="space-y-6">
+                  <DegreePlanTab />
+                </TabsContent>
+
+                <TabsContent value="study">
+                  <StudyTrackerTab />
+                </TabsContent>
+
+                <TabsContent value="wellness">
+                  <WellnessTab />
+                </TabsContent>
+
+                <TabsContent value="settings">
+                  <SettingsTab />
+                </TabsContent>
+
+                {import.meta.env.VITE_FEATURE_TESTING && (
+                  <TabsContent value="test">
+                    <TestTab />
+                  </TabsContent>
+                )}
+              </Tabs>
             </ItemDialogProvider>
 
             {/* Single Soundtrack Card - Always mounted, position controlled by prop */}

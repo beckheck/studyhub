@@ -24,6 +24,10 @@ _Avoid_: Appointment, CalendarItem
 A recurring weekly class slot tied to a weekday and time block (lecture, tutorial, workshop, or lab). Defined by pattern, not by concrete dates.
 _Avoid_: Class, Schedule (schedule is the rendered view, not the entry)
 
+**File Attachment**:
+A user-uploaded file embedded in a note or linked to a course syllabus, stored on-device as base64. Tracked by id and garbage-collected when no note or syllabus references it.
+_Avoid_: Upload, Attachment (alone)
+
 ## Academic
 
 **Course**:

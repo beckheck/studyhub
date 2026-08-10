@@ -1,4 +1,4 @@
-import { fileAttachmentStorage } from '@/lib/file-attachment-storage';
+import { fileAttachmentStorage } from '@/stores/app';
 import { cn } from '@/lib/utils';
 import { Node, mergeAttributes } from '@tiptap/core';
 import Blockquote from '@tiptap/extension-blockquote';
@@ -260,7 +260,7 @@ const createFileAttachmentNode = (draggable: boolean) =>
             tabindex: '0', // Make focusable
           },
           this.options.HTMLAttributes,
-          HTMLAttributes
+          HTMLAttributes,
         ),
         ['span', { class: 'file-icon' }, HTMLAttributes.fileIcon],
         [
@@ -387,7 +387,7 @@ const handleHierarchicalCheckboxClick = (
   target: HTMLElement,
   event: Event,
   onContentChange?: (content: string) => void,
-  calculateProgress?: (editor: any) => void
+  calculateProgress?: (editor: any) => void,
 ) => {
   // Only prevent propagation for checkbox clicks
   event.stopPropagation();
@@ -765,7 +765,7 @@ const getEditorAttributes = (className?: string) => ({
     // Ensure blockquote styling
     'prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-600',
     'prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600 dark:prose-blockquote:text-gray-400',
-    className
+    className,
   ),
 });
 
@@ -1012,7 +1012,7 @@ export function RichTextEditor({
         editor
           .getHTML()
           .trim()
-          .replace(/^(<p><\/p>)+$/, '')
+          .replace(/^(<p><\/p>)+$/, ''),
       );
     },
     editorProps: {
@@ -1510,7 +1510,7 @@ export function RichTextEditor({
       className={cn(
         'border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden',
         'bg-white dark:bg-gray-800',
-        className
+        className,
       )}
     >
       {/* Toolbar */}
@@ -1586,7 +1586,7 @@ export function RichTextDisplay({ content, className, onContentChange, onProgres
         onProgressChange({ completed, total, percentage });
       });
     },
-    [onProgressChange]
+    [onProgressChange],
   );
 
   // Handle both plain text and HTML content
