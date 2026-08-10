@@ -10,7 +10,7 @@
 
 | ID | Candidate | Strength |
 |---|---|---|
-| A | Item dialog copy-paste + sync inlined in dialog hook | **Strong** |
+| A | Item dialog copy-paste + sync inlined in dialog hook | **Strong** ✅ |
 | B | Calendar queries re-implemented 3+ times. Recurrence is 715 lines of dead code | **Strong** ✅ |
 | C | Timer manager untestable via `store` singleton import | Worth exploring | **Worth exploring** |
 | D | `fileAttachmentStorage` mutates store. GC lives in the wrong module | **Strong** |
@@ -21,15 +21,17 @@
 ---
 
 <a id="candidate-a"></a>
-## Candidate A: Item dialog copy-paste + sync inlined in a dialog hook
+## Candidate A: Item dialog copy-paste + sync inlined in a dialog hook  ✅ Implemented
 
-**Files:** `src/items/useItemDialog.ts:108-193`, `src/items/ItemDialogTrigger.tsx`, `src/items/ItemList.tsx`, `src/items/methods.ts`, `src/items/models.ts`, `src/items/base/methods.tsx`. 7 tab copy-paste sites (`CourseManagerTab.tsx:1186-1198`, `ProjectsTab.tsx:1021-1033`, `TimetableTab.tsx:284-296`, `PlannerTab.tsx:263-275`, `UglyCalendarPlannerTab.tsx:380`, `ItemList.tsx:141-153`)
+**Status:** Implemented. The sync extraction earns its keep (the deepening part). The provider extraction reverses easily (gets a note, not an ADR). See [ADR 0002](./adr/0002-sync-module-does-not-write-store.md).
+
+**Files:** `src/items/useItemDialog.ts:108-193`, `src/items/ItemDialogTrigger.tsx`, `src/items/ItemList.tsx`, `src/items/methods.ts`, `src/items/models.ts`, `src/items/base/methods.tsx`. 8 tab copy-paste sites (`CourseManagerTab.tsx:1186-1198`, `ProjectsTab.tsx:1021-1033`, `TimetableTab.tsx:284-296`, `PlannerTab.tsx:263-275`, `UglyCalendarPlannerTab.tsx:380`, `ItemList.tsx:141-153`, `ItemDialogExample.tsx`). The grilling session found `ItemDialogExample` as an 8th site.
 
 ### Problem
 
 The "unified item management system" is 23 files, but the unifying interface is missing:
 
-- `<ItemDialog {...11 props}>` is copy-pasted verbatim in **7 tab files**. No provider, no context. Each tab derives its own `addItemDialogOptions`/`editItemDialogOptions`.
+- `<ItemDialog {...11 props}>` is copy-pasted verbatim in **8 tab files**. No provider, no context. Each tab derives its own `addItemDialogOptions`/`editItemDialogOptions`.
 - `useItemDialog` (a *dialog-state* hook) also contains a 75-line `syncItemToGoogle` (lines 108-180) that branches on `item.type` and calls `googleCalendarSync.syncNewEvent`/`updateEvent`/`syncTaskToGoogle`/`syncExamToGoogle`, then re-saves the item with the returned `googleEventId` via a second `updateItem`. A dialog hook is acting as a Google Calendar sync orchestrator.
 - `methods.ts` is a 28-line dispatch table (`new itemMethods[item.type](item)`) hiding ~4 lines of switch logic behind a factory + abstract class + 4 subclasses. `ItemDialogTrigger.tsx` is a 30-line `<div onClick>` wrapper that callers wrap *again* with their own `<Button>`.
 
@@ -49,6 +51,12 @@ An `<ItemDialogProvider>` in `App.tsx` exposing `openAdd(type, initialData?, opt
 - **Tests:** `handleSave`/`handleDeleteItem`'s sync path (currently **0 coverage**. `useItemDialog.test.ts` never calls them because they would hit the real `googleCalendarSync` singleton) becomes testable through the sync module's own interface with an injected stub.
 
 **Recommendation: Strong**
+
+### Implementation notes
+
+- **Sync extraction (the part that earned its keep).** `GoogleCalendarSync` gained two public dispatch methods: `syncItem(item, ctx)` and `deleteItem(item, ctx)`. They dispatch on `item.type` to the existing 4 `sync*` methods and `deleteEvent`, own the "sync disabled" guard, and return `{ success, skipped?, googleEventId?, error? }` without writing the store. The caller (`useItemDialog`'s `handleSave`) stamps the returned `googleEventId` via a single `updateItem`. This seam is recorded in [ADR 0002](./adr/0002-sync-module-does-not-write-store.md). The sync module owns the API call, and the caller owns the store write.
+- **The 4 underlying `sync*` methods stay untouched.** Their internal collapse (near-identical 30-line blocks, instance-level `retryAttempts`) is [Candidate F](#candidate-f), deferred. The new dispatch methods are the test surface. The 4 methods keep their existing `console.log` calls.
+- **Provider extraction (the easily-reversed part).** One `<ItemDialogProvider>` in `App.tsx` mounts the single `<ItemDialog>` and exposes `useItemDialog()` as a context consumer. The 8 copy-pasted `<ItemDialog>` JSX blocks and `ItemDialogTrigger.tsx` are gone. This is a conventional React pattern, trivially reversible, so it gets a note here rather than an ADR.
 
 ---
 
