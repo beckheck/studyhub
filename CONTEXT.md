@@ -16,6 +16,10 @@ _Avoid_: Assignment, Homework, Todo
 A graded assessment with a start time and weight (0–100%); trackable as taken or not-taken.
 _Avoid_: Test, Quiz
 
+**Grade**:
+A numeric score (1–7 scale) recorded against an Exam. Combined with the Exam's weight to compute a weighted average for a Course. Deleting an Exam cascades to its Exam Grades.
+_Avoid_: Score, Result, Mark
+
 **Event**:
 A calendar entry with a start/end time, possibly all-day, possibly recurring.
 _Avoid_: Appointment, CalendarItem

@@ -25,7 +25,7 @@ export function useItemDialog() {
     onOpenChange,
   } = useItemDialogState()
 
-  const { addItem, updateItem, deleteItem } = useItems()
+  const { addItem, updateItem, deleteItem, updateEvent, updateTask, updateExam } = useItems()
   const { googleCalendar } = useGoogleCalendar()
   const appState = useAppState()
   const { syncItem, deleteItem: syncDeleteItem } = useGoogleCalendarSync()
@@ -67,7 +67,9 @@ export function useItemDialog() {
     try {
       const result = await syncItem(item, ctx)
       if (result.success && result.googleEventId) {
-        updateItem(item.id, { googleCalendarEventId: result.googleEventId } as Partial<Item>)
+        if (item.type === 'event') updateEvent(item.id, { googleCalendarEventId: result.googleEventId })
+        else if (item.type === 'task') updateTask(item.id, { googleCalendarEventId: result.googleEventId })
+        else if (item.type === 'exam') updateExam(item.id, { googleCalendarEventId: result.googleEventId })
       } else if (!result.success && !result.skipped) {
         console.error('Google Calendar sync failed:', result.error)
       }

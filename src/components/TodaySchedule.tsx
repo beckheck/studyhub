@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { QuickRecordDialog } from '@/components/CourseRecordCalendar'
 import { useCourses, useItems, useSemesterDates } from '@/hooks/useStore'
-import { ItemTimetable, TIME_BLOCKS } from '@/items/timetable/modelSchema'
+import { TIME_BLOCKS } from '@/items/timetable/modelSchema'
 import { Clock, NotebookPen, Palmtree } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +15,7 @@ export default function TodaySchedule() {
   const { getItemsByType } = useItems()
   const { semesterDates } = useSemesterDates()
 
-  const timetableEvents = getItemsByType('timetable') as ItemTimetable[]
+  const timetableEvents = getItemsByType('timetable')
 
   // Check if today is during an active semester or on break
   const isDuringSemester = (() => {

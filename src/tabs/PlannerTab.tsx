@@ -25,7 +25,7 @@ const addItemDialogOptions: ItemDialogOptions = {
 
 export default function PlannerTab() {
   const { courses } = useCourses()
-  const { items, updateItem } = useItems()
+  const { items, updateTask, updateExam, updateEvent } = useItems()
 
   // Localization hooks
   const { t } = useTranslation('planner')
@@ -121,17 +121,17 @@ export default function PlannerTab() {
       const newEnd = new Date(item.endsAt)
       newEnd.setDate(newEnd.getDate() + daysDiff)
 
-      updateItem(itemId, { startsAt: newStart, endsAt: newEnd } as any)
+      updateEvent(itemId, { startsAt: newStart, endsAt: newEnd })
     } else if (item.type === 'exam') {
       const oldDate = new Date(item.startsAt)
       const newDate = new Date(oldDate)
       newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
-      updateItem(itemId, { startsAt: newDate } as any)
+      updateExam(itemId, { startsAt: newDate })
     } else if (item.type === 'task') {
       const oldDate = new Date(item.dueAt)
       const newDate = new Date(oldDate)
       newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
-      updateItem(itemId, { dueAt: newDate } as any)
+      updateTask(itemId, { dueAt: newDate })
     }
   }
 

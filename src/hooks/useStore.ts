@@ -1,14 +1,19 @@
 import { useEffect } from 'react'
 import { useSnapshot } from 'valtio'
 import { uid } from '../lib/utils'
+import { cascadeExamDelete, cascadeCourseClear } from '../lib/item-cascades'
 import { store, storeLoadingState } from '../stores/app'
+import type { Item, ItemType } from '@/items/models'
+import type { ItemTask } from '@/items/task/modelSchema'
+import type { ItemExam } from '@/items/exam/modelSchema'
+import type { ItemEvent } from '@/items/event/modelSchema'
+import type { ItemTimetable } from '@/items/timetable/modelSchema'
 import type {
   Course,
   CourseContact,
   CourseRecord,
   DegreePlan,
   ExamGrade,
-  Item,
   Project,
   SoundtrackPosition,
   StudySession,
@@ -105,32 +110,15 @@ export function useCourses() {
   const state = useSnapshot(store)
 
   const clearCourseData = (courseId: string) => {
-    // Clear exams and their grades
-    const examIdsToDelete: string[] = []
-
-    // Clear items
-    for (let i = store.items.length - 1; i >= 0; i--) {
-      if (store.items[i].courseId === courseId) {
-        if (store.items[i].type === 'exam') {
-          examIdsToDelete.push(store.items[i].id)
-        }
-        store.items.splice(i, 1)
-      }
-    }
-
-    // Clear exam grades for deleted exams
-    for (let i = store.examGrades.length - 1; i >= 0; i--) {
-      if (examIdsToDelete.includes(store.examGrades[i].examId)) {
-        store.examGrades.splice(i, 1)
-      }
-    }
-
-    // Clear study sessions
-    for (let i = store.sessions.length - 1; i >= 0; i--) {
-      if (store.sessions[i].courseId === courseId) {
-        store.sessions.splice(i, 1)
-      }
-    }
+    const result = cascadeCourseClear(
+      store.items as Item[],
+      store.examGrades as ExamGrade[],
+      store.sessions as StudySession[],
+      courseId,
+    )
+    store.items = result.items as any
+    store.examGrades = result.examGrades as any
+    store.sessions = result.sessions as any
   }
 
   return {
@@ -575,16 +563,52 @@ export function useWeeklyGoals() {
 /**
  * Hook to access and modify items
  */
+
+function updateItemOfType(
+  store: { items: Item[] },
+  id: string,
+  updates: Partial<Omit<Item, 'id' | 'createdAt'>>,
+): Item | null {
+  const itemIndex = store.items.findIndex(item => item.id === id)
+  if (itemIndex !== -1) {
+    const currentItem = store.items[itemIndex]
+    store.items[itemIndex] = {
+      ...currentItem,
+      ...updates,
+      updatedAt: new Date(),
+    } as Item
+    return store.items[itemIndex]
+  }
+  return null
+}
+
+function removeItemById(store: { items: Item[] }, id: string): boolean {
+  const itemIndex = store.items.findIndex(item => item.id === id)
+  if (itemIndex !== -1) {
+    store.items.splice(itemIndex, 1)
+    return true
+  }
+  return false
+}
+
+function removeExamWithCascade(store: { items: Item[]; examGrades: ExamGrade[] }, id: string): boolean {
+  const itemIndex = store.items.findIndex(item => item.id === id)
+  if (itemIndex !== -1) {
+    const result = cascadeExamDelete(store.items, store.examGrades, id)
+    store.items = result.items as any
+    store.examGrades = result.examGrades as any
+    return true
+  }
+  return false
+}
+
 export function useItems() {
   const items = useSnapshot(store.items)
 
   return {
     items,
-    getItemById: (id: string) => {
-      return items.find(item => item.id === id)
-    },
-    getItemsByType: (type: Item['type']) => {
-      return items.filter(item => item.type === type)
+    getItemsByType: <T extends ItemType>(type: T): Extract<Item, { type: T }>[] => {
+      return items.filter((item): item is Extract<Item, { type: T }> => item.type === type)
     },
     getItemsByCourse: (courseId: string) => {
       return items.filter(item => item.courseId === courseId)
@@ -592,15 +616,17 @@ export function useItems() {
     getItemsByProject: (projectId: string) => {
       return items.filter(item => item.projectId === projectId)
     },
-    addItem: (item: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>) => {
+    addItem: <T extends ItemType>(
+      item: Omit<Extract<Item, { type: T }>, 'id' | 'createdAt' | 'updatedAt'>,
+    ): Extract<Item, { type: T }> => {
       const now = new Date()
       const newItem = {
         ...item,
         id: uid(),
         createdAt: now,
         updatedAt: now,
-      } as Item
-      store.items.unshift(newItem)
+      } as Extract<Item, { type: T }>
+      store.items.unshift(newItem as Item)
       return newItem
     },
     updateItem: (id: string, updates: Partial<Omit<Item, 'id' | 'createdAt'>>) => {
@@ -616,24 +642,34 @@ export function useItems() {
       }
       return null
     },
-    deleteItem: (id: string) => {
-      const itemIndex = store.items.findIndex(item => item.id === id)
-      if (itemIndex !== -1) {
-        store.items.splice(itemIndex, 1)
-
-        // Remove associated grades
-        const gradeIndices: number[] = []
-        for (let i = store.examGrades.length - 1; i >= 0; i--) {
-          if (store.examGrades[i].examId === id) {
-            gradeIndices.push(i)
-          }
-        }
-        gradeIndices.forEach(index => store.examGrades.splice(index, 1))
-
-        return true
-      }
-      return false
+    updateTask: (id: string, updates: Partial<Omit<ItemTask, 'id' | 'createdAt'>>): ItemTask | null => {
+      const result = updateItemOfType(store, id, updates)
+      return result as ItemTask | null
     },
+    updateExam: (id: string, updates: Partial<Omit<ItemExam, 'id' | 'createdAt'>>): ItemExam | null => {
+      const result = updateItemOfType(store, id, updates)
+      return result as ItemExam | null
+    },
+    updateEvent: (id: string, updates: Partial<Omit<ItemEvent, 'id' | 'createdAt'>>): ItemEvent | null => {
+      const result = updateItemOfType(store, id, updates)
+      return result as ItemEvent | null
+    },
+    updateTimetable: (id: string, updates: Partial<Omit<ItemTimetable, 'id' | 'createdAt'>>): ItemTimetable | null => {
+      const result = updateItemOfType(store, id, updates)
+      return result as ItemTimetable | null
+    },
+    deleteItem: (id: string): boolean => {
+      const item = store.items.find(item => item.id === id)
+      if (!item) return false
+      if (item.type === 'exam') {
+        return removeExamWithCascade(store, id)
+      }
+      return removeItemById(store, id)
+    },
+    deleteTask: (id: string): boolean => removeItemById(store, id),
+    deleteExam: (id: string): boolean => removeExamWithCascade(store, id),
+    deleteEvent: (id: string): boolean => removeItemById(store, id),
+    deleteTimetable: (id: string): boolean => removeItemById(store, id),
     softDeleteItem: (id: string) => {
       const itemIndex = store.items.findIndex(item => item.id === id)
       if (itemIndex !== -1) {
@@ -651,13 +687,6 @@ export function useItems() {
         return true
       }
       return false
-    },
-    clearCourseItems: (courseId: string) => {
-      for (let i = store.items.length - 1; i >= 0; i--) {
-        if (store.items[i].courseId === courseId) {
-          store.items.splice(i, 1)
-        }
-      }
     },
     setItems: (items: Item[]) => {
       store.items = items

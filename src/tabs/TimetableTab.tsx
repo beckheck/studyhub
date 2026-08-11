@@ -12,11 +12,11 @@ export default function TimetableTab() {
   const { t } = useTranslation('timetable')
   const { getDayNames, getShortDayNames } = useLocalization()
   const { getCourseTitle } = useCourses()
-  const { getItemsByType, updateItem } = useItems()
+  const { getItemsByType, updateTimetable } = useItems()
   const itemDialog = useItemDialog()
 
   // Get timetable events from the unified item system
-  const timetableEvents = getItemsByType('timetable') as ItemTimetable[]
+  const timetableEvents = getItemsByType('timetable')
 
   const [draggedEvent, setDraggedEvent] = useState<ItemTimetable | null>(null)
   const [dragOverCell, setDragOverCell] = useState<{ day: string; block: string } | null>(null)
@@ -134,10 +134,10 @@ export default function TimetableTab() {
     // Check if the event is being dropped in a different cell
     if (draggedEvent.weekday !== targetWeekday || draggedEvent.blockId !== targetBlock) {
       // Update the event with new weekday and block
-      updateItem(draggedEvent.id, {
+      updateTimetable(draggedEvent.id, {
         weekday: targetWeekday,
         blockId: targetBlock,
-      } as any)
+      })
     }
 
     setDraggedEvent(null)

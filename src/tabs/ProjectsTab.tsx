@@ -6,8 +6,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useItems, useProjects } from '@/hooks/useStore'
-import { ItemEvent } from '@/items/event/modelSchema'
-import { ItemTask } from '@/items/task/modelSchema'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { Project, ProjectIconName, ProjectMember, ProjectType, ProjectVisualType } from '@/types'
 import { motion } from 'framer-motion'
@@ -154,7 +152,7 @@ const CONTACT_AVATAR_STYLES = [
 export default function ProjectsTab() {
   const { t } = useTranslation('projects')
   const { projects, addProject, updateProject, deleteProject, setProjects } = useProjects()
-  const { items, updateItem } = useItems()
+  const { items, updateTask, getItemsByType } = useItems()
   const itemDialog = useItemDialog()
 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
@@ -183,28 +181,26 @@ export default function ProjectsTab() {
 
   const linkedMeetings = useMemo(
     () =>
-      items.filter(
+      getItemsByType('event').filter(
         item =>
-          item.type === 'event' &&
           item.projectId === selectedProject?.id &&
           !item.isDeleted &&
           // hide events that have already ended (compare by calendar day)
-          !isDateBefore((item as ItemEvent).endsAt, new Date()),
-      ) as ItemEvent[],
-    [items, selectedProject?.id],
+          !isDateBefore(item.endsAt, new Date()),
+      ),
+    [items, selectedProject?.id, getItemsByType],
   )
 
   const linkedTasks = useMemo(
     () =>
-      items.filter(
+      getItemsByType('task').filter(
         item =>
-          item.type === 'task' &&
           item.projectId === selectedProject?.id &&
           !item.isDeleted &&
           // hide tasks whose due date is before today
-          !isDateBefore((item as ItemTask).dueAt, new Date()),
-      ) as ItemTask[],
-    [items, selectedProject?.id],
+          !isDateBefore(item.dueAt, new Date()),
+      ),
+    [items, selectedProject?.id, getItemsByType],
   )
 
   const visibleTeamMembers = selectedProject?.teamMembers.slice(0, 3) ?? []
@@ -428,19 +424,11 @@ export default function ProjectsTab() {
                 const ProjectIconOrEmoji = ProjectVisual
                 const isSelected = selectedProject?.id === project.id
                 const isBeingDragged = draggedProjectId === project.id
-                const projectMeetingCount = items.filter(
-                  item =>
-                    item.type === 'event' &&
-                    item.projectId === project.id &&
-                    !item.isDeleted &&
-                    !isDateBefore((item as ItemEvent).endsAt, new Date()),
+                const projectMeetingCount = getItemsByType('event').filter(
+                  item => item.projectId === project.id && !item.isDeleted && !isDateBefore(item.endsAt, new Date()),
                 ).length
-                const projectTaskCount = items.filter(
-                  item =>
-                    item.type === 'task' &&
-                    item.projectId === project.id &&
-                    !item.isDeleted &&
-                    !isDateBefore((item as ItemTask).dueAt, new Date()),
+                const projectTaskCount = getItemsByType('task').filter(
+                  item => item.projectId === project.id && !item.isDeleted && !isDateBefore(item.dueAt, new Date()),
                 ).length
 
                 return (
@@ -673,7 +661,7 @@ export default function ProjectsTab() {
                                     className={`h-8 w-8 rounded-full ${task.isCompleted ? 'text-green-500' : ''}`}
                                     onClick={e => {
                                       e.stopPropagation()
-                                      updateItem(task.id, { isCompleted: !task.isCompleted } as any)
+                                      updateTask(task.id, { isCompleted: !task.isCompleted })
                                     }}
                                   >
                                     <Check className="w-4 h-4" />

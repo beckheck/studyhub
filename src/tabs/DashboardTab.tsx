@@ -9,8 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } from '@/hooks/useStore'
-import { ItemExam } from '@/items/exam/modelSchema'
-import { ItemTask } from '@/items/task/modelSchema'
 import { compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils'
 import {
   AlertTriangle,
@@ -231,7 +229,7 @@ function DashboardBareWidgetFrame({
 export default function DashboardTab({ onTabChange, isWidgetEditMode }: DashboardTabProps) {
   const { t } = useTranslation('common')
   const { setSelectedCourse } = useCourses()
-  const { getItemsByType, updateItem } = useItems()
+  const { getItemsByType, updateTask, updateExam } = useItems()
   const {
     dashboard,
     missionText,
@@ -242,8 +240,8 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
     moveWidgetToEnd,
   } = useDashboardLayout()
 
-  const tasks = getItemsByType('task') as ItemTask[]
-  const exams = getItemsByType('exam') as ItemExam[]
+  const tasks = getItemsByType('task')
+  const exams = getItemsByType('exam')
 
   const { weather } = useWeather()
   const { soundtrack, setSoundtrackPosition } = useSoundtrack()
@@ -293,14 +291,14 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const toggleTask = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId)
     if (task) {
-      updateItem(taskId, { isCompleted: !task.isCompleted } as any)
+      updateTask(taskId, { isCompleted: !task.isCompleted })
     }
   }
 
   const toggleExamComplete = (examId: string) => {
     const exam = exams.find(e => e.id === examId)
     if (exam) {
-      updateItem(examId, { isCompleted: !exam.isCompleted } as any)
+      updateExam(examId, { isCompleted: !exam.isCompleted })
     }
   }
 

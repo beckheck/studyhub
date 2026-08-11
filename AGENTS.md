@@ -59,7 +59,7 @@ Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vit
 
 ## Before proposing a refactor
 
-Check `docs/ARCHITECTURE.md` §7 (principles in force) and §1-2 (the dual-context model). If a proposal contradicts the per-context stores, the `browserRuntime` seam, the background timer, or the separate timer storage key, it needs an ADR. Deepening opportunities are tracked in `docs/architecture-review-candidates.md`, not in the baseline doc.
+Check `docs/ARCHITECTURE.md` §7 (principles in force) and §1-2 (the dual-context model). If a proposal contradicts the per-context stores, the `browserRuntime` seam, the background timer, or the separate timer storage key, it needs an ADR.
 
 ## Writing Style
 

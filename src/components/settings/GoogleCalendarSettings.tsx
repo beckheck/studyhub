@@ -15,7 +15,7 @@ export default function GoogleCalendarSettings() {
   const { googleCalendar, setGoogleCalendarConfig, setCalendars, setSelectedCalendar, clearGoogleCalendar } =
     useGoogleCalendar()
   const appState = useAppState()
-  const { addItem, updateItem } = useItems()
+  const { addItem, updateEvent, updateTask, updateExam } = useItems()
   const { fetchCalendars, bulkSyncItems, fetchEventsFromCalendar } = useGoogleCalendarSync()
   const [loading, setLoading] = useState(false)
   const [bulkExporting, setBulkExporting] = useState(false)
@@ -126,7 +126,11 @@ export default function GoogleCalendarSettings() {
 
       if (results.success > 0) {
         results.updatedEventIds.forEach((eventId, itemId) => {
-          updateItem(itemId, { googleCalendarEventId: eventId } as Partial<Item>)
+          const item = appState.items.find(i => i.id === itemId)
+          if (!item) return
+          if (item.type === 'event') updateEvent(itemId, { googleCalendarEventId: eventId })
+          else if (item.type === 'task') updateTask(itemId, { googleCalendarEventId: eventId })
+          else if (item.type === 'exam') updateExam(itemId, { googleCalendarEventId: eventId })
         })
         setSuccessMessage(
           `✅ Successfully exported ${results.success} item${results.success !== 1 ? 's' : ''} to Google Calendar${
@@ -222,7 +226,7 @@ export default function GoogleCalendarSettings() {
         }
 
         // Add to our items
-        addItem({
+        addItem<'event'>({
           type: 'event',
           title: ev.summary || 'Untitled Event',
           courseId: undefined,
@@ -234,7 +238,7 @@ export default function GoogleCalendarSettings() {
           location: ev.location || '',
           googleCalendarEventId: ev.id,
           isDeleted: false,
-        } as any)
+        })
 
         importedCount++
       }

@@ -9,6 +9,9 @@ const mocked = vi.hoisted(() => ({
   deleteItem: vi.fn(),
   addItem: vi.fn(),
   updateItem: vi.fn(),
+  updateTask: vi.fn(),
+  updateEvent: vi.fn(),
+  updateExam: vi.fn(),
   deleteItemLocal: vi.fn(),
 }))
 
@@ -31,6 +34,9 @@ vi.mock('@/hooks/useStore', async importOriginal => {
       items: [],
       addItem: mocked.addItem,
       updateItem: mocked.updateItem,
+      updateTask: mocked.updateTask,
+      updateEvent: mocked.updateEvent,
+      updateExam: mocked.updateExam,
       deleteItem: mocked.deleteItemLocal,
       getItemsByType: () => [],
     }),
@@ -180,7 +186,7 @@ describe('ItemDialogProvider context', () => {
     })
 
     await waitFor(() => {
-      const stampCall = mocked.updateItem.mock.calls.find(
+      const stampCall = mocked.updateTask.mock.calls.find(
         ([id, updates]: [string, any]) => id === 'test-uuid-123' && updates?.googleCalendarEventId === 'g-stamped',
       )
       expect(stampCall).toBeDefined()
@@ -207,7 +213,7 @@ describe('ItemDialogProvider context', () => {
       expect(mocked.syncItem).toHaveBeenCalledTimes(1)
     })
 
-    const stampCall = mocked.updateItem.mock.calls.find(([, updates]: [string, any]) => updates?.googleCalendarEventId)
+    const stampCall = mocked.updateTask.mock.calls.find(([, updates]: [string, any]) => updates?.googleCalendarEventId)
     expect(stampCall).toBeUndefined()
   })
 

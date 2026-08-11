@@ -10,6 +10,9 @@ const mocked = vi.hoisted(() => ({
   deleteItem: vi.fn(),
   addItem: vi.fn(),
   updateItem: vi.fn(),
+  updateTask: vi.fn(),
+  updateEvent: vi.fn(),
+  updateExam: vi.fn(),
   deleteItemLocal: vi.fn(),
   useStoreMocked: false as boolean,
   appState: {
@@ -34,6 +37,9 @@ vi.mock('@/hooks/useStore', async importOriginal => {
         return {
           addItem: mocked.addItem,
           updateItem: mocked.updateItem,
+          updateTask: mocked.updateTask,
+          updateEvent: mocked.updateEvent,
+          updateExam: mocked.updateExam,
           deleteItem: mocked.deleteItemLocal,
         }
       }
@@ -182,7 +188,7 @@ describe('useItemDialog handleSave sync wiring', () => {
     })
 
     await waitFor(() => {
-      const stampCall = mocked.updateItem.mock.calls.find(
+      const stampCall = mocked.updateTask.mock.calls.find(
         ([id, updates]: [string, any]) => id === 'test-uuid-123' && updates?.googleCalendarEventId === 'g-new-task',
       )
       expect(stampCall).toBeDefined()
@@ -212,7 +218,7 @@ describe('useItemDialog handleSave sync wiring', () => {
     })
 
     expect(errorSpy).not.toHaveBeenCalled()
-    const stampCall = mocked.updateItem.mock.calls.find(([, updates]: [string, any]) => updates?.googleCalendarEventId)
+    const stampCall = mocked.updateTask.mock.calls.find(([, updates]: [string, any]) => updates?.googleCalendarEventId)
     expect(stampCall).toBeUndefined()
 
     errorSpy.mockRestore()

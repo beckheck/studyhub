@@ -14,9 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useConfetti } from '@/hooks/useConfetti'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useExamGrades, useItems } from '@/hooks/useStore'
-import { ItemExam } from '@/items/exam/modelSchema'
 import { getItemTaskPriorityColor } from '@/items/task/methods'
-import { ItemTask } from '@/items/task/modelSchema'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { compareDates, getDateString } from '@/lib/date-utils'
 import { motion } from 'framer-motion'
@@ -64,11 +62,11 @@ export default function CourseManagerTab() {
     updateCourseLinks,
     updateCourseContacts,
   } = useCourses()
-  const { getItemsByType, updateItem, deleteItem } = useItems()
+  const { getItemsByType, updateTask, updateExam, deleteItem } = useItems()
 
   // Get items by type
-  const tasks = getItemsByType('task') as ItemTask[]
-  const exams = getItemsByType('exam') as ItemExam[]
+  const tasks = getItemsByType('task')
+  const exams = getItemsByType('exam')
 
   // Access exam grades separately (still managed in the old way)
   const { examGrades, setExamGrades } = useExamGrades()
@@ -804,7 +802,7 @@ export default function CourseManagerTab() {
                           variant="default"
                           className="rounded-xl"
                           onClick={() => {
-                            updateItem(t.id, { isCompleted: true } as any)
+                            updateTask(t.id, { isCompleted: true })
                           }}
                         >
                           {tCourse('actions.done')}
@@ -878,7 +876,7 @@ export default function CourseManagerTab() {
                                   size="icon"
                                   variant="ghost"
                                   className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => updateItem(t.id, { isCompleted: false } as any)}
+                                  onClick={() => updateTask(t.id, { isCompleted: false })}
                                   title={tCourse('actions.undo')}
                                 >
                                   <Undo className="w-4 h-4" />
@@ -1033,9 +1031,9 @@ export default function CourseManagerTab() {
                                   className="text-xs"
                                   onContentChange={newContent => {
                                     // Update the exam with the new notes content
-                                    updateItem(e.id, {
+                                    updateExam(e.id, {
                                       notes: newContent,
-                                    } as any)
+                                    })
                                   }}
                                   onProgressChange={progress => {
                                     setExamNotesProgress(prev => ({
@@ -1113,7 +1111,7 @@ export default function CourseManagerTab() {
                                     className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
                                     onClick={ev => {
                                       ev.stopPropagation()
-                                      updateItem(e.id, { isCompleted: false } as any)
+                                      updateExam(e.id, { isCompleted: false })
                                     }}
                                     title={tCourse('exams.upcoming.title')}
                                   >
@@ -1136,9 +1134,9 @@ export default function CourseManagerTab() {
                                       className="text-xs"
                                       onContentChange={newContent => {
                                         // Update the exam with the new notes content
-                                        updateItem(e.id, {
+                                        updateExam(e.id, {
                                           notes: newContent,
-                                        } as any)
+                                        })
                                       }}
                                     />
                                   </div>

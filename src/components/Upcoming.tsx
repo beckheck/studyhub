@@ -1,6 +1,5 @@
 import { useItems } from '@/hooks/useStore'
 import { ItemTask } from '@/items/task/modelSchema'
-import { ItemExam } from '@/items/exam/modelSchema'
 import { calculateDDay, compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils'
 import { AnimatePresence } from 'framer-motion'
 import { useMemo } from 'react'
@@ -30,24 +29,24 @@ export default function Upcoming({
   onCourseSelect,
 }: UpcomingProps) {
   const { t } = useTranslation('common')
-  const { getItemsByType, updateItem } = useItems()
+  const { getItemsByType, updateTask, updateExam } = useItems()
 
   // Get items by type
-  const tasks = getItemsByType('task') as ItemTask[]
-  const exams = getItemsByType('exam') as ItemExam[]
+  const tasks = getItemsByType('task')
+  const exams = getItemsByType('exam')
 
   // Helper functions for item updates
   const toggleTask = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId)
     if (task) {
-      updateItem(taskId, { isCompleted: !task.isCompleted } as any)
+      updateTask(taskId, { isCompleted: !task.isCompleted })
     }
   }
 
   const toggleExamComplete = (examId: string) => {
     const exam = exams.find(e => e.id === examId)
     if (exam) {
-      updateItem(examId, { isCompleted: !exam.isCompleted } as any)
+      updateExam(examId, { isCompleted: !exam.isCompleted })
     }
   }
 
