@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for OpenCode sessions working in StudyHub. Read alongside [`CONTEXT.md`](./CONTEXT.md) (domain vocabulary) and [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) (system baseline).
+Guidance for OpenCode sessions working in StudyHub. Read alongside [`CONTEXT.md`](./CONTEXT.md) (domain vocabulary).
 
 ## Commands
 
@@ -27,7 +27,7 @@ Run a single test file: `vp exec vitest run path/to/file.test.ts`. By name: `vp 
   - Extension: WXT (`wxt.config.ts`, `src/entrypoints/*`). WXT wraps Vite; `@wxt-dev/module-react` adds React.
 - **Path alias `@` → `src`** in both `vite.config.js` and `wxt.config.ts` (and `tsconfig.json`). Use `@/...` imports.
 - **Feature flags** (env, set in `.env.local`): `VITE_FEATURE_UGLY_CALENDAR`, `VITE_FEATURE_TESTING` gate optional tabs in `App.tsx`.
-- **Google OAuth env:** `VITE_GOOGLE_CLIENT_ID` (see `.env.example`). OAuth uses Google Identity Services (GIS) with PKCE. No client secret. Google Calendar sync is **web-only by construction**; do not assume it works in extension mode without adding a `chrome.identity.launchWebAuthFlow` adapter. See ADR 0006 and ADR 0007.
+- **Google OAuth env:** `VITE_GOOGLE_CLIENT_ID` (see `.env.example`).
 
 ## TypeScript
 
@@ -39,9 +39,9 @@ Run a single test file: `vp exec vitest run path/to/file.test.ts`. By name: `vp 
 - Vitest + jsdom + Testing Library. Config: `vitest.config.ts`. Setup: `src/test/setup.ts`.
 - **`src/test/setup.ts` globally mocks `crypto.randomUUID` (→ `'test-uuid-123'`) and `Date.now` (→ `1640995200000`, 2022-01-01).** Tests that rely on unique IDs or distinct timestamps will break or give false passes; reset/override in-file when needed.
 - Existing tests concentrate on leaf pure functions (`date-utils`, `recurrence-utils`, `timetable/modelSchema`, `MiniCalendar`'s `buildCalendarMatrix`, `calendar-queries`). Cross-module wiring (storage sync, timer bridge, Google sync, GC) is largely untested — don't assume green tests mean the feature works end-to-end.
-- `recurrence-utils.ts` (715 lines) is wired into production via `calendar-queries.ts` (`getItemsInRange`/`getItemsOnDate`). Recurring `ItemEvent`s expand into occurrences on each matching date in the visible range. See [ADR 0001](./docs/adr/0001-calendar-entry-return-shape.md).
+- `recurrence-utils.ts` (715 lines) is wired into production via `calendar-queries.ts` (`getItemsInRange`/`getItemsOnDate`). Recurring `ItemEvent`s expand into occurrences on each matching date in the visible range. See ADR-0001.
 
-## Architecture (read `docs/ARCHITECTURE.md` before structural changes)
+## Architecture
 
 - **Dual surface, one app.** Six Container Modes (`web`, `popup`, `sidepanel`, `tab`, `overlay`, `newtab`); all render the same `App` via `AppContainer` (`src/AppContainer.tsx`) with different dimensions. `web` has no `browser.*` APIs; the runtime seam is `src/lib/browser-runtime-stub.ts` (`browserRuntime` + `isExtension`).
 - **Extension mode = two JS contexts.** Background service worker (`src/entrypoints/background.ts`) and UI each have their own valtio `store` instance, synced via `browser.storage.local` / IndexedDB through `HybridStorage`. Storage is the source of truth; `store` is a synced cache. This duality is **fundamental** — don't propose unifying the stores.
@@ -56,10 +56,6 @@ Formatting: 2-space indent, single quotes, no semicolons, trailing commas, recom
 
 - **Domain language is governed by `CONTEXT.md`.**
 - **i18n:** i18next with per-namespace JSON under `src/locales/{en,es}/`; item-type strings under `src/items/locales/`. The content script imports translations directly (no i18next there). Source language is `en`.
-
-## Before proposing a refactor
-
-Check `docs/ARCHITECTURE.md` §7 (principles in force) and §1-2 (the dual-context model). If a proposal contradicts the per-context stores, the `browserRuntime` seam, the background timer, or the separate timer storage key, it needs an ADR.
 
 ## Writing Style
 

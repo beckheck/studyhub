@@ -174,7 +174,7 @@ export const storeLoadingState = proxy<{
 })
 
 // Create the repository for app state persistence.
-// See ADR 0004: repository seam for app state.
+// Repository seam for app state.
 const repo = createRepository<AppState>({
   storage: hybridStorage,
   storageKey: STORAGE_KEY,
@@ -264,7 +264,7 @@ export function persistStore(): Promise<void> {
 }
 
 // Cross-context synchronization.
-// See ADR 0004: the setTimeout(0) is kept to match the proven synchronization pattern.
+// The setTimeout(0) is kept to match the proven synchronization pattern.
 function setupStorageSynchronization() {
   repo.subscribe(state => {
     if (!isStoreReady) return
@@ -284,7 +284,7 @@ function setupStorageSynchronization() {
 // Listen for storage changes from other tabs (browser's native storage events only)
 
 // File attachment storage: store-backed repository adapter.
-// See ADR 0003: lib modules do not import the store; the store supplies a repository adapter.
+// Lib modules do not import the store; the store supplies a repository adapter.
 const fileRepository: FileRepository = {
   async getFile(fileId: string): Promise<StoredFileAttachment | null> {
     return store.fileAttachments.files[fileId] || null

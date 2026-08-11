@@ -92,4 +92,4 @@ Access tokens expire after one hour. StudyHub silently refreshes the token when 
 
 ### Connect button does nothing in extension mode
 
-Google Calendar sync is web-only by design. The Connect button is hidden in extension mode. See [ADR 0006](./adr/0006-google-calendar-sync-web-only.md).
+Google Calendar sync is web-only by design. The Connect button is hidden in extension mode. See ADR-0001.

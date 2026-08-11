@@ -1,7 +1,6 @@
 /**
  * File Attachment Storage System
  * Stores file attachments through a repository adapter supplied by the caller.
- * See ADR 0003: lib modules do not import the store.
  */
 
 import type { FileAttachmentMetadata, StoredFileAttachment } from '@/types'

@@ -1,7 +1,7 @@
 /**
  * File Attachment Garbage Collection
  * Scans app state for referenced file ids and deletes unreferenced files.
- * See ADR 0003: the reference scan lives where the app state shape lives,
+ * The reference scan lives where the app state shape lives,
  * not in the file storage module.
  */
 
