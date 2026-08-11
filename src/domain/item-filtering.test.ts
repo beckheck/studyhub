@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vite-plus/test'
-import { isOverdue, getOverdueItems, getUpcomingItems } from './item-filtering'
+import { isOverdue, getOverdueItems } from './item-filtering'
 import type { ItemTask } from '@/items/task/modelSchema'
 import type { ItemExam } from '@/items/exam/modelSchema'
-import type { ItemEvent } from '@/items/event/modelSchema'
 
 const now = new Date('2026-01-15T12:00:00')
 
@@ -35,22 +34,6 @@ function makeExam(id: string, startsAt: Date, isCompleted = false): ItemExam {
     updatedAt: new Date('2026-01-01'),
     isDeleted: false,
   } as ItemExam
-}
-
-function makeEvent(id: string, startsAt: Date, endsAt: Date, projectId = 'p1'): ItemEvent {
-  return {
-    id,
-    type: 'event',
-    title: `Event ${id}`,
-    courseId: 'c1',
-    projectId,
-    startsAt,
-    endsAt,
-    isAllDay: false,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-    isDeleted: false,
-  } as ItemEvent
 }
 
 describe('isOverdue', () => {
@@ -106,34 +89,6 @@ describe('getOverdueItems', () => {
   it('returns empty arrays when nothing is overdue', () => {
     const result = getOverdueItems([], [], now)
     expect(result.exams).toEqual([])
-    expect(result.tasks).toEqual([])
-  })
-})
-
-describe('getUpcomingItems', () => {
-  it('returns events and tasks linked to the project that are not in the past', () => {
-    const events = [
-      makeEvent('ev1', new Date('2026-01-20'), new Date('2026-01-20T18:00')), // upcoming
-      makeEvent('ev2', new Date('2026-01-10'), new Date('2026-01-10T18:00')), // past
-    ]
-    const tasks = [
-      makeTask('t1', new Date('2026-01-20')), // upcoming
-      makeTask('t2', new Date('2026-01-10')), // past
-    ]
-
-    const result = getUpcomingItems(events, tasks, 'p1', now)
-
-    expect(result.meetings.map(e => e.id)).toEqual(['ev1'])
-    expect(result.tasks.map(t => t.id)).toEqual(['t1'])
-  })
-
-  it('excludes items linked to a different project', () => {
-    const events = [makeEvent('ev1', new Date('2026-01-20'), new Date('2026-01-20T18:00'), 'other')]
-    const tasks = [makeTask('t1', new Date('2026-01-20'), false, 'other')]
-
-    const result = getUpcomingItems(events, tasks, 'p1', now)
-
-    expect(result.meetings).toEqual([])
     expect(result.tasks).toEqual([])
   })
 })

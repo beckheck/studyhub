@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { RichTextDisplay } from '@/components/ui/rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { calculateCourseAverage as calcCourseAverage, computeUpdatedGrades } from '@/domain/grades'
+import { calculateCourseAverage as calcCourseAverage, computeCourseStats, computeUpdatedGrades } from '@/domain/grades'
 import { sortTasks as sortTasksByOrder } from '@/domain/item-sorting'
 import { useConfetti } from '@/hooks/useConfetti'
 import { useLocalization } from '@/hooks/useLocalization'
@@ -113,13 +113,7 @@ export default function CourseManagerTab() {
   }, [selectedCourseId, selectedCourse])
 
   const courseStats = useMemo(() => {
-    return courses.reduce<Record<string, { openTasks: number; upcomingExams: number }>>((acc, course) => {
-      acc[course.id] = {
-        openTasks: tasks.filter(task => task.courseId === course.id && !task.isCompleted).length,
-        upcomingExams: exams.filter(exam => exam.courseId === course.id && !exam.isCompleted).length,
-      }
-      return acc
-    }, {})
+    return computeCourseStats(courses, tasks, exams)
   }, [courses, exams, tasks])
 
   // Toggle expanded state for exam notes

@@ -1,6 +1,6 @@
 import type { ItemExam } from '@/items/exam/modelSchema'
 import type { ItemTask } from '@/items/task/modelSchema'
-import type { Course, ExamGrade } from '@/types'
+import type { ExamGrade } from '@/types'
 
 export function calculateCourseAverage(exams: readonly ItemExam[], grades: readonly ExamGrade[]): string | null {
   const examsWithGrades = exams.filter(exam => grades.some(grade => grade.examId === exam.id))
@@ -41,7 +41,7 @@ export function computeUpdatedGrades(grades: readonly ExamGrade[], examId: strin
 }
 
 export function computeCourseStats(
-  courses: readonly Course[],
+  courses: readonly { id: string }[],
   tasks: readonly ItemTask[],
   exams: readonly ItemExam[],
 ): Record<string, { openTasks: number; upcomingExams: number }> {
