@@ -197,6 +197,22 @@ describe('GoogleCalendarSync.syncItem', () => {
       expect(result).toEqual({ success: true, googleEventId: 'g-evt-1' })
     })
 
+    it('falls back to POST on 404 and returns the new event id', async () => {
+      fetchMock
+        .mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({ error: { message: 'Not Found' } }) })
+        .mockResolvedValueOnce(okResponse('g-new-id'))
+
+      const event = makeEvent({ googleCalendarEventId: 'g-deleted', id: 'evt-1' })
+      const result = await sync.syncItem(event, CTX)
+
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock.mock.calls[0][0]).toBe(`${API_BASE}/calendars/cal-1/events/g-deleted`)
+      expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe('PUT')
+      expect(fetchMock.mock.calls[1][0]).toBe(`${API_BASE}/calendars/cal-1/events`)
+      expect((fetchMock.mock.calls[1][1] as RequestInit).method).toBe('POST')
+      expect(result).toEqual({ success: true, googleEventId: 'g-new-id' })
+    })
+
     it('formats all-day events as date only, with end inclusive of the last day', async () => {
       fetchMock.mockResolvedValue(okResponse('g-evt-1'))
 
@@ -208,8 +224,8 @@ describe('GoogleCalendarSync.syncItem', () => {
       await sync.syncItem(event, CTX)
 
       const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)
-      expect(body.start).toEqual({ date: '20240110' })
-      expect(body.end).toEqual({ date: '20240111' })
+      expect(body.start).toEqual({ date: '2024-01-10' })
+      expect(body.end).toEqual({ date: '2024-01-11' })
     })
 
     it('sends the recurrence as an RRule array', async () => {
@@ -430,7 +446,11 @@ describe('GoogleCalendarSync.bulkSyncItems', () => {
     const items: Item[] = [makeEvent(), makeTask({ googleCalendarEventId: 'g-task-1' })]
     const result = await sync.bulkSyncItems(items, CTX)
 
-    expect(result).toEqual({ success: 2, failed: 0, errors: [] })
+    expect(result.success).toBe(2)
+    expect(result.failed).toBe(0)
+    expect(result.errors).toEqual([])
+    expect(result.updatedEventIds.size).toBe(1)
+    expect(result.updatedEventIds.get('evt-1')).toBe('g-evt-1')
     const [postUrl, postOptions] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(postUrl).toBe(`${API_BASE}/calendars/cal-1/events`)
     expect(postOptions.method).toBe('POST')

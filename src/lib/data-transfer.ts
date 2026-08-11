@@ -46,6 +46,7 @@ export function serialize(state: AppState): ExchangeFormatV2 {
         bgImage: state.theme.bgImage,
       },
       activeTabsByMode: state.activeTabsByMode,
+      googleCalendar: state.googleCalendar,
     },
     semesterDates: state.semesterDates,
   }
@@ -143,7 +144,7 @@ function deserializeV2(data: ExchangeFormatV2): AppState {
       apiKey: data.settings.weather.apiKey,
       location: data.settings.weather.location,
     },
-    googleCalendar: {
+    googleCalendar: data.settings.googleCalendar || {
       syncEnabled: false,
     },
     focusTimer: data.settings.focusTimer || {
@@ -414,6 +415,13 @@ export interface ExchangeFormatV2 {
       bgImage: string
     }
     activeTabsByMode?: Record<string, string>
+    googleCalendar?: {
+      accessToken?: string
+      tokenExpiresAt?: number
+      calendarId?: string
+      calendars?: Array<{ id: string; summary: string }>
+      syncEnabled: boolean
+    }
   }
   courseRecords?: Array<{
     id: string

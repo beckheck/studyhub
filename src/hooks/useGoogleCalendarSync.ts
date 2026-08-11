@@ -27,7 +27,7 @@ export function useGoogleCalendarSync() {
       const expiresAt = config.tokenExpiresAt ?? 0
 
       if (!token) {
-        throw new Error('Not connected to Google Calendar.')
+        return ''
       }
 
       if (googleOAuthManager.isTokenExpired(expiresAt)) {
@@ -57,14 +57,18 @@ export function useGoogleCalendarSync() {
     items: Item[],
     ctx: SyncCtxWithoutToken,
     onProgress?: (current: number, total: number) => void,
-  ): Promise<{ success: number; failed: number; errors: string[] }> =>
+  ): Promise<{ success: number; failed: number; errors: string[]; updatedEventIds: Map<string, string> }> =>
     syncRef.current!.bulkSyncItems(items, buildCtx(ctx), onProgress)
 
-  const fetchCalendars = (): Promise<Array<{ id: string; summary: string }> | null> =>
-    syncRef.current!.fetchCalendars(googleCalendar.accessToken ?? '')
+  const fetchCalendars = (tokenOverride?: string): Promise<Array<{ id: string; summary: string }> | null> => {
+    const token = tokenOverride ?? googleCalendar.accessToken ?? ''
+    return syncRef.current!.fetchCalendars(token)
+  }
 
-  const fetchEventsFromCalendar = (calendarId: string, timeMin?: Date): Promise<any[]> =>
-    syncRef.current!.fetchEventsFromCalendar(googleCalendar.accessToken ?? '', calendarId, timeMin)
+  const fetchEventsFromCalendar = (calendarId: string, timeMin?: Date, tokenOverride?: string): Promise<any[]> => {
+    const token = tokenOverride ?? googleCalendar.accessToken ?? ''
+    return syncRef.current!.fetchEventsFromCalendar(token, calendarId, timeMin)
+  }
 
   return {
     syncItem,

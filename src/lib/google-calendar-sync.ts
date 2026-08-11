@@ -41,6 +41,13 @@ function formatDate(date: Date): string {
   return `${year}${month}${day}`
 }
 
+function formatDateIso(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
@@ -100,10 +107,36 @@ export class GoogleCalendarSync {
         ? `/calendars/${ctx.calendarId}/events/${existingId}`
         : `/calendars/${ctx.calendarId}/events`
 
-      const response = await this.makeApiRequest(method, endpoint, googleEvent, ctx.accessToken)
+      let response = await this.makeApiRequest(method, endpoint, googleEvent, ctx.accessToken)
+
+      if (response.status === 404 && existingId) {
+        const postEndpoint = `/calendars/${ctx.calendarId}/events`
+        const postResponse = await this.makeApiRequest('POST', postEndpoint, googleEvent, ctx.accessToken)
+        response = postResponse
+        const createdEvent = await response.json()
+        return {
+          success: true,
+          googleEventId: createdEvent.id,
+        }
+      }
 
       if (!response.ok) {
         const error = await response.json()
+        console.error(
+          'syncItem failed:',
+          response.status,
+          JSON.stringify(error),
+          'item:',
+          item.title,
+          'itemType:',
+          item.type,
+          'eventId:',
+          existingId,
+          'calendarId:',
+          ctx.calendarId,
+          'eventBody:',
+          JSON.stringify(googleEvent),
+        )
         return {
           success: false,
           error: error.error?.message || 'Failed to sync item',
@@ -172,11 +205,12 @@ export class GoogleCalendarSync {
     items: Item[],
     ctx: SyncItemContext,
     onProgress?: (current: number, total: number) => void,
-  ): Promise<{ success: number; failed: number; errors: string[] }> {
+  ): Promise<{ success: number; failed: number; errors: string[]; updatedEventIds: Map<string, string> }> {
     const results = {
       success: 0,
       failed: 0,
       errors: [] as string[],
+      updatedEventIds: new Map<string, string>(),
     }
 
     for (let i = 0; i < items.length; i++) {
@@ -187,6 +221,10 @@ export class GoogleCalendarSync {
 
       if (result.success) {
         results.success++
+        const oldEventId = (item as any).googleCalendarEventId
+        if (result.googleEventId && result.googleEventId !== oldEventId) {
+          results.updatedEventIds.set(item.id, result.googleEventId)
+        }
       } else if (!result.skipped) {
         results.failed++
         results.errors.push(`${item.title}: ${result.error || 'Unknown error'}`)
@@ -201,12 +239,13 @@ export class GoogleCalendarSync {
       const response = await this.makeApiRequest('GET', '/users/me/calendarList', null, accessToken)
 
       if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        console.error('fetchCalendars API error:', response.status, error)
         return null
       }
 
       const data = await response.json()
 
-      // Filter to only calendars with writer access
       const writableCalendars =
         data.items
           ?.filter((cal: any) => cal.accessRole === 'owner' || cal.accessRole === 'writer')
@@ -216,7 +255,8 @@ export class GoogleCalendarSync {
           })) || []
 
       return writableCalendars
-    } catch {
+    } catch (error) {
+      console.error('fetchCalendars failed:', error)
       return null
     }
   }
@@ -251,7 +291,13 @@ export class GoogleCalendarSync {
     accessToken: string,
     retryCount = 0,
   ): Promise<Response> {
-    const resolvedToken = this.getValidAccessToken ? await this.getValidAccessToken() : accessToken
+    let resolvedToken = accessToken
+    if (this.getValidAccessToken) {
+      const callbackToken = await this.getValidAccessToken()
+      if (callbackToken) {
+        resolvedToken = callbackToken
+      }
+    }
     const url = `${this.apiBaseUrl}${endpoint}`
 
     const options: RequestInit = {
@@ -320,12 +366,12 @@ export class GoogleCalendarSync {
         const googleEvent: GoogleCalendarEvent = {
           summary: item.title ?? '',
           description: description(),
-          location: item.location,
+          location: item.location || undefined,
           start: item.isAllDay
-            ? { date: formatDate(item.startsAt) }
+            ? { date: formatDateIso(item.startsAt) }
             : { dateTime: item.startsAt.toISOString(), timeZone },
           end: item.isAllDay
-            ? { date: formatDate(addDays(item.endsAt, 1)) }
+            ? { date: formatDateIso(addDays(item.endsAt, 1)) }
             : { dateTime: item.endsAt.toISOString(), timeZone },
         }
 

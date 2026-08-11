@@ -15,7 +15,7 @@ export default function GoogleCalendarSettings() {
   const { googleCalendar, setGoogleCalendarConfig, setCalendars, setSelectedCalendar, clearGoogleCalendar } =
     useGoogleCalendar()
   const appState = useAppState()
-  const { addItem } = useItems()
+  const { addItem, updateItem } = useItems()
   const { fetchCalendars, bulkSyncItems, fetchEventsFromCalendar } = useGoogleCalendarSync()
   const [loading, setLoading] = useState(false)
   const [bulkExporting, setBulkExporting] = useState(false)
@@ -52,7 +52,7 @@ export default function GoogleCalendarSettings() {
 
       // Fetch calendars
       console.log('Fetching calendars...')
-      const calendars = await fetchCalendars()
+      const calendars = await fetchCalendars(tokenState.accessToken)
       console.log('Calendars fetched:', calendars)
 
       if (calendars && calendars.length > 0) {
@@ -125,6 +125,9 @@ export default function GoogleCalendarSettings() {
       )
 
       if (results.success > 0) {
+        results.updatedEventIds.forEach((eventId, itemId) => {
+          updateItem(itemId, { googleCalendarEventId: eventId } as Partial<Item>)
+        })
         setSuccessMessage(
           `✅ Successfully exported ${results.success} item${results.success !== 1 ? 's' : ''} to Google Calendar${
             results.failed > 0 ? ` (${results.failed} failed)` : ''
