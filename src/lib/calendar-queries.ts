@@ -46,10 +46,8 @@ export function getItemsInRange(
 }
 
 export function getItemsOnDate(items: readonly Item[], date: Date, opts: CalendarQueryOptions = {}): CalendarEntry[] {
-  const dayStart = new Date(date)
-  dayStart.setUTCHours(0, 0, 0, 0)
-  const dayEnd = new Date(date)
-  dayEnd.setUTCHours(23, 59, 59, 999)
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
   return getItemsInRange(items, dayStart, dayEnd, opts)
 }
 
@@ -91,8 +89,8 @@ function singleEventEntries(item: ItemEvent, rangeStart: Date, rangeEnd: Date): 
   const overlapEnd = eventEndStr < rangeEndStr ? eventEndStr : rangeEndStr
   if (overlapStart > overlapEnd) return entries
 
-  let cursor = new Date(overlapStart + 'T00:00:00.000Z')
-  const last = new Date(overlapEnd + 'T00:00:00.000Z')
+  let cursor = parseLocalDate(overlapStart)
+  const last = parseLocalDate(overlapEnd)
   while (getDateString(cursor) <= getDateString(last)) {
     entries.push({
       item,
@@ -100,9 +98,14 @@ function singleEventEntries(item: ItemEvent, rangeStart: Date, rangeEnd: Date): 
       startsAt: item.startsAt,
       endsAt: item.endsAt,
     })
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
+    cursor.setDate(cursor.getDate() + 1)
   }
   return entries
+}
+
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
 function itemEntry(item: Item): { date: Date; startsAt: Date } {

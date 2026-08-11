@@ -6,6 +6,7 @@ import {
   itemBaseFormSchema,
 } from '@/items/base/formSchema'
 import { Item } from '@/items/models'
+import { getDateString } from '@/lib/date-utils'
 import { z } from 'zod'
 import { ItemEvent, ItemEventSchema } from './modelSchema'
 
@@ -61,13 +62,13 @@ export const DEFAULT_ITEM_EVENT_DISABLED: ItemFormFieldFlags = {}
 
 export const eventModelToFormConverter = (item: Item): ItemEventForm => {
   if (item.type !== 'event') throw new Error('Invalid item type')
-  const startsAtDate = item.startsAt // Now it's already a Date object
-  const endsAtDate = item.endsAt // Now it's already a Date object
+  const startsAtDate = item.startsAt
+  const endsAtDate = item.endsAt
   return {
     ...getBaseFormFromModel(item),
-    startsAt: startsAtDate.toISOString().split('T')[0],
+    startsAt: getDateString(startsAtDate),
     startsAtTime: startsAtDate.toTimeString().split(' ')[0].slice(0, 5),
-    endsAt: endsAtDate.toISOString().split('T')[0],
+    endsAt: getDateString(endsAtDate),
     endsAtTime: endsAtDate.toTimeString().split(' ')[0].slice(0, 5),
     isAllDay: item.isAllDay,
     location: item.location || '',
@@ -76,7 +77,7 @@ export const eventModelToFormConverter = (item: Item): ItemEventForm => {
     recurrenceInterval: item.recurrence?.interval || 1,
     recurrenceByWeekday: item.recurrence?.byWeekday || [],
     recurrenceCount: item.recurrence?.count,
-    recurrenceUntil: item.recurrence?.until ? item.recurrence.until.toISOString().split('T')[0] : undefined,
+    recurrenceUntil: item.recurrence?.until ? getDateString(item.recurrence.until) : undefined,
   }
 }
 
@@ -98,7 +99,7 @@ export const eventFormToModelConverter = (form: ItemEventForm, existingItem?: It
             byWeekday: form.recurrenceByWeekday,
           }),
         ...(form.recurrenceCount && { count: form.recurrenceCount }),
-        ...(form.recurrenceUntil && { until: new Date(form.recurrenceUntil) }),
+        ...(form.recurrenceUntil && { until: new Date(`${form.recurrenceUntil}T00:00`) }),
       }
     : undefined
 

@@ -17,10 +17,10 @@ import {
 } from './date-utils'
 
 describe('date-utils', () => {
-  const date1 = new Date('2024-01-15T10:30:00Z') // Monday
-  const date2 = new Date('2024-01-15T23:59:59Z') // Same day, different time
-  const date3 = new Date('2024-01-16T00:00:00Z') // Next day
-  const date4 = new Date('2024-01-20T15:00:00Z') // 5 days later
+  const date1 = new Date(2024, 0, 15, 10, 30) // Monday
+  const date2 = new Date(2024, 0, 15, 23, 59, 59) // Same day, different time
+  const date3 = new Date(2024, 0, 16, 0, 0) // Next day
+  const date4 = new Date(2024, 0, 20, 15, 0) // 5 days later
 
   describe('getDateString', () => {
     it('should return YYYY-MM-DD format for Date objects', () => {
@@ -33,13 +33,12 @@ describe('date-utils', () => {
       expect(getDateString(date3.getTime())).toBe('2024-01-16')
     })
 
-    it('should handle timezone differences consistently', () => {
-      // Test with dates that might have timezone issues
-      const utcDate = new Date('2024-01-15T23:00:00Z')
-      const localDate = new Date('2024-01-16T01:00:00+02:00') // Same UTC time, different timezone
+    it('should use local calendar components', () => {
+      const early = new Date(2024, 0, 15, 0, 30)
+      const late = new Date(2024, 0, 15, 23, 30)
 
-      expect(getDateString(utcDate)).toBe('2024-01-15')
-      expect(getDateString(localDate)).toBe('2024-01-15') // Should be same UTC date
+      expect(getDateString(early)).toBe('2024-01-15')
+      expect(getDateString(late)).toBe('2024-01-15')
     })
   })
 
@@ -168,28 +167,24 @@ describe('date-utils', () => {
 
   describe('timezone safety', () => {
     it('should handle daylight saving time transitions correctly', () => {
-      // Test dates around DST transition (spring forward)
-      const beforeDST = new Date('2024-03-09T10:00:00-05:00') // EST
-      const afterDST = new Date('2024-03-11T10:00:00-04:00') // EDT
+      const beforeDST = new Date(2024, 2, 9, 10)
+      const afterDST = new Date(2024, 2, 11, 10)
 
       const daysDiff = getDaysDifference(beforeDST, afterDST)
       expect(daysDiff).toBe(2)
     })
 
-    it('should handle dates across different timezones consistently', () => {
-      // Same UTC moment in different timezone representations
-      const utc = new Date('2024-01-15T23:00:00Z')
-      const eastern = new Date('2024-01-15T18:00:00-05:00')
-      const pacific = new Date('2024-01-15T15:00:00-08:00')
+    it('should treat local dates at the edges of a day as the same day', () => {
+      const early = new Date(2024, 0, 15, 0, 30)
+      const late = new Date(2024, 0, 15, 23, 30)
 
-      expect(isSameDate(utc, eastern)).toBe(true)
-      expect(isSameDate(utc, pacific)).toBe(true)
-      expect(isSameDate(eastern, pacific)).toBe(true)
+      expect(isSameDate(early, late)).toBe(true)
+      expect(getDaysDifference(early, late)).toBe(0)
     })
 
     it('should handle midnight boundary cases', () => {
-      const endOfDay = new Date('2024-01-15T23:59:59Z')
-      const startOfNextDay = new Date('2024-01-16T00:00:00Z')
+      const endOfDay = new Date(2024, 0, 15, 23, 59, 59)
+      const startOfNextDay = new Date(2024, 0, 16, 0, 0, 0)
 
       expect(isSameDate(endOfDay, startOfNextDay)).toBe(false)
       expect(getDaysDifference(endOfDay, startOfNextDay)).toBe(1)

@@ -4,6 +4,7 @@ import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses } from '@/hooks/useStore'
 import { getItemTaskPriorityColor } from '@/items/task/methods'
 import { ItemTask } from '@/items/task/modelSchema'
+import { getDateString } from '@/lib/date-utils'
 import { AlertTriangle } from 'lucide-react'
 import React from 'react'
 
@@ -25,7 +26,7 @@ const SwipeableTask = React.forwardRef<HTMLDivElement, SwipeableTaskProps>(funct
   const { formatDateDDMMYYYY } = useLocalization()
 
   // Convert timestamp to date string for compatibility with existing functions
-  const dueDateString = task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : ''
+  const dueDateString = task.dueAt ? getDateString(new Date(task.dueAt)) : ''
 
   return (
     <SwipeableItem

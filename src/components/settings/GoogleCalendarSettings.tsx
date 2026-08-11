@@ -186,8 +186,24 @@ export default function GoogleCalendarSettings() {
         }
 
         const isAllDay = !!ev.start.date
-        const startsAt = isAllDay ? new Date(ev.start.date) : new Date(ev.start.dateTime)
-        const endsAt = ev.end ? (isAllDay ? new Date(ev.end.date) : new Date(ev.end.dateTime)) : startsAt
+
+        // All-day events carry date-only fields. Parse them as local midnight
+        // and convert Google's exclusive end date to the app's inclusive one.
+        let startsAt: Date
+        let endsAt: Date
+        if (isAllDay) {
+          startsAt = new Date(`${ev.start.date}T00:00`)
+          if (ev.end?.date) {
+            endsAt = new Date(`${ev.end.date}T00:00`)
+            endsAt.setDate(endsAt.getDate() - 1)
+            if (endsAt < startsAt) endsAt = startsAt
+          } else {
+            endsAt = startsAt
+          }
+        } else {
+          startsAt = new Date(ev.start.dateTime)
+          endsAt = ev.end?.dateTime ? new Date(ev.end.dateTime) : startsAt
+        }
 
         // Skip duplicates
         // Match by title, date, or if it already has googleCalendarEventId matching ev.id in our local state

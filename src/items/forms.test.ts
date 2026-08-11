@@ -77,7 +77,7 @@ describe('Converters', () => {
           notes: 'Important assignment',
           tags: ['homework', 'urgent'],
           type: 'task',
-          dueAt: new Date('2022-01-15'),
+          dueAt: new Date(2022, 0, 15),
           priority: 'high',
           isCompleted: true,
         })
@@ -102,7 +102,7 @@ describe('Converters', () => {
           notes: undefined,
           tags: undefined,
           type: 'task',
-          dueAt: new Date('2022-01-10'),
+          dueAt: new Date(2022, 0, 10),
           priority: 'medium',
           isCompleted: false,
         })
@@ -140,7 +140,7 @@ describe('Converters', () => {
           notes: undefined,
           tags: undefined,
           type: 'task',
-          dueAt: new Date('2022-01-15'),
+          dueAt: new Date(2022, 0, 15),
           priority: 'medium',
           isCompleted: false,
           id: 'existing-id',
@@ -245,7 +245,7 @@ describe('Converters', () => {
           interval: 2,
           byWeekday: [1, 3],
           count: 10,
-          until: new Date('2022-03-15'),
+          until: new Date(2022, 2, 15),
         })
       })
 
@@ -336,7 +336,7 @@ describe('Converters', () => {
           createdAt: mockDate,
           updatedAt: mockDate,
           type: 'task',
-          dueAt: new Date('2022-01-15'),
+          dueAt: new Date(2022, 0, 15),
           priority: 'medium',
           isCompleted: false,
         })
@@ -396,7 +396,7 @@ describe('Converters', () => {
           createdAt: new Date(-86400000),
           updatedAt: mockDate,
           type: 'task',
-          dueAt: new Date('2022-01-20'),
+          dueAt: new Date(2022, 0, 20),
           priority: 'high',
           isCompleted: true,
         })
@@ -415,7 +415,7 @@ describe('Converters', () => {
 
         expect(result.type).toBe('task')
         expect(result.title).toBe('Test Task')
-        expect(result.dueAt).toStrictEqual(new Date('2022-01-15'))
+        expect(result.dueAt).toStrictEqual(new Date(2022, 0, 15))
       })
 
       it('should work with all item types', () => {
@@ -471,7 +471,7 @@ describe('Converters', () => {
           createdAt: mockOldDate,
           updatedAt: mockOldDate,
           type: 'task',
-          dueAt: new Date('2022-01-15'),
+          dueAt: new Date(2022, 0, 15),
           priority: 'high',
           isCompleted: true,
         }
@@ -502,7 +502,7 @@ describe('Converters', () => {
           createdAt: mockDate,
           updatedAt: mockDate,
           type: 'task',
-          dueAt: new Date('2022-01-10'),
+          dueAt: new Date(2022, 0, 10),
           priority: 'medium',
           isCompleted: false,
         }
@@ -630,7 +630,7 @@ describe('Converters', () => {
             interval: 2,
             byWeekday: [1, 3],
             count: 10,
-            until: new Date('2022-03-15'),
+            until: new Date(2022, 2, 15),
           },
         }
 
@@ -831,7 +831,7 @@ describe('Converters', () => {
           createdAt: mockDate,
           updatedAt: mockDate,
           type: 'task',
-          dueAt: new Date('2022-01-15'),
+          dueAt: new Date(2022, 0, 15),
           priority: 'medium',
           isCompleted: false,
         }
@@ -856,7 +856,7 @@ describe('Converters', () => {
           createdAt: mockDate,
           updatedAt: mockDate,
           type: 'task',
-          dueAt: new Date('2022-01-15'),
+          dueAt: new Date(2022, 0, 15),
           priority: 'medium',
           isCompleted: false,
         }

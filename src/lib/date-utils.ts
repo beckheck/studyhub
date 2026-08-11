@@ -1,33 +1,34 @@
 /**
- * Timezone-safe date utilities
+ * Date utilities for local wall-clock dates
  *
- * This module provides utilities for handling dates in a timezone-safe manner,
- * avoiding common pitfalls with date comparisons and calculations that can
- * cause items to appear on wrong dates due to timezone conversions.
- *
- * All functions in this module use UTC date strings (YYYY-MM-DD format) for
- * comparisons to ensure consistent behavior across different timezones and
- * daylight saving time transitions.
+ * The app stores item timestamps as local wall-clock times (for example, a task
+ * due date or an event start time). This module compares calendar days using the
+ * local date components of those timestamps, never the UTC representation.
+ * A local 20:00 event end must stay on the same calendar day, regardless of the
+ * user's offset from UTC.
  *
  * Key principles:
- * - Use `toISOString().split('T')[0]` to get consistent date strings
+ * - Use `getDateString` (local components) for day comparisons
  * - Compare calendar days, not timestamps
- * - Avoid `setHours(0, 0, 0, 0)` for date comparisons
- * - Handle multi-day events correctly across timezone boundaries
+ * - Construct day boundaries with `new Date(y, m, d)` (local midnight)
+ * - Handle multi-day events correctly across UTC midnight boundaries
  */
 
 /**
- * Get the date string (YYYY-MM-DD) from a Date object or timestamp in UTC
- * This ensures consistent date representation regardless of timezone
+ * Get the local date string (YYYY-MM-DD) from a Date object or timestamp
+ * Uses the date's local calendar components, not its UTC representation
  */
 export function getDateString(date: Date | number): string {
   const d = typeof date === 'number' ? new Date(date) : date
-  return d.toISOString().split('T')[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**
  * Check if two dates (Date objects or timestamps) represent the same calendar day
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isSameDate(date1: Date | number, date2: Date | number): boolean {
   return getDateString(date1) === getDateString(date2)
@@ -35,7 +36,7 @@ export function isSameDate(date1: Date | number, date2: Date | number): boolean 
 
 /**
  * Check if a date falls within a date range (inclusive)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isDateInRange(date: Date | number, startDate: Date | number, endDate: Date | number): boolean {
   const dateStr = getDateString(date)
@@ -47,7 +48,7 @@ export function isDateInRange(date: Date | number, startDate: Date | number, end
 
 /**
  * Check if an event spans multiple days
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isMultiDayEvent(startDate: Date | number, endDate: Date | number): boolean {
   return getDateString(startDate) !== getDateString(endDate)
@@ -55,7 +56,7 @@ export function isMultiDayEvent(startDate: Date | number, endDate: Date | number
 
 /**
  * Check if a date is before another date (calendar day comparison)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isDateBefore(date1: Date | number, date2: Date | number): boolean {
   return getDateString(date1) < getDateString(date2)
@@ -63,7 +64,7 @@ export function isDateBefore(date1: Date | number, date2: Date | number): boolea
 
 /**
  * Check if a date is after another date (calendar day comparison)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isDateAfter(date1: Date | number, date2: Date | number): boolean {
   return getDateString(date1) > getDateString(date2)
@@ -71,7 +72,7 @@ export function isDateAfter(date1: Date | number, date2: Date | number): boolean
 
 /**
  * Check if a date is before or equal to another date (calendar day comparison)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isDateBeforeOrEqual(date1: Date | number, date2: Date | number): boolean {
   return getDateString(date1) <= getDateString(date2)
@@ -79,7 +80,7 @@ export function isDateBeforeOrEqual(date1: Date | number, date2: Date | number):
 
 /**
  * Check if a date is after or equal to another date (calendar day comparison)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isDateAfterOrEqual(date1: Date | number, date2: Date | number): boolean {
   return getDateString(date1) >= getDateString(date2)
@@ -87,7 +88,7 @@ export function isDateAfterOrEqual(date1: Date | number, date2: Date | number): 
 
 /**
  * Calculate the difference in days between two dates
- * Uses UTC date strings to ensure consistent calculation regardless of timezone
+ * Uses local date strings for consistent calculation
  * Returns positive number if date2 is after date1, negative if before
  */
 export function getDaysDifference(date1: Date | number, date2: Date | number): number {
@@ -102,7 +103,7 @@ export function getDaysDifference(date1: Date | number, date2: Date | number): n
 }
 
 /**
- * Get today's date string in UTC format (YYYY-MM-DD)
+ * Get today's date string in local format (YYYY-MM-DD)
  * Useful for consistent "today" comparisons
  */
 export function getTodayDateString(): string {
@@ -111,7 +112,7 @@ export function getTodayDateString(): string {
 
 /**
  * Check if a date is today (calendar day comparison)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isToday(date: Date | number): boolean {
   return getDateString(date) === getTodayDateString()
@@ -119,7 +120,7 @@ export function isToday(date: Date | number): boolean {
 
 /**
  * Check if a date is in the past (before today)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isPastDate(date: Date | number): boolean {
   return isDateBefore(date, new Date())
@@ -127,7 +128,7 @@ export function isPastDate(date: Date | number): boolean {
 
 /**
  * Check if a date is in the future (after today)
- * Uses UTC date strings for comparison to avoid timezone issues
+ * Uses local date strings for comparison
  */
 export function isFutureDate(date: Date | number): boolean {
   return isDateAfter(date, new Date())

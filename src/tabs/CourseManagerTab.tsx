@@ -18,7 +18,7 @@ import { ItemExam } from '@/items/exam/modelSchema'
 import { getItemTaskPriorityColor } from '@/items/task/methods'
 import { ItemTask } from '@/items/task/modelSchema'
 import { useItemDialog } from '@/items/ItemDialogProvider'
-import { compareDates } from '@/lib/date-utils'
+import { compareDates, getDateString } from '@/lib/date-utils'
 import { motion } from 'framer-motion'
 import {
   CalendarDays,
@@ -783,8 +783,7 @@ export default function CourseManagerTab() {
                       >
                         <div className="font-medium">{t.title}</div>
                         <div className="text-xs text-zinc-500">
-                          {t.dueAt ? formatDateDDMMYYYY(new Date(t.dueAt).toISOString().split('T')[0]) : '—'} ·{' '}
-                          {t.priority}
+                          {t.dueAt ? formatDateDDMMYYYY(getDateString(new Date(t.dueAt))) : '—'} · {t.priority}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -859,8 +858,7 @@ export default function CourseManagerTab() {
                                   {t.title}
                                 </div>
                                 <div className="text-xs text-zinc-500">
-                                  {t.dueAt ? formatDateDDMMYYYY(new Date(t.dueAt).toISOString().split('T')[0]) : '—'} ·{' '}
-                                  {t.priority}
+                                  {t.dueAt ? formatDateDDMMYYYY(getDateString(new Date(t.dueAt))) : '—'} · {t.priority}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1015,7 +1013,7 @@ export default function CourseManagerTab() {
                               </Badge>
                               <div className="font-medium">{e.title}</div>
                               <div className="text-xs text-zinc-500">
-                                {formatDateDDMMYYYY(new Date(e.startsAt).toISOString().split('T')[0])} · {e.weight}%
+                                {formatDateDDMMYYYY(getDateString(new Date(e.startsAt)))} · {e.weight}%
                               </div>
                             </div>
                           </div>
@@ -1104,8 +1102,8 @@ export default function CourseManagerTab() {
                                     <span className="font-medium text-green-700 dark:text-green-400">{e.title}</span>
                                   </div>
                                   <div className="text-xs text-zinc-500 ml-6">
-                                    {formatDateDDMMYYYY(new Date(e.startsAt).toISOString().split('T')[0])} · {e.weight}%
-                                    ·{tCommon('status.completed')}
+                                    {formatDateDDMMYYYY(getDateString(new Date(e.startsAt)))} · {e.weight}% ·
+                                    {tCommon('status.completed')}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">

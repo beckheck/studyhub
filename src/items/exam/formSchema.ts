@@ -6,6 +6,7 @@ import {
   itemBaseFormSchema,
 } from '@/items/base/formSchema'
 import { Item } from '@/items/models'
+import { getDateString } from '@/lib/date-utils'
 import { z } from 'zod'
 import { ItemExam, ItemExamSchema } from './modelSchema'
 
@@ -40,7 +41,7 @@ export const examModelToFormConverter = (item: Item): ItemExamForm => {
   const startsAtDate = item.startsAt
   return {
     ...getBaseFormFromModel(item),
-    startsAt: startsAtDate.toISOString().split('T')[0],
+    startsAt: getDateString(startsAtDate),
     startsAtTime: startsAtDate.toTimeString().split(' ')[0].slice(0, 5),
     weight: item.weight,
     isCompleted: item.isCompleted,

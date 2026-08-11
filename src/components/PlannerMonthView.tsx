@@ -7,7 +7,7 @@ import { useCourses, useItems } from '@/hooks/useStore'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { Item } from '@/items/models'
 import { ItemDialogOptions } from '@/items/useItemDialogState'
-import { compareDates, isMultiDayEvent } from '@/lib/date-utils'
+import { compareDates, getDateString, isMultiDayEvent } from '@/lib/date-utils'
 import { useTranslation } from 'react-i18next'
 import { CalendarView } from '../types'
 import { useState } from 'react'
@@ -300,10 +300,10 @@ export function PlannerMonthView({
                             <div>
                               📅{' '}
                               {isMultiDay
-                                ? `${formatDateDDMMYYYY(startDate.toISOString().split('T')[0])} - ${formatDateDDMMYYYY(
-                                    endDate.toISOString().split('T')[0],
+                                ? `${formatDateDDMMYYYY(getDateString(startDate))} - ${formatDateDDMMYYYY(
+                                    getDateString(endDate),
                                   )}`
-                                : formatDateDDMMYYYY(startDate.toISOString().split('T')[0])}
+                                : formatDateDDMMYYYY(getDateString(startDate))}
                             </div>
                             {item.location && <div>📍 {item.location}</div>}
                             {item.notes && (

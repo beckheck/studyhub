@@ -29,7 +29,7 @@ import {
   Users,
   Vote,
 } from 'lucide-react'
-import { isDateBefore } from '@/lib/date-utils'
+import { getDateString, isDateBefore } from '@/lib/date-utils'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -315,7 +315,7 @@ export default function ProjectsTab() {
   const addLinkedMeeting = () => {
     if (!selectedProject) return
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = getDateString(new Date())
     itemDialog.openAddDialog(
       'event',
       {

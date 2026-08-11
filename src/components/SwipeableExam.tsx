@@ -3,6 +3,7 @@ import SwipeableItem from '@/components/ui/swipeable-item'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses } from '@/hooks/useStore'
 import { ItemExam } from '@/items/exam/modelSchema'
+import { getDateString } from '@/lib/date-utils'
 import { AlertTriangle } from 'lucide-react'
 import React from 'react'
 
@@ -24,7 +25,7 @@ const SwipeableExam = React.forwardRef<HTMLDivElement, SwipeableExamProps>(funct
   const { formatDateDDMMYYYY } = useLocalization()
 
   // Convert timestamp to date string for compatibility with existing functions
-  const examDateString = new Date(exam.startsAt).toISOString().split('T')[0]
+  const examDateString = getDateString(new Date(exam.startsAt))
 
   return (
     <SwipeableItem ref={ref} index={index} expanded={expanded} onComplete={() => onComplete(exam.id)} onClick={onClick}>

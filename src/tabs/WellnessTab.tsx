@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useWellness } from '@/hooks/useStore'
+import { getDateString } from '@/lib/date-utils'
 import { CalendarView, MonthlyMood, MoodEmoji, DailyHydration } from '@/types'
 import { motion } from 'framer-motion'
 import { Settings } from 'lucide-react'
@@ -150,7 +151,7 @@ export default function WellnessTab() {
   // Get today's date string
   const getTodayDateString = (): string => {
     const today = new Date()
-    return today.toISOString().split('T')[0]
+    return getDateString(today)
   }
 
   // Calendar state for mood tracking

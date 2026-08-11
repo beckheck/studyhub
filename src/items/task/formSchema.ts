@@ -1,5 +1,6 @@
 import { t } from '@/i18n/config'
 import { Item } from '@/items/models'
+import { getDateString } from '@/lib/date-utils'
 import { z } from 'zod'
 import {
   getBaseFormFromModel,
@@ -40,7 +41,7 @@ export const taskModelToFormConverter = (item: Item): ItemTaskForm => {
   if (item.type !== 'task') throw new Error('Invalid item type')
   return {
     ...getBaseFormFromModel(item),
-    dueAt: item.dueAt.toISOString().split('T')[0], // Now it's already a Date object
+    dueAt: getDateString(item.dueAt), // Now it's already a Date object
     priority: item.priority,
     isCompleted: item.isCompleted,
   }
@@ -50,7 +51,7 @@ export const taskFormToModelConverter = (form: ItemTaskForm, existingItem?: Item
   return {
     ...getBaseModelFromForm(form),
     type: 'task' as const,
-    dueAt: new Date(form.dueAt),
+    dueAt: new Date(`${form.dueAt}T00:00`),
     priority: form.priority,
     isCompleted: form.isCompleted,
     ...getExistingItemModel(existingItem),
