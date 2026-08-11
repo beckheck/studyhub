@@ -39,19 +39,19 @@
 ### Building for Production
 
 ```bash
-npm run build:ext
+vp run ext:build
 ```
 
 ### Development Mode
 
 ```bash
-npm run dev:ext
+vp run ext:dev
 ```
 
 ### Regular Web App (for comparison)
 
 ```bash
-npm run dev
+vp dev
 ```
 
 ## Extension Features

@@ -17,11 +17,11 @@ vp check --fix      # lint+format, fix if possible
 vp run check:full   # lint -> build -> test (run before declaring work done)
 ```
 
-Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vitest run -t "test name"`.
+Run a single test file: `vp exec vitest run path/to/file.test.ts`. By name: `vp exec vitest run -t "test name"`.
 
 ## Toolchain
 
-- **Node 22** pinned via `mise.toml` (`package.json` only requires >=18). Run `mise install` if `node` is wrong.
+- **Node 24** pinned via `devEngines.runtime`; vite-plus (`vp env`) resolves and installs the runtime automatically. Run `vp env current` / `vp env doctor` to verify. `engines.node` is `>=22.0.0` (consumer floor).
 - **Two build targets, one React app:**
   - Web: Vite+ (`vite.config.js`, `index.html`, `src/main.tsx`).
   - Extension: WXT (`wxt.config.ts`, `src/entrypoints/*`). WXT wraps Vite; `@wxt-dev/module-react` adds React.
