@@ -175,7 +175,7 @@ export function createLocalMidnightDate(dateString: string): Date {
 }
 
 // Import timezone-aware utilities for date handling
-type DateComponents = {
+export type DateComponents = {
   year: number
   month: number
   date: number
@@ -189,17 +189,19 @@ type DateComponents = {
 /**
  * Helper function to get date components in a specific timezone
  */
-export function getDateComponentsInTimezone(date: Date, timezone?: string): DateComponents {
+export function getDateComponentsInTimezone(date: Date | number, timezone?: string): DateComponents {
+  const d = typeof date === 'number' ? new Date(date) : date
+
   if (!timezone) {
     return {
-      year: date.getFullYear(),
-      month: date.getMonth(),
-      date: date.getDate(),
-      day: date.getDay(),
-      hours: date.getHours(),
-      minutes: date.getMinutes(),
-      seconds: date.getSeconds(),
-      milliseconds: date.getMilliseconds(),
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      date: d.getDate(),
+      day: d.getDay(),
+      hours: d.getHours(),
+      minutes: d.getMinutes(),
+      seconds: d.getSeconds(),
+      milliseconds: d.getMilliseconds(),
     }
   }
 
@@ -216,7 +218,7 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
     hour12: false,
   })
 
-  const parts = formatter.formatToParts(date)
+  const parts = formatter.formatToParts(d)
   const partsMap = parts.reduce(
     (acc, part) => {
       acc[part.type] = part.value
@@ -254,6 +256,26 @@ export function getDateComponentsInTimezone(date: Date, timezone?: string): Date
 export function addDaysToComponents(components: DateComponents, daysToAdd: number): DateComponents {
   // Create a date and add days - JavaScript automatically handles overflow
   const date = new Date(components.year, components.month, components.date + daysToAdd)
+
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+    date: date.getDate(),
+    day: date.getDay(),
+    hours: components.hours,
+    minutes: components.minutes,
+    seconds: components.seconds,
+    milliseconds: components.milliseconds,
+  }
+}
+
+/**
+ * Helper function to add months to a date and get the resulting components
+ * Properly handles year boundaries and invalid dates
+ */
+export function addMonthsToComponents(components: DateComponents, monthsToAdd: number): DateComponents {
+  // Create a date and add months - JavaScript automatically handles overflow
+  const date = new Date(components.year, components.month + monthsToAdd, components.date)
 
   return {
     year: date.getFullYear(),

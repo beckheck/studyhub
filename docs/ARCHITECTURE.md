@@ -269,6 +269,8 @@ The shared query module `src/lib/calendar-queries.ts` exports `getItemsInRange(i
 
 **Recurrence is expanded.** `recurrence-utils.ts` is wired into `getItemsInRange` via the `expandRecurrence` option (default `true`). A recurring `ItemEvent` produces one `CalendarEntry` per matching date in the visible range. Timetable items are excluded from the shared query (their expansion uses a weekday pattern + timezone, a different mechanism kept inline in `UglyCalendarPlannerTab`).
 
+**Open question: the timetable expansion timezone.** The inline timetable expansion hardcodes `America/Santiago` as the timezone (`UglyCalendarPlannerTab.tsx`). The user never selects a timezone. Resolving the default (a user setting, or the device timezone) needs an ADR.
+
 ### Google Calendar sync
 
 Three modules, each behind a seam:

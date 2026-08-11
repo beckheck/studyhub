@@ -10,6 +10,13 @@
  */
 
 import type { EventRecurrence } from '@/items/event/modelSchema'
+import {
+  addDaysToComponents,
+  addMonthsToComponents,
+  createDateInTimezone,
+  getDateComponentsInTimezone,
+  type DateComponents,
+} from '@/lib/date-utils'
 
 /**
  * Represents a single occurrence of a recurring event
@@ -231,20 +238,6 @@ export function calculateTotalOccurrences(baseStartTime: number, recurrence: Eve
 // Private helper functions
 
 /**
- * Type for date components extracted from a timestamp
- */
-type DateComponents = {
-  year: number
-  month: number
-  date: number
-  day: number
-  hours: number
-  minutes: number
-  seconds: number
-  milliseconds: number
-}
-
-/**
  * Checks if a date matches the recurrence pattern
  */
 function isDateInRecurrencePattern(
@@ -275,7 +268,7 @@ function isDailyMatch(
   recurrence: EventRecurrence,
 ): boolean {
   // Calculate the difference in days between the two dates
-  const checkTime = createTimestampInTimezone(
+  const checkTime = createDateInTimezone(
     checkComponents.year,
     checkComponents.month,
     checkComponents.date,
@@ -283,8 +276,16 @@ function isDailyMatch(
     0,
     0,
     0,
-  )
-  const baseTime = createTimestampInTimezone(baseComponents.year, baseComponents.month, baseComponents.date, 0, 0, 0, 0)
+  ).getTime()
+  const baseTime = createDateInTimezone(
+    baseComponents.year,
+    baseComponents.month,
+    baseComponents.date,
+    0,
+    0,
+    0,
+    0,
+  ).getTime()
 
   const daysDiff = Math.floor((checkTime - baseTime) / (1000 * 60 * 60 * 24))
 
@@ -308,7 +309,7 @@ function isWeeklyMatch(
   recurrence: EventRecurrence,
 ): boolean {
   // Calculate the difference in weeks
-  const checkTime = createTimestampInTimezone(
+  const checkTime = createDateInTimezone(
     checkComponents.year,
     checkComponents.month,
     checkComponents.date,
@@ -316,8 +317,16 @@ function isWeeklyMatch(
     0,
     0,
     0,
-  )
-  const baseTime = createTimestampInTimezone(baseComponents.year, baseComponents.month, baseComponents.date, 0, 0, 0, 0)
+  ).getTime()
+  const baseTime = createDateInTimezone(
+    baseComponents.year,
+    baseComponents.month,
+    baseComponents.date,
+    0,
+    0,
+    0,
+    0,
+  ).getTime()
 
   const weeksDiff = Math.floor((checkTime - baseTime) / (1000 * 60 * 60 * 24 * 7))
 
@@ -381,7 +390,7 @@ function getNextPotentialOccurrence(
   switch (recurrence.frequency) {
     case 'daily': {
       const newComponents = addDaysToComponents(currentComponents, recurrence.interval)
-      return createTimestampInTimezone(
+      return createDateInTimezone(
         newComponents.year,
         newComponents.month,
         newComponents.date,
@@ -390,7 +399,7 @@ function getNextPotentialOccurrence(
         baseComponents.seconds,
         baseComponents.milliseconds,
         timezone,
-      )
+      ).getTime()
     }
 
     case 'weekly':
@@ -406,7 +415,7 @@ function getNextPotentialOccurrence(
           // Next occurrence is later this week
           const daysToAdd = nextWeekday - currentDay
           const newComponents = addDaysToComponents(currentComponents, daysToAdd)
-          return createTimestampInTimezone(
+          return createDateInTimezone(
             newComponents.year,
             newComponents.month,
             newComponents.date,
@@ -415,13 +424,13 @@ function getNextPotentialOccurrence(
             baseComponents.seconds,
             baseComponents.milliseconds,
             timezone,
-          )
+          ).getTime()
         } else {
           // Move to next interval and start with first weekday
           const daysToNextWeek = 7 - currentDay + sortedWeekdays[0]
           const additionalWeeks = (recurrence.interval - 1) * 7
           const newComponents = addDaysToComponents(currentComponents, daysToNextWeek + additionalWeeks)
-          return createTimestampInTimezone(
+          return createDateInTimezone(
             newComponents.year,
             newComponents.month,
             newComponents.date,
@@ -430,12 +439,12 @@ function getNextPotentialOccurrence(
             baseComponents.seconds,
             baseComponents.milliseconds,
             timezone,
-          )
+          ).getTime()
         }
       } else {
         // Use original weekday
         const newComponents = addDaysToComponents(currentComponents, 7 * recurrence.interval)
-        return createTimestampInTimezone(
+        return createDateInTimezone(
           newComponents.year,
           newComponents.month,
           newComponents.date,
@@ -444,12 +453,12 @@ function getNextPotentialOccurrence(
           baseComponents.seconds,
           baseComponents.milliseconds,
           timezone,
-        )
+        ).getTime()
       }
 
     case 'monthly': {
       const newComponents = addMonthsToComponents(currentComponents, recurrence.interval)
-      return createTimestampInTimezone(
+      return createDateInTimezone(
         newComponents.year,
         newComponents.month,
         newComponents.date,
@@ -458,11 +467,11 @@ function getNextPotentialOccurrence(
         baseComponents.seconds,
         baseComponents.milliseconds,
         timezone,
-      )
+      ).getTime()
     }
 
     case 'yearly':
-      return createTimestampInTimezone(
+      return createDateInTimezone(
         currentComponents.year + recurrence.interval,
         currentComponents.month,
         currentComponents.date,
@@ -471,232 +480,9 @@ function getNextPotentialOccurrence(
         baseComponents.seconds,
         baseComponents.milliseconds,
         timezone,
-      )
+      ).getTime()
 
     default:
       throw new Error(`Unsupported recurrence frequency: ${String(recurrence.frequency)}`)
-  }
-}
-
-/**
- * Utility function to create a date at the start of the day (00:00:00)
- */
-export function getStartOfDay(timestamp: number, timezone?: string): number {
-  const components = getDateComponentsInTimezone(timestamp, timezone)
-  return createTimestampInTimezone(components.year, components.month, components.date, 0, 0, 0, 0, timezone)
-}
-
-/**
- * Utility function to create a date at the end of the day (23:59:59.999)
- */
-export function getEndOfDay(timestamp: number, timezone?: string): number {
-  const components = getDateComponentsInTimezone(timestamp, timezone)
-  return createTimestampInTimezone(components.year, components.month, components.date, 23, 59, 59, 999, timezone)
-}
-
-/**
- * Utility function to get the start of a week (Sunday 00:00:00)
- */
-export function getStartOfWeek(timestamp: number, timezone?: string): number {
-  const components = getDateComponentsInTimezone(timestamp, timezone)
-  const dayOffset = components.day
-  const startOfWeekComponents = addDaysToComponents(components, -dayOffset)
-  return createTimestampInTimezone(
-    startOfWeekComponents.year,
-    startOfWeekComponents.month,
-    startOfWeekComponents.date,
-    0,
-    0,
-    0,
-    0,
-    timezone,
-  )
-}
-
-/**
- * Utility function to get the end of a week (Saturday 23:59:59.999)
- */
-export function getEndOfWeek(timestamp: number, timezone?: string): number {
-  const components = getDateComponentsInTimezone(timestamp, timezone)
-  const dayOffset = 6 - components.day
-  const endOfWeekComponents = addDaysToComponents(components, dayOffset)
-  return createTimestampInTimezone(
-    endOfWeekComponents.year,
-    endOfWeekComponents.month,
-    endOfWeekComponents.date,
-    23,
-    59,
-    59,
-    999,
-    timezone,
-  )
-}
-
-/**
- * Helper function to get date components in a specific timezone
- */
-function getDateComponentsInTimezone(timestamp: number, timezone?: string) {
-  const date = new Date(timestamp)
-
-  if (!timezone) {
-    return {
-      year: date.getFullYear(),
-      month: date.getMonth(),
-      date: date.getDate(),
-      day: date.getDay(),
-      hours: date.getHours(),
-      minutes: date.getMinutes(),
-      seconds: date.getSeconds(),
-      milliseconds: date.getMilliseconds(),
-    }
-  }
-
-  // Use Intl.DateTimeFormat to get components in the specified timezone
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  })
-
-  const parts = formatter.formatToParts(date)
-  const partsMap = parts.reduce(
-    (acc, part) => {
-      acc[part.type] = part.value
-      return acc
-    },
-    {} as Record<string, string>,
-  )
-
-  // Map weekday names to numbers (Sunday = 0)
-  const weekdayMap: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6,
-  }
-
-  return {
-    year: parseInt(partsMap.year),
-    month: parseInt(partsMap.month) - 1, // JavaScript months are 0-based
-    date: parseInt(partsMap.day),
-    day: weekdayMap[partsMap.weekday],
-    hours: parseInt(partsMap.hour),
-    minutes: parseInt(partsMap.minute),
-    seconds: parseInt(partsMap.second),
-    milliseconds: 0, // Not available from formatter
-  }
-}
-
-/**
- * Helper function to add days to a date and get the resulting components
- * Properly handles month/year boundaries
- */
-function addDaysToComponents(components: DateComponents, daysToAdd: number): DateComponents {
-  // Create a date and add days - JavaScript automatically handles overflow
-  const date = new Date(components.year, components.month, components.date + daysToAdd)
-
-  return {
-    year: date.getFullYear(),
-    month: date.getMonth(),
-    date: date.getDate(),
-    day: date.getDay(),
-    hours: components.hours,
-    minutes: components.minutes,
-    seconds: components.seconds,
-    milliseconds: components.milliseconds,
-  }
-}
-
-/**
- * Helper function to add months to a date and get the resulting components
- * Properly handles year boundaries and invalid dates
- */
-function addMonthsToComponents(components: DateComponents, monthsToAdd: number): DateComponents {
-  // Create a date and add months - JavaScript automatically handles overflow
-  const date = new Date(components.year, components.month + monthsToAdd, components.date)
-
-  return {
-    year: date.getFullYear(),
-    month: date.getMonth(),
-    date: date.getDate(),
-    day: date.getDay(),
-    hours: components.hours,
-    minutes: components.minutes,
-    seconds: components.seconds,
-    milliseconds: components.milliseconds,
-  }
-}
-
-/**
- * Helper function to create a timestamp from date components in a specific timezone
- */
-function createTimestampInTimezone(
-  year: number,
-  month: number,
-  date: number,
-  hours: number = 0,
-  minutes: number = 0,
-  seconds: number = 0,
-  milliseconds: number = 0,
-  timezone?: string,
-): number {
-  if (!timezone) {
-    return new Date(year, month, date, hours, minutes, seconds, milliseconds).getTime()
-  }
-
-  // Create an ISO string that represents the local time in the target timezone
-  const isoString = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}T${String(
-    hours,
-  ).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(
-    milliseconds,
-  ).padStart(3, '0')}`
-
-  try {
-    // Create a temporary date to find what UTC time corresponds to this local time in the target timezone
-    const tempDate = new Date(isoString + 'Z') // Treat as UTC first
-
-    // Format this date in the target timezone to see what local time it represents
-    const formatter = new Intl.DateTimeFormat('sv-SE', {
-      // Swedish format gives us YYYY-MM-DD HH:mm:ss
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    })
-
-    const formatted = formatter.format(tempDate).replace(' ', 'T')
-
-    // Calculate the difference between what we want and what we got
-    const wantedLocal = isoString
-    const actualLocal = formatted
-
-    // If they're the same, we found the right UTC time
-    if (wantedLocal.startsWith(actualLocal)) {
-      return tempDate.getTime()
-    }
-
-    // If not, we need to adjust
-    const wantedDate = new Date(wantedLocal + 'Z')
-    const actualDate = new Date(actualLocal + 'Z')
-    const diff = wantedDate.getTime() - actualDate.getTime()
-
-    return tempDate.getTime() + diff
-  } catch (error) {
-    // Fallback to UTC if timezone handling fails
-    console.warn(`Failed to handle timezone ${timezone}, falling back to UTC:`, error)
-    return new Date(year, month, date, hours, minutes, seconds, milliseconds).getTime()
   }
 }

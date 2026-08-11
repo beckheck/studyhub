@@ -14,6 +14,9 @@ import {
   isPastDate,
   isFutureDate,
   calculateDDay,
+  getDateComponentsInTimezone,
+  addDaysToComponents,
+  addMonthsToComponents,
 } from './date-utils'
 
 describe('date-utils', () => {
@@ -188,6 +191,64 @@ describe('date-utils', () => {
 
       expect(isSameDate(endOfDay, startOfNextDay)).toBe(false)
       expect(getDaysDifference(endOfDay, startOfNextDay)).toBe(1)
+    })
+  })
+
+  describe('getDateComponentsInTimezone', () => {
+    it('should accept both Date objects and timestamps', () => {
+      const date = new Date('2024-01-15T10:30:00Z')
+      const fromDate = getDateComponentsInTimezone(date)
+      const fromTimestamp = getDateComponentsInTimezone(date.getTime())
+
+      expect(fromTimestamp).toEqual(fromDate)
+      expect(fromTimestamp).toMatchObject({ year: 2024, month: 0, date: 15 })
+    })
+
+    it('should return components in the given timezone', () => {
+      const timestamp = new Date('2024-01-01T03:30:00Z').getTime()
+      const inUTC = getDateComponentsInTimezone(timestamp, 'UTC')
+      const inTokyo = getDateComponentsInTimezone(timestamp, 'Asia/Tokyo')
+
+      expect(inUTC).toMatchObject({ date: 1, hours: 3 })
+      expect(inTokyo).toMatchObject({ date: 1, hours: 12 })
+    })
+  })
+
+  describe('addDaysToComponents', () => {
+    it('should cross month boundaries', () => {
+      const components = {
+        year: 2024,
+        month: 0,
+        date: 31,
+        day: 3,
+        hours: 10,
+        minutes: 30,
+        seconds: 0,
+        milliseconds: 0,
+      }
+
+      const result = addDaysToComponents(components, 1)
+
+      expect(result).toMatchObject({ year: 2024, month: 1, date: 1, hours: 10, minutes: 30 })
+    })
+  })
+
+  describe('addMonthsToComponents', () => {
+    it('should cross year boundaries', () => {
+      const components = {
+        year: 2024,
+        month: 11,
+        date: 15,
+        day: 0,
+        hours: 10,
+        minutes: 30,
+        seconds: 0,
+        milliseconds: 0,
+      }
+
+      const result = addMonthsToComponents(components, 1)
+
+      expect(result).toMatchObject({ year: 2025, month: 0, date: 15, hours: 10, minutes: 30 })
     })
   })
 })

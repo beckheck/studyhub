@@ -21,10 +21,6 @@ import {
   generateRecurrenceOccurrences,
   getNextOccurrence,
   calculateTotalOccurrences,
-  getStartOfDay,
-  getEndOfDay,
-  getStartOfWeek,
-  getEndOfWeek,
   type RecurrenceGenerationOptions,
 } from './recurrence-utils'
 import type { EventRecurrence } from '../items/event/modelSchema'
@@ -432,62 +428,6 @@ describe('recurrence-utils', () => {
     })
   })
 
-  describe('utility functions', () => {
-    describe('getStartOfDay', () => {
-      it('should return start of day', () => {
-        const timestamp = new Date('2024-01-01T15:30:45.123Z').getTime()
-        const startOfDay = getStartOfDay(timestamp)
-        const date = new Date(startOfDay)
-
-        expect(date.getHours()).toBe(0)
-        expect(date.getMinutes()).toBe(0)
-        expect(date.getSeconds()).toBe(0)
-        expect(date.getMilliseconds()).toBe(0)
-      })
-    })
-
-    describe('getEndOfDay', () => {
-      it('should return end of day', () => {
-        const timestamp = new Date('2024-01-01T15:30:45.123Z').getTime()
-        const endOfDay = getEndOfDay(timestamp)
-        const date = new Date(endOfDay)
-
-        expect(date.getHours()).toBe(23)
-        expect(date.getMinutes()).toBe(59)
-        expect(date.getSeconds()).toBe(59)
-        expect(date.getMilliseconds()).toBe(999)
-      })
-    })
-
-    describe('getStartOfWeek', () => {
-      it('should return start of week (Sunday)', () => {
-        const mondayTimestamp = new Date('2024-01-01T15:30:45.123Z').getTime() // Monday
-        const startOfWeek = getStartOfWeek(mondayTimestamp)
-        const date = new Date(startOfWeek)
-
-        expect(date.getDay()).toBe(0) // Sunday
-        expect(date.getHours()).toBe(0)
-        expect(date.getMinutes()).toBe(0)
-        expect(date.getSeconds()).toBe(0)
-        expect(date.getMilliseconds()).toBe(0)
-      })
-    })
-
-    describe('getEndOfWeek', () => {
-      it('should return end of week (Saturday)', () => {
-        const mondayTimestamp = new Date('2024-01-01T15:30:45.123Z').getTime() // Monday
-        const endOfWeek = getEndOfWeek(mondayTimestamp)
-        const date = new Date(endOfWeek)
-
-        expect(date.getDay()).toBe(6) // Saturday
-        expect(date.getHours()).toBe(23)
-        expect(date.getMinutes()).toBe(59)
-        expect(date.getSeconds()).toBe(59)
-        expect(date.getMilliseconds()).toBe(999)
-      })
-    })
-  })
-
   describe('edge cases and error handling', () => {
     it('should handle leap year for yearly recurrence', () => {
       const leapYearStart = new Date('2024-02-29T10:00:00Z').getTime() // Leap day
@@ -613,21 +553,6 @@ describe('recurrence-utils', () => {
 
       expect(nextOcc).not.toBeNull()
       expect(nextOcc!.startsAt).toBeGreaterThan(fromDate)
-    })
-
-    it('should handle timezone in utility functions', () => {
-      // Use a timestamp that results in different calendar days in different timezones
-      const timestamp = new Date('2024-01-01T02:30:45.123Z').getTime()
-
-      // Test with explicit timezones (not relying on default behavior)
-      const startOfDayUTC = getStartOfDay(timestamp, 'UTC')
-      const startOfDaySCL = getStartOfDay(timestamp, 'America/Santiago')
-      const startOfDayTokyo = getStartOfDay(timestamp, 'Asia/Tokyo')
-
-      // They should be different due to timezone differences
-      expect(startOfDayUTC).not.toBe(startOfDaySCL)
-      expect(startOfDayUTC).not.toBe(startOfDayTokyo)
-      expect(startOfDaySCL).not.toBe(startOfDayTokyo)
     })
 
     it('should handle DST transitions correctly', () => {
@@ -881,6 +806,33 @@ describe('recurrence-utils', () => {
           expect(localTime).toBe('14:00')
         })
       })
+    })
+  })
+
+  describe('recurrence expansion through shared date helpers', () => {
+    it('should expand monthly occurrences', () => {
+      const baseTime = new Date('2024-01-15T10:00:00Z').getTime()
+      const baseEndTime = baseTime + oneHour
+
+      const recurrence: EventRecurrence = {
+        frequency: 'monthly',
+        interval: 1,
+        count: 3,
+      }
+
+      const options: RecurrenceGenerationOptions = {
+        rangeStart: baseTime,
+        rangeEnd: baseTime + 120 * oneDay,
+        timezone: 'UTC',
+      }
+
+      const occurrences = generateRecurrenceOccurrences(baseTime, baseEndTime, recurrence, options)
+
+      expect(occurrences.map(occ => new Date(occ.startsAt).toISOString())).toEqual([
+        '2024-01-15T10:00:00.000Z',
+        '2024-02-15T10:00:00.000Z',
+        '2024-03-15T10:00:00.000Z',
+      ])
     })
   })
 })
