@@ -8,8 +8,10 @@ import { useSettingsDialogContext } from '@/components/settings/SettingsDialogPr
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import { getOverdueItems } from '@/domain/item-filtering'
+import { sortExamsByDate, sortTasks } from '@/domain/item-sorting'
 import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } from '@/hooks/useStore'
-import { compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils'
+import { isDateAfterOrEqual } from '@/lib/date-utils'
 import {
   AlertTriangle,
   CalendarDays,
@@ -493,9 +495,10 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
             <Card className="rounded-2xl border-none shadow-xl bg-white/80 dark:bg-white/10 backdrop-blur">
               <CardContent className="p-5">
                 <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {tasks
-                    .filter(t => !t.isCompleted)
-                    .sort((a, b) => compareDates(a.dueAt, b.dueAt))
+                  {sortTasks(
+                    tasks.filter(t => !t.isCompleted),
+                    'date',
+                  )
                     .slice(0, 10)
                     .map(task => (
                       <div
@@ -550,8 +553,8 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
       })
     }
 
-    const allExams = filteredExams.sort((a, b) => compareDates(a.startsAt, b.startsAt))
-    const allTasks = filteredTasks.sort((a, b) => compareDates(a.dueAt, b.dueAt))
+    const allExams = sortExamsByDate(filteredExams)
+    const allTasks = sortTasks(filteredTasks, 'date')
 
     const currentExamCount = 5 + nextUpExpanded * 3
     const currentTaskCount = 5 + nextUpExpanded * 3
@@ -615,21 +618,8 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
                     <span className="ml-2 text-xs text-zinc-500">
                       (
                       {(() => {
-                        const today = new Date()
-
-                        const overdueExams = exams.filter(e => {
-                          if (e.isCompleted) return false
-                          const examDate = new Date(e.startsAt)
-                          return isDateBefore(examDate, today)
-                        }).length
-
-                        const overdueTasks = tasks.filter(t => {
-                          if (t.isCompleted || !t.dueAt) return false
-                          const taskDate = new Date(t.dueAt)
-                          return isDateBefore(taskDate, today)
-                        }).length
-
-                        return overdueExams + overdueTasks
+                        const overdue = getOverdueItems(exams, tasks, new Date())
+                        return overdue.exams.length + overdue.tasks.length
                       })()}
                       )
                     </span>

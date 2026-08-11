@@ -134,6 +134,18 @@ Each subtype has its own directory with a zod schema (`modelSchema`), a form sch
 
 **Depth:** the core (zod schemas per subtype, form schemas, model<->form converters) is real and deep. One `Item` union, one `parseItem`-shaped interface, four adapters. A single `<ItemDialogProvider>` in `App.tsx` mounts the one `<ItemDialog>` and exposes `useItemDialog()` as a context consumer. Every tab and component that creates or edits items calls `useItemDialog()` from context and renders zero dialog JSX. `useItemDialogState` holds the pure dialog state (open/close/form transitions, no store, no sync). `useItemDialog` wraps it with the `handleSave`/`handleDelete` wiring: it calls `googleCalendarSync.syncItem`/`deleteItem`, stamps the returned `googleEventId` via `updateItem`, and uses `convertItemFormToModel`/`convertItemModelToForm` from `forms.ts` to translate between form and model shapes. The dialog survives tab switches because one provider instance backs the whole app.
 
+### Domain (`src/domain/`)
+
+Pure, framework-free functions per domain cluster. Five modules extracted from the tab components that previously duplicated this logic:
+
+- **`grades.ts`**: course average (`calculateCourseAverage`), grade add/update/clear (`computeUpdatedGrades`), per-course open task / upcoming exam stats (`computeCourseStats`).
+- **`degree-plan.ts`**: prerequisite checking (`checkPrerequisites`), course status enum (`getCourseStatus` returns `'completed' | 'available' | 'blocked'`; the UI maps the enum to colors), credit totals, semester operations (add course, toggle completion, append semester).
+- **`wellness.ts`**: active mood keys (`getActiveMoods`), mood selection math (`computeMoodSelection`), hydration goal/day-entry computation (`computeDailyHydration`), and date lookups.
+- **`item-sorting.ts`**: `sortTasks` (date or priority order) and `sortExamsByDate`, both via `toSorted()`.
+- **`item-filtering.ts`**: `isOverdue`, `getOverdueItems`, `getUpcomingItems`. Date comparisons are calendar-day, reusing `isDateBefore` from `src/lib/date-utils.ts`.
+
+Domain modules never import the valtio store (see [ADR 0003](./adr/0003-lib-modules-do-not-import-store.md)). Input arrays are `readonly` so valtio snapshot arrays pass through without casts. The tab components call these modules; `src/lib/` stays for date/string/storage utilities, `src/domain/` holds per-cluster business rules.
+
 ### Lib (`src/lib/`)
 
 Organized by architectural role:

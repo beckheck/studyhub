@@ -31,7 +31,7 @@ Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vit
 
 ## TypeScript
 
-- `strict: false`, `strictNullChecks: false`, `allowJs: true`, `checkJs: true`. The codebase is mixed JS/TS; `tsconfig` includes `src/**/*.{js,jsx,ts,tsx}`. Don't "fix" strictness settings globally without intent — lots of code relies on the loose config.
+- `strict: false`, `strictNullChecks: true`, `allowJs: true`, `checkJs: true`. The codebase is mixed JS/TS; `tsconfig` includes `src/**/*.{js,jsx,ts,tsx}`. Don't "fix" strictness settings globally without intent — lots of code relies on the loose config.
 - shadcn/ui is configured for **JSX, not TSX** (`components.json`: `"tsx": false`). shadcn primitives live in `src/components/ui/` as `.jsx`.
 
 ## Test setup
@@ -52,9 +52,9 @@ Run a single test file: `npx vitest run path/to/file.test.ts`. By name: `npx vit
 
 ## Conventions
 
+Formatting: 2-space indent, single quotes, no semicolons, trailing commas, recommended lint rules. Enforced by Oxlint.
+
 - **Domain language is governed by `CONTEXT.md`.**
-- **Prettier:** 120 cols, single quotes, arrow parens `avoid`, semis on. No format-on-save script; run `npx prettier --write` if needed.
-- **ESLint** (`eslint.config.js`): only lints `*.{js,jsx}` (not TS), `no-unused-vars` ignores identifiers starting with uppercase or underscore.
 - **i18n:** i18next with per-namespace JSON under `src/locales/{en,es}/`; item-type strings under `src/items/locales/`. The content script imports translations directly (no i18next there). Source language is `en`.
 
 ## Before proposing a refactor
@@ -92,7 +92,7 @@ Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.de
 ## Review Checklist
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Run `vp check --fix` and `vp test` to format, lint, type check and test changes.
 - [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
 - [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.
 

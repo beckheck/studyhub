@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { RichTextDisplay } from '@/components/ui/rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { calculateCourseAverage as calcCourseAverage, computeUpdatedGrades } from '@/domain/grades'
+import { sortTasks as sortTasksByOrder } from '@/domain/item-sorting'
 import { useConfetti } from '@/hooks/useConfetti'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useExamGrades, useItems } from '@/hooks/useStore'
@@ -151,58 +153,7 @@ export default function CourseManagerTab() {
   }
 
   // Sort tasks based on selected order
-  const sortTasks = (taskList: typeof courseTasks) => {
-    return [...taskList].sort((a, b) => {
-      if (taskSortOrder === 'date') {
-        // Sort by due date (earliest first), then by priority, then alphabetically
-        if (!a.dueAt && !b.dueAt) {
-          // Both have no due date, sort by priority then alphabetically
-          const priorityOrder = { high: 0, medium: 1, low: 2 }
-          const priorityComparison =
-            priorityOrder[a.priority as keyof typeof priorityOrder] -
-            priorityOrder[b.priority as keyof typeof priorityOrder]
-          if (priorityComparison !== 0) return priorityComparison
-          return (a.title || '').localeCompare(b.title || '')
-        }
-        if (!a.dueAt) return 1 // Tasks without due date go to end
-        if (!b.dueAt) return -1
-
-        const dateComparison = compareDates(a.dueAt, b.dueAt)
-        if (dateComparison !== 0) return dateComparison
-
-        // If dates are same, sort by priority
-        const priorityOrder = { high: 0, medium: 1, low: 2 }
-        const priorityComparison =
-          priorityOrder[a.priority as keyof typeof priorityOrder] -
-          priorityOrder[b.priority as keyof typeof priorityOrder]
-        if (priorityComparison !== 0) return priorityComparison
-
-        // If both date and priority are same, sort alphabetically
-        return (a.title || '').localeCompare(b.title || '')
-      } else {
-        // Sort by priority (high > medium > low), then by due date, then alphabetically
-        const priorityOrder = { high: 0, medium: 1, low: 2 }
-        const priorityComparison =
-          priorityOrder[a.priority as keyof typeof priorityOrder] -
-          priorityOrder[b.priority as keyof typeof priorityOrder]
-        if (priorityComparison !== 0) return priorityComparison
-
-        // If priorities are same, sort by due date
-        if (!a.dueAt && !b.dueAt) {
-          // Both have no due date, sort alphabetically
-          return (a.title || '').localeCompare(b.title || '')
-        }
-        if (!a.dueAt) return 1
-        if (!b.dueAt) return -1
-
-        const dateComparison = compareDates(a.dueAt, b.dueAt)
-        if (dateComparison !== 0) return dateComparison
-
-        // If both priority and date are same, sort alphabetically
-        return (a.title || '').localeCompare(b.title || '')
-      }
-    })
-  }
+  const sortTasks = (taskList: typeof courseTasks) => sortTasksByOrder(taskList, taskSortOrder)
 
   // Create sorted task lists
   const openTasks = sortTasks(courseTasks.filter(t => !t.isCompleted))
@@ -214,44 +165,10 @@ export default function CourseManagerTab() {
     return exam && exam.courseId === selectedCourseId
   })
 
-  const calculateCourseAverage = (): string | null => {
-    const examsWithGrades = courseExams.filter(exam => courseGrades.some(grade => grade.examId === exam.id))
-
-    if (examsWithGrades.length === 0) return null
-
-    let totalWeightedScore = 0
-    let totalWeight = 0
-
-    examsWithGrades.forEach(exam => {
-      const grade = courseGrades.find(g => g.examId === exam.id)
-      if (grade && grade.grade >= 1 && grade.grade <= 7) {
-        totalWeightedScore += grade.grade * exam.weight
-        totalWeight += exam.weight
-      }
-    })
-
-    return totalWeight > 0 ? (totalWeightedScore / totalWeight).toFixed(1) : null
-  }
+  const calculateCourseAverage = (): string | null => calcCourseAverage(courseExams, courseGrades)
 
   const updateExamGrade = (examId: string, grade: string): void => {
-    // Allow empty string to clear the grade
-    if (grade === '') {
-      const filtered = examGrades.filter(g => g.examId !== examId)
-      setExamGrades(filtered)
-      return
-    }
-
-    const gradeValue = parseFloat(grade)
-
-    // Always allow numeric input for better UX, but validate before saving
-    if (!isNaN(gradeValue) && gradeValue >= 1 && gradeValue <= 7) {
-      const existing = examGrades.find(g => g.examId === examId)
-      if (existing) {
-        setExamGrades(examGrades.map(g => (g.examId === examId ? { ...g, grade: gradeValue } : g)))
-      } else {
-        setExamGrades([...examGrades, { examId, grade: gradeValue }])
-      }
-    }
+    setExamGrades(computeUpdatedGrades(examGrades, examId, grade))
   }
 
   const handleAddLink = () => {

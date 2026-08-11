@@ -6,6 +6,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  computeDailyHydration,
+  computeMoodSelection,
+  getActiveMoods,
+  getHydrationForDate as getStoredHydrationForDate,
+  getMoodForDate as getStoredMoodForDate,
+} from '@/domain/wellness'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useWellness } from '@/hooks/useStore'
 import { getDateString } from '@/lib/date-utils'
@@ -198,7 +205,7 @@ export default function WellnessTab() {
 
   // Get mood for specific date
   const getMoodForDate = (dateString: string): MonthlyMood | null => {
-    return monthlyMoods[dateString] || null
+    return getStoredMoodForDate(monthlyMoods, dateString)
   }
 
   // Calculate total mood percentage
@@ -206,9 +213,7 @@ export default function WellnessTab() {
 
   // Build progressive gradient from mood percentages (like Present Goals)
   const buildMoodGradient = (): string => {
-    const activeMoods = Object.entries(moodPercentages)
-      .filter(([_, percentage]) => percentage > 0)
-      .sort(([a], [b]) => a.localeCompare(b)) // Sort for consistency
+    const activeMoods = getActiveMoods(moodPercentages)
 
     if (activeMoods.length === 0) {
       return 'transparent'
@@ -216,11 +221,11 @@ export default function WellnessTab() {
 
     if (activeMoods.length === 1) {
       // Single color for first mood
-      return moodEmojis[activeMoods[0][0]].color
+      return moodEmojis[activeMoods[0]].color
     }
 
     // Multiple moods - create progressive gradient like Present Goals
-    const colors = activeMoods.map(([moodKey, _]) => moodEmojis[moodKey].color)
+    const colors = activeMoods.map(moodKey => moodEmojis[moodKey].color)
     const step = 100 / (colors.length - 1)
     const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ')
 
@@ -229,71 +234,47 @@ export default function WellnessTab() {
 
   // Get border color from first active mood
   const getBorderColor = (): string => {
-    const firstActiveMood = Object.entries(moodPercentages)
-      .filter(([_, percentage]) => percentage > 0)
-      .sort(([a], [b]) => a.localeCompare(b))[0]
+    const firstActiveMood = getActiveMoods(moodPercentages)[0]
 
     if (firstActiveMood) {
-      return moodEmojis[firstActiveMood[0]].color + '40' // Add transparency
+      return moodEmojis[firstActiveMood].color + '40' // Add transparency
     }
     return '#e5e7eb' // Default gray border
   }
 
   // Handle mood selection (add 20% each click)
   const handleMoodSelect = (moodKey: string): void => {
+    const { moods: updatedMoods, totalPercentage: totalPerc } = computeMoodSelection(moodPercentages, moodKey)
+
     setHasInteracted(true)
-    const currentPercentage = moodPercentages[moodKey] || 0
-    const newPercentage = Math.min(100, currentPercentage + 20)
+    setMoodPercentages(updatedMoods)
 
-    // Calculate if total would exceed 100%
-    const otherMoodsTotal = Object.entries(moodPercentages)
-      .filter(([key]) => key !== moodKey)
-      .reduce((sum, [_, percentage]) => sum + percentage, 0)
+    // Save to monthly moods immediately
+    const today = getTodayDateString()
 
-    if (otherMoodsTotal + newPercentage > 100) {
-      // Cap at remaining percentage
-      const updatedMoods = {
-        ...moodPercentages,
-        [moodKey]: Math.max(0, 100 - otherMoodsTotal),
+    if (totalPerc > 0) {
+      const activeMoods = getActiveMoods(updatedMoods)
+
+      let gradient = 'transparent'
+      if (activeMoods.length === 1) {
+        gradient = moodEmojis[activeMoods[0]].color
+      } else if (activeMoods.length > 1) {
+        const colors = activeMoods.map(moodKey => moodEmojis[moodKey].color)
+        const step = 100 / (colors.length - 1)
+        const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ')
+        gradient = `linear-gradient(180deg, ${gradientStops})`
       }
-      setMoodPercentages(updatedMoods)
-    } else {
-      const updatedMoods = {
-        ...moodPercentages,
-        [moodKey]: newPercentage,
+
+      const newMonthlyMoods = {
+        ...monthlyMoods,
+        [today]: {
+          percentages: { ...updatedMoods },
+          gradient: gradient,
+          totalPercentage: totalPerc,
+          savedAt: Date.now(),
+        },
       }
-      setMoodPercentages(updatedMoods)
-
-      // Save to monthly moods immediately
-      const today = getTodayDateString()
-      const totalPerc = Object.values(updatedMoods).reduce((sum, percentage) => sum + percentage, 0)
-
-      if (totalPerc > 0) {
-        const activeMoods = Object.entries(updatedMoods)
-          .filter(([_, percentage]) => percentage > 0)
-          .sort(([a], [b]) => a.localeCompare(b))
-
-        let gradient = 'transparent'
-        if (activeMoods.length === 1) {
-          gradient = moodEmojis[activeMoods[0][0]].color
-        } else if (activeMoods.length > 1) {
-          const colors = activeMoods.map(([moodKey, _]) => moodEmojis[moodKey].color)
-          const step = 100 / (colors.length - 1)
-          const gradientStops = colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(', ')
-          gradient = `linear-gradient(180deg, ${gradientStops})`
-        }
-
-        const newMonthlyMoods = {
-          ...monthlyMoods,
-          [today]: {
-            percentages: { ...updatedMoods },
-            gradient: gradient,
-            totalPercentage: totalPerc,
-            savedAt: Date.now(),
-          },
-        }
-        setMonthlyMoods(newMonthlyMoods)
-      }
+      setMonthlyMoods(newMonthlyMoods)
     }
   }
 
@@ -363,30 +344,12 @@ export default function WellnessTab() {
   // Save daily hydration data
   const saveDailyHydration = (waterIntake: number): void => {
     const today = getTodayDateString()
-    const goal = hydrationSettings.useCups
-      ? hydrationSettings.unit === 'metric'
-        ? Math.ceil(hydrationSettings.dailyGoalML / hydrationSettings.cupSizeML)
-        : Math.ceil(hydrationSettings.dailyGoalOZ / hydrationSettings.cupSizeOZ)
-      : hydrationSettings.unit === 'metric'
-        ? hydrationSettings.dailyGoalML
-        : hydrationSettings.dailyGoalOZ
-
-    const newDailyHydration = {
-      ...safeDailyHydration,
-      [today]: {
-        intake: waterIntake,
-        goal: goal,
-        unit: hydrationSettings.unit,
-        useCups: hydrationSettings.useCups,
-        savedAt: Date.now(),
-      },
-    }
-    setDailyHydration(newDailyHydration)
+    setDailyHydration(computeDailyHydration(safeDailyHydration, today, waterIntake, hydrationSettings))
   }
 
   // Get hydration data for specific date
   const getHydrationForDate = (dateString: string): DailyHydration | null => {
-    return safeDailyHydration[dateString] || null
+    return getStoredHydrationForDate(safeDailyHydration, dateString)
   }
 
   return (

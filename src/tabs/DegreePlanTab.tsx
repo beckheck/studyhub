@@ -3,8 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  checkPrerequisites,
+  computeCompletedCourses,
+  computeSemestersWithCourse,
+  computeSemestersWithNewSemester,
+  getCompletedCredits as calcCompletedCredits,
+  getCourseStatus,
+  getTotalCredits as calcTotalCredits,
+} from '@/domain/degree-plan'
 import { useDegreePlan } from '@/hooks/useStore'
-import { uid } from '@/lib/utils'
 import { DegreeCourse } from '@/types'
 import { ArrowLeft, ArrowRight, Check, Edit, GraduationCap, Plus, Trash2, X } from 'lucide-react'
 import React, { useState } from 'react'
@@ -24,15 +32,8 @@ export default function DegreePlanTab() {
   const { t: tCommon } = useTranslation('common')
 
   // State management
-  const {
-    degreePlan,
-    setDegreePlan,
-    setDegreePlanName,
-    setSemesters,
-    addCompletedCourse,
-    removeCompletedCourse,
-    removeSemester,
-  } = useDegreePlan()
+  const { degreePlan, setDegreePlan, setDegreePlanName, setSemesters, setCompletedCourses, removeSemester } =
+    useDegreePlan()
   const [degreePlanDialog, setDegreePlanDialog] = useState<boolean>(false)
   const [degreePlanStep, setDegreePlanStep] = useState<'setup' | 'courses' | 'view'>('setup')
   const [currentSemester, setCurrentSemester] = useState<number>(1)
@@ -70,50 +71,18 @@ export default function DegreePlanTab() {
   }
 
   function addCourseToSemester(semesterNumber: number, courseData: Omit<DegreeCourse, 'id' | 'completed'>): void {
-    const newSemesters = degreePlan.semesters.map(sem =>
-      sem.number === semesterNumber
-        ? {
-            ...sem,
-            courses: [
-              ...sem.courses,
-              {
-                id: uid(),
-                ...courseData,
-                completed: false,
-              },
-            ],
-          }
-        : sem,
-    )
-    setSemesters(newSemesters)
+    setSemesters(computeSemestersWithCourse(degreePlan.semesters, semesterNumber, courseData))
   }
 
   function toggleCourseCompletion(courseAcronym: string): void {
-    const isCompleted = degreePlan.completedCourses.includes(courseAcronym)
-    if (isCompleted) {
-      removeCompletedCourse(courseAcronym)
-    } else {
-      addCompletedCourse(courseAcronym)
-    }
+    setCompletedCourses(computeCompletedCourses(degreePlan.completedCourses, courseAcronym))
   }
 
-  function checkPrerequisites(course: DegreeCourse, _semester: any): boolean {
-    if (!course.prerequisites) return true
-
-    const prereqAcronyms = course.prerequisites.split(',').map(p => p.trim())
-    const completedCourses = degreePlan.completedCourses
-
-    // Check if ALL prerequisites are completed
-    return prereqAcronyms.every(prereq => completedCourses.includes(prereq))
-  }
-
-  function getCourseColor(course: DegreeCourse, semester: any): string {
-    const isCompleted = degreePlan.completedCourses.includes(course.acronym)
-    const prerequisitesMet = checkPrerequisites(course, semester)
-
-    if (isCompleted) {
+  function getCourseColor(course: DegreeCourse): string {
+    const status = getCourseStatus(course, degreePlan.completedCourses)
+    if (status === 'completed') {
       return '#10ac84' // Green for completed
-    } else if (prerequisitesMet) {
+    } else if (status === 'available') {
       return '#3b82f6' // Blue for available
     } else {
       return 'transparent' // No color for unavailable
@@ -199,38 +168,16 @@ export default function DegreePlanTab() {
 
   // Credit calculation functions
   const getTotalCredits = (): number => {
-    return degreePlan.semesters.reduce((total, semester) => {
-      return (
-        total +
-        semester.courses.reduce((semesterTotal, course) => {
-          return semesterTotal + parseInt(course.credits || '0')
-        }, 0)
-      )
-    }, 0)
+    return calcTotalCredits(degreePlan.semesters)
   }
 
   const getCompletedCredits = (): number => {
-    return degreePlan.semesters.reduce((total, semester) => {
-      return (
-        total +
-        semester.courses.reduce((semesterTotal, course) => {
-          const isCompleted = degreePlan.completedCourses.includes(course.acronym)
-          return semesterTotal + (isCompleted ? parseInt(course.credits || '0') : 0)
-        }, 0)
-      )
-    }, 0)
+    return calcCompletedCredits(degreePlan.semesters, degreePlan.completedCourses)
   }
 
   // Add new semester function
   const addNewSemester = (): void => {
-    const newSemesterNumber = degreePlan.semesters.length + 1
-    const newSemester = {
-      id: uid(),
-      number: newSemesterNumber,
-      courses: [],
-    }
-
-    setSemesters([...degreePlan.semesters, newSemester])
+    setSemesters(computeSemestersWithNewSemester(degreePlan.semesters))
   }
 
   // Handle degree plan name changes
@@ -328,8 +275,8 @@ export default function DegreePlanTab() {
                     >
                       {semester.courses.map(course => {
                         const isCompleted = degreePlan.completedCourses.includes(course.acronym)
-                        const prerequisitesMet = checkPrerequisites(course, semester)
-                        const bgColor = getCourseColor(course, semester)
+                        const prerequisitesMet = checkPrerequisites(course, degreePlan.completedCourses)
+                        const bgColor = getCourseColor(course)
 
                         return (
                           <div
@@ -926,7 +873,7 @@ export default function DegreePlanTab() {
                     <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {semester.courses.map(course => {
                         const isCompleted = degreePlan.completedCourses.includes(course.acronym)
-                        const prerequisitesMet = checkPrerequisites(course, semester)
+                        const prerequisitesMet = checkPrerequisites(course, degreePlan.completedCourses)
 
                         return (
                           <div
