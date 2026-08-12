@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { RichTextDisplay } from '@/components/ui/rich-text-editor'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useItems } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { Item } from '@/items/models'
 import { ItemDialogOptions } from '@/items/useItemDialogState'
@@ -41,7 +42,8 @@ export function PlannerMonthView({
   handleEventDrop,
 }: PlannerMonthViewProps) {
   const { getCourseTitle } = useCourses()
-  const { getItemsByType, updateItem } = useItems()
+  const { getItemsByType } = useItems()
+  const { updateItemFields } = useItemWrite()
   const itemDialog = useItemDialog()
   const { t } = useTranslation('planner')
   const { getShortDayNames, formatDate: localizedFormatDate, formatDateDDMMYYYY } = useLocalization()
@@ -54,7 +56,7 @@ export function PlannerMonthView({
 
   // Helper function to handle content changes for different event types
   const handleEventContentChange = (event: any, newContent: string) => {
-    updateItem(event.id, { notes: newContent })
+    updateItemFields(event.id, { notes: newContent }).catch(error => console.error('Error updating item notes:', error))
   }
 
   return (

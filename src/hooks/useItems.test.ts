@@ -170,61 +170,6 @@ describe('useItems', () => {
     })
   })
 
-  describe('deleteItem cascade', () => {
-    it('deleteExam cascades exam grades', () => {
-      const exam = makeExam({ id: 'e-1' })
-      const grades: ExamGrade[] = [
-        { examId: 'e-1', grade: 6 },
-        { examId: 'e-2', grade: 7 },
-      ]
-      seedStore([exam], grades)
-
-      const { result } = renderHook(() => useItems())
-
-      act(() => {
-        result.current.deleteExam('e-1')
-      })
-
-      expect(store.items).toHaveLength(0)
-      expect(store.examGrades).toHaveLength(1)
-      expect(store.examGrades[0].examId).toBe('e-2')
-    })
-
-    it('deleteTask does not cascade grades', () => {
-      const task = makeTask({ id: 't-1' })
-      const grades: ExamGrade[] = [{ examId: 't-1', grade: 6 }]
-      seedStore([task], grades)
-
-      const { result } = renderHook(() => useItems())
-
-      act(() => {
-        result.current.deleteTask('t-1')
-      })
-
-      expect(store.items).toHaveLength(0)
-      expect(store.examGrades).toHaveLength(1)
-    })
-
-    it('generic deleteItem still cascades exam grades', () => {
-      const exam = makeExam({ id: 'e-1' })
-      const grades: ExamGrade[] = [
-        { examId: 'e-1', grade: 6 },
-        { examId: 'e-2', grade: 7 },
-      ]
-      seedStore([exam], grades)
-
-      const { result } = renderHook(() => useItems())
-
-      act(() => {
-        result.current.deleteItem('e-1')
-      })
-
-      expect(store.items).toHaveLength(0)
-      expect(store.examGrades).toHaveLength(1)
-      expect(store.examGrades[0].examId).toBe('e-2')
-    })
-  })
-
   describe('dead code removed', () => {
     it('does not expose getItemById', () => {
       const { result } = renderHook(() => useItems())

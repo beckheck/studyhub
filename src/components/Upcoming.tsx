@@ -1,4 +1,5 @@
 import { useItems } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { ItemTask } from '@/items/task/modelSchema'
 import { calculateDDay, compareDates, isDateAfterOrEqual, isDateBefore } from '@/lib/date-utils'
 import { AnimatePresence } from 'framer-motion'
@@ -29,7 +30,8 @@ export default function Upcoming({
   onCourseSelect,
 }: UpcomingProps) {
   const { t } = useTranslation('common')
-  const { getItemsByType, updateTask, updateExam } = useItems()
+  const { getItemsByType } = useItems()
+  const { updateItemFields } = useItemWrite()
 
   // Get items by type
   const tasks = getItemsByType('task')
@@ -39,14 +41,18 @@ export default function Upcoming({
   const toggleTask = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId)
     if (task) {
-      updateTask(taskId, { isCompleted: !task.isCompleted })
+      updateItemFields(taskId, { isCompleted: !task.isCompleted }).catch(error =>
+        console.error('Error updating task:', error),
+      )
     }
   }
 
   const toggleExamComplete = (examId: string) => {
     const exam = exams.find(e => e.id === examId)
     if (exam) {
-      updateExam(examId, { isCompleted: !exam.isCompleted })
+      updateItemFields(examId, { isCompleted: !exam.isCompleted }).catch(error =>
+        console.error('Error updating exam:', error),
+      )
     }
   }
 

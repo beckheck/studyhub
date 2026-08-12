@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useSnapshot } from 'valtio'
 import { uid } from '../lib/utils'
-import { cascadeExamDelete, cascadeCourseClear } from '../lib/item-cascades'
+import { cascadeCourseClear } from '../lib/item-cascades'
 import { store, storeLoadingState } from '../stores/app'
 import type { Item, ItemType } from '@/items/models'
 import type { ItemTask } from '@/items/task/modelSchema'
@@ -582,26 +582,6 @@ function updateItemOfType(
   return null
 }
 
-function removeItemById(store: { items: Item[] }, id: string): boolean {
-  const itemIndex = store.items.findIndex(item => item.id === id)
-  if (itemIndex !== -1) {
-    store.items.splice(itemIndex, 1)
-    return true
-  }
-  return false
-}
-
-function removeExamWithCascade(store: { items: Item[]; examGrades: ExamGrade[] }, id: string): boolean {
-  const itemIndex = store.items.findIndex(item => item.id === id)
-  if (itemIndex !== -1) {
-    const result = cascadeExamDelete(store.items, store.examGrades, id)
-    store.items = result.items as any
-    store.examGrades = result.examGrades as any
-    return true
-  }
-  return false
-}
-
 export function useItems() {
   const items = useSnapshot(store.items)
 
@@ -629,19 +609,6 @@ export function useItems() {
       store.items.unshift(newItem as Item)
       return newItem
     },
-    updateItem: (id: string, updates: Partial<Omit<Item, 'id' | 'createdAt'>>) => {
-      const itemIndex = store.items.findIndex(item => item.id === id)
-      if (itemIndex !== -1) {
-        const currentItem = store.items[itemIndex]
-        store.items[itemIndex] = {
-          ...currentItem,
-          ...updates,
-          updatedAt: new Date(),
-        } as Item
-        return store.items[itemIndex]
-      }
-      return null
-    },
     updateTask: (id: string, updates: Partial<Omit<ItemTask, 'id' | 'createdAt'>>): ItemTask | null => {
       const result = updateItemOfType(store, id, updates)
       return result as ItemTask | null
@@ -657,36 +624,6 @@ export function useItems() {
     updateTimetable: (id: string, updates: Partial<Omit<ItemTimetable, 'id' | 'createdAt'>>): ItemTimetable | null => {
       const result = updateItemOfType(store, id, updates)
       return result as ItemTimetable | null
-    },
-    deleteItem: (id: string): boolean => {
-      const item = store.items.find(item => item.id === id)
-      if (!item) return false
-      if (item.type === 'exam') {
-        return removeExamWithCascade(store, id)
-      }
-      return removeItemById(store, id)
-    },
-    deleteTask: (id: string): boolean => removeItemById(store, id),
-    deleteExam: (id: string): boolean => removeExamWithCascade(store, id),
-    deleteEvent: (id: string): boolean => removeItemById(store, id),
-    deleteTimetable: (id: string): boolean => removeItemById(store, id),
-    softDeleteItem: (id: string) => {
-      const itemIndex = store.items.findIndex(item => item.id === id)
-      if (itemIndex !== -1) {
-        store.items[itemIndex].isDeleted = true
-        store.items[itemIndex].updatedAt = new Date()
-        return true
-      }
-      return false
-    },
-    restoreItem: (id: string) => {
-      const itemIndex = store.items.findIndex(item => item.id === id)
-      if (itemIndex !== -1) {
-        store.items[itemIndex].isDeleted = false
-        store.items[itemIndex].updatedAt = new Date()
-        return true
-      }
-      return false
     },
     setItems: (items: Item[]) => {
       store.items = items

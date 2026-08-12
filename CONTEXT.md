@@ -72,6 +72,10 @@ _Avoid_: Mode (alone), Surface, Context (collides with React)
 A mechanism that pushes a dated Item (Event, Task, or Exam) to a Google Calendar Event so the two stay in step. A Timetable never syncs because it defines a pattern, not concrete dates. The reverse direction, a Google Calendar Event into the app, is an Import.
 _Avoid_: Export (for the automatic push), Google Sync
 
+**Item write**:
+The single flow through which an Item change persists. When the changed field has a Google counterpart, the flow propagates the change to Google Calendar Sync and stamps the returned event id onto the Item. Every Item mutation surface (dialog, planner drag, planner notes, completion toggles) crosses this flow.
+_Avoid_: Save Service, Item Handler
+
 ## Calendar
 
 **Occurrence**:

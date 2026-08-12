@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useItems, useProjects } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { Project, ProjectIconName, ProjectMember, ProjectType, ProjectVisualType } from '@/types'
 import { motion } from 'framer-motion'
@@ -152,7 +153,8 @@ const CONTACT_AVATAR_STYLES = [
 export default function ProjectsTab() {
   const { t } = useTranslation('projects')
   const { projects, addProject, updateProject, deleteProject, setProjects } = useProjects()
-  const { items, updateTask, getItemsByType } = useItems()
+  const { items, getItemsByType } = useItems()
+  const { updateItemFields } = useItemWrite()
   const itemDialog = useItemDialog()
 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
@@ -661,7 +663,9 @@ export default function ProjectsTab() {
                                     className={`h-8 w-8 rounded-full ${task.isCompleted ? 'text-green-500' : ''}`}
                                     onClick={e => {
                                       e.stopPropagation()
-                                      updateTask(task.id, { isCompleted: !task.isCompleted })
+                                      updateItemFields(task.id, { isCompleted: !task.isCompleted }).catch(error =>
+                                        console.error('Error updating task:', error),
+                                      )
                                     }}
                                   >
                                     <Check className="w-4 h-4" />

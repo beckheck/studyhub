@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { getOverdueItems } from '@/domain/item-filtering'
 import { sortExamsByDate, sortTasks } from '@/domain/item-sorting'
 import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { isDateAfterOrEqual } from '@/lib/date-utils'
 import {
   AlertTriangle,
@@ -231,7 +232,8 @@ function DashboardBareWidgetFrame({
 export default function DashboardTab({ onTabChange, isWidgetEditMode }: DashboardTabProps) {
   const { t } = useTranslation('common')
   const { setSelectedCourse } = useCourses()
-  const { getItemsByType, updateTask, updateExam } = useItems()
+  const { getItemsByType } = useItems()
+  const { updateItemFields } = useItemWrite()
   const {
     dashboard,
     missionText,
@@ -293,14 +295,18 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const toggleTask = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId)
     if (task) {
-      updateTask(taskId, { isCompleted: !task.isCompleted })
+      updateItemFields(taskId, { isCompleted: !task.isCompleted }).catch(error =>
+        console.error('Error updating task:', error),
+      )
     }
   }
 
   const toggleExamComplete = (examId: string) => {
     const exam = exams.find(e => e.id === examId)
     if (exam) {
-      updateExam(examId, { isCompleted: !exam.isCompleted })
+      updateItemFields(examId, { isCompleted: !exam.isCompleted }).catch(error =>
+        console.error('Error updating exam:', error),
+      )
     }
   }
 

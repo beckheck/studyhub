@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useItems } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { ItemDialogOptions, useItemDialog } from '@/items/ItemDialogProvider'
 import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries'
 import { getDateString, isMultiDayEvent } from '@/lib/date-utils'
@@ -25,7 +26,8 @@ const addItemDialogOptions: ItemDialogOptions = {
 
 export default function PlannerTab() {
   const { courses } = useCourses()
-  const { items, updateTask, updateExam, updateEvent } = useItems()
+  const { items } = useItems()
+  const { updateItemFields } = useItemWrite()
 
   // Localization hooks
   const { t } = useTranslation('planner')
@@ -121,17 +123,19 @@ export default function PlannerTab() {
       const newEnd = new Date(item.endsAt)
       newEnd.setDate(newEnd.getDate() + daysDiff)
 
-      updateEvent(itemId, { startsAt: newStart, endsAt: newEnd })
+      updateItemFields(itemId, { startsAt: newStart, endsAt: newEnd }).catch(error =>
+        console.error('Error moving event:', error),
+      )
     } else if (item.type === 'exam') {
       const oldDate = new Date(item.startsAt)
       const newDate = new Date(oldDate)
       newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
-      updateExam(itemId, { startsAt: newDate })
+      updateItemFields(itemId, { startsAt: newDate }).catch(error => console.error('Error moving exam:', error))
     } else if (item.type === 'task') {
       const oldDate = new Date(item.dueAt)
       const newDate = new Date(oldDate)
       newDate.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
-      updateTask(itemId, { dueAt: newDate })
+      updateItemFields(itemId, { dueAt: newDate }).catch(error => console.error('Error moving task:', error))
     }
   }
 

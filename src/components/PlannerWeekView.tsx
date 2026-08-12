@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useLocalization } from '@/hooks/useLocalization'
-import { useCourses, useItems, useWeeklyGoals } from '@/hooks/useStore'
+import { useCourses, useWeeklyGoals } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { ItemDialogOptions } from '@/items/useItemDialogState'
 import { Plus, Target, Trash2 } from 'lucide-react'
@@ -38,14 +39,14 @@ export function PlannerWeekView({
 }: PlannerWeekViewProps) {
   const { getCourseTitle } = useCourses()
   const { weeklyGoals, addGoal, toggleGoal, deleteGoal, clearAllGoals } = useWeeklyGoals()
-  const { updateItem } = useItems()
+  const { updateItemFields } = useItemWrite()
   const itemDialog = useItemDialog()
   const { t } = useTranslation('planner')
   const { getShortDayNames } = useLocalization()
 
   // Helper function to handle content changes for different event types
   const handleEventContentChange = (event: any, newContent: string) => {
-    updateItem(event.id, { notes: newContent })
+    updateItemFields(event.id, { notes: newContent }).catch(error => console.error('Error updating item notes:', error))
   }
 
   const [goalForm, setGoalForm] = useState<{ title: string }>({ title: '' })

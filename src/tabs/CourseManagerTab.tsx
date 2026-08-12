@@ -16,6 +16,7 @@ import { sortTasks as sortTasksByOrder } from '@/domain/item-sorting'
 import { useConfetti } from '@/hooks/useConfetti'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useExamGrades, useItems } from '@/hooks/useStore'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { getItemTaskPriorityColor } from '@/items/task/methods'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { compareDates, getDateString } from '@/lib/date-utils'
@@ -64,7 +65,8 @@ export default function CourseManagerTab() {
     updateCourseLinks,
     updateCourseContacts,
   } = useCourses()
-  const { getItemsByType, updateTask, updateExam, deleteItem } = useItems()
+  const { getItemsByType } = useItems()
+  const { updateItemFields, deleteItem: deleteItemWrite } = useItemWrite()
 
   // Get items by type
   const tasks = getItemsByType('task')
@@ -713,12 +715,21 @@ export default function CourseManagerTab() {
                           variant="default"
                           className="rounded-xl"
                           onClick={() => {
-                            updateTask(t.id, { isCompleted: true })
+                            updateItemFields(t.id, { isCompleted: true }).catch(error =>
+                              console.error('Error updating task:', error),
+                            )
                           }}
                         >
                           {tCourse('actions.done')}
                         </Button>
-                        <Button size="icon" variant="ghost" className="rounded-xl" onClick={() => deleteItem(t.id)}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="rounded-xl"
+                          onClick={() =>
+                            deleteItemWrite(t).catch(error => console.error('Error deleting task:', error))
+                          }
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -787,7 +798,11 @@ export default function CourseManagerTab() {
                                   size="icon"
                                   variant="ghost"
                                   className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => updateTask(t.id, { isCompleted: false })}
+                                  onClick={() =>
+                                    updateItemFields(t.id, { isCompleted: false }).catch(error =>
+                                      console.error('Error updating task:', error),
+                                    )
+                                  }
                                   title={tCourse('actions.undo')}
                                 >
                                   <Undo className="w-4 h-4" />
@@ -796,7 +811,9 @@ export default function CourseManagerTab() {
                                   size="icon"
                                   variant="ghost"
                                   className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => deleteItem(t.id)}
+                                  onClick={() =>
+                                    deleteItemWrite(t).catch(error => console.error('Error deleting task:', error))
+                                  }
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -942,9 +959,9 @@ export default function CourseManagerTab() {
                                   className="text-xs"
                                   onContentChange={newContent => {
                                     // Update the exam with the new notes content
-                                    updateExam(e.id, {
-                                      notes: newContent,
-                                    })
+                                    updateItemFields(e.id, { notes: newContent }).catch(error =>
+                                      console.error('Error updating exam:', error),
+                                    )
                                   }}
                                   onProgressChange={progress => {
                                     setExamNotesProgress(prev => ({
@@ -1022,7 +1039,9 @@ export default function CourseManagerTab() {
                                     className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
                                     onClick={ev => {
                                       ev.stopPropagation()
-                                      updateExam(e.id, { isCompleted: false })
+                                      updateItemFields(e.id, { isCompleted: false }).catch(error =>
+                                        console.error('Error updating exam:', error),
+                                      )
                                     }}
                                     title={tCourse('exams.upcoming.title')}
                                   >
@@ -1045,9 +1064,9 @@ export default function CourseManagerTab() {
                                       className="text-xs"
                                       onContentChange={newContent => {
                                         // Update the exam with the new notes content
-                                        updateExam(e.id, {
+                                        updateItemFields(e.id, {
                                           notes: newContent,
-                                        })
+                                        }).catch(error => console.error('Error updating exam:', error))
                                       }}
                                     />
                                   </div>

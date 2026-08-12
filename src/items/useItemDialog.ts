@@ -1,12 +1,15 @@
 import { convertItemFormToModel, convertItemModelToForm, getDefaultItemFormForType, ItemForm } from '@/items/forms'
 import { Item } from '@/items/models'
-import { useItems, useGoogleCalendar, useAppState } from '@/hooks/useStore'
-import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync'
-import { SyncItemContext } from '@/lib/google-calendar-sync'
+import { useItemWrite } from '@/hooks/useItemWrite'
 import { useItemDialogState } from './useItemDialogState'
 
 export type { ItemFormFieldFlags } from '@/items/forms'
 export type { ItemDialogOptions } from './useItemDialogState'
+
+function stripSystemFields(item: Item): Omit<Item, 'id' | 'createdAt' | 'updatedAt'> {
+  const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = item
+  return rest as Omit<Item, 'id' | 'createdAt' | 'updatedAt'>
+}
 
 export function useItemDialog() {
   const {
@@ -25,64 +28,26 @@ export function useItemDialog() {
     onOpenChange,
   } = useItemDialogState()
 
-  const { addItem, updateItem, deleteItem, updateEvent, updateTask, updateExam } = useItems()
-  const { googleCalendar } = useGoogleCalendar()
-  const appState = useAppState()
-  const { syncItem, deleteItem: syncDeleteItem } = useGoogleCalendarSync()
-
-  const buildSyncCtx = (): SyncItemContext => ({
-    accessToken: googleCalendar.accessToken ?? '',
-    calendarId: googleCalendar.calendarId ?? '',
-    syncEnabled: googleCalendar.syncEnabled,
-    courses: Object.fromEntries(appState.courses.map(c => [c.id, c.title])),
-    projects: Object.fromEntries(appState.projects.map(p => [p.id, p.title])),
-  })
+  const { saveItem, updateItemFields, deleteItem } = useItemWrite()
 
   const handleSave = (validatedData?: ItemForm) => {
     const dataToSave = validatedData || form
-    handleSaveItem(dataToSave, editingItem)
+    const item = convertItemFormToModel(itemType, dataToSave, editingItem ?? undefined)
+    if (editingItem) {
+      updateItemFields(editingItem.id, stripSystemFields(item)).catch(error =>
+        console.error('Error saving item:', error),
+      )
+    } else {
+      saveItem(stripSystemFields(item)).catch(error => console.error('Error saving item:', error))
+    }
     closeDialog()
   }
 
   const handleDelete = () => {
     if (editingItem) {
-      handleDeleteItem(editingItem)
+      deleteItem(editingItem).catch(error => console.error('Error deleting item:', error))
       closeDialog()
     }
-  }
-
-  const handleSaveItem = (formData: ItemForm, editingItem: Item | null) => {
-    const item = convertItemFormToModel(itemType, formData, editingItem ?? undefined)
-    let savedItem: Item
-    if (editingItem) {
-      savedItem = updateItem(editingItem.id, item) ?? item
-    } else {
-      savedItem = addItem(item)
-    }
-    syncItemToGoogle(savedItem).catch(console.error)
-  }
-
-  const syncItemToGoogle = async (item: Item) => {
-    const ctx = buildSyncCtx()
-    try {
-      const result = await syncItem(item, ctx)
-      if (result.success && result.googleEventId) {
-        if (item.type === 'event') updateEvent(item.id, { googleCalendarEventId: result.googleEventId })
-        else if (item.type === 'task') updateTask(item.id, { googleCalendarEventId: result.googleEventId })
-        else if (item.type === 'exam') updateExam(item.id, { googleCalendarEventId: result.googleEventId })
-      } else if (!result.success && !result.skipped) {
-        console.error('Google Calendar sync failed:', result.error)
-      }
-    } catch (error) {
-      console.error('Error syncing to Google Calendar:', error)
-    }
-  }
-
-  const handleDeleteItem = (item: Item) => {
-    deleteItem(item.id)
-
-    const ctx = buildSyncCtx()
-    syncDeleteItem(item, ctx).catch(error => console.error('Error deleting from Google Calendar:', error))
   }
 
   return {
@@ -102,8 +67,6 @@ export function useItemDialog() {
     closeDialog,
     handleSave,
     handleDelete,
-    handleSaveItem,
-    handleDeleteItem,
     handleChangeItemType,
 
     // Utilities
