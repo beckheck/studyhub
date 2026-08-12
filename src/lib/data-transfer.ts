@@ -1,10 +1,10 @@
 import {
-  DEFAULT_DASHBOARD_WIDGET_ORDER,
   DEFAULT_DASHBOARD_WIDGET_VISIBILITY,
   DEFAULT_FOCUS_TIMER_CONFIG,
   DEFAULT_HYDRATION_SETTINGS,
   DEFAULT_MOOD_EMOJIS,
 } from '@/stores/app'
+import { DEFAULT_DASHBOARD_WIDGET_ORDER } from '@/lib/dashboard-layout'
 import type { AppState, CourseRecord, DashboardState, Item, SemesterDates, SoundtrackPosition } from '@/types'
 
 export function serialize(state: AppState): ExchangeFormatV2 {

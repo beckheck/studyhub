@@ -1,4 +1,5 @@
 import { FileAttachmentStorage, type FileRepository } from '@/lib/file-attachment-storage'
+import { DEFAULT_DASHBOARD_WIDGET_ORDER } from '@/lib/dashboard-layout'
 import { uid } from '@/lib/utils'
 import i18next from 'i18next'
 import { proxy, snapshot, subscribe } from 'valtio'
@@ -66,12 +67,11 @@ export const DEFAULT_DASHBOARD_WIDGET_VISIBILITY = {
   datetime: true,
   schedule: true,
   nextUp: true,
-  calendar: true,
   soundtrack: true,
   tips: true,
+  scratchpad: true,
+  mytasks: true,
 }
-
-export const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips']
 const DEFAULT_DASHBOARD_MISSION_TEXT = ''
 
 // Create the initial state with proper defaults
@@ -194,7 +194,9 @@ async function loadState(): Promise<AppState> {
     return createInitialState()
   }
 
-  storeLoadingState.status = tLoadingScreen('loadingFromStorage', { adapter: hybridStorage.adapterName })
+  storeLoadingState.status = tLoadingScreen('loadingFromStorage', {
+    adapter: hybridStorage.adapterName,
+  })
   const state = await repo.load(createInitialState)
   storeLoadingState.status = tLoadingScreen('restoringData')
   return state

@@ -13,6 +13,7 @@ import { sortExamsByDate, sortTasks } from '@/domain/item-sorting'
 import { useCourses, useDashboardLayout, useItems, useSoundtrack, useWeather } from '@/hooks/useStore'
 import { useItemWrite } from '@/hooks/useItemWrite'
 import { isDateAfterOrEqual } from '@/lib/date-utils'
+import { type DashboardWidgetId } from '@/lib/dashboard-layout'
 import {
   AlertTriangle,
   CalendarDays,
@@ -31,18 +32,6 @@ interface DashboardTabProps {
   onTabChange: (tab: string) => void
   isWidgetEditMode: boolean
 }
-
-type DashboardWidgetId =
-  | 'weather'
-  | 'datetime'
-  | 'schedule'
-  | 'nextUp'
-  | 'soundtrack'
-  | 'tips'
-  | 'scratchpad'
-  | 'mytasks'
-
-const DEFAULT_WIDGET_ORDER: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp', 'mytasks', 'soundtrack', 'tips']
 
 interface DashboardWidgetFrameProps {
   id: DashboardWidgetId
@@ -235,10 +224,11 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const { getItemsByType } = useItems()
   const { updateItemFields } = useItemWrite()
   const {
-    dashboard,
+    resolvedOrder: widgetOrder,
     missionText,
     missionLink,
     setMissionText,
+    isWidgetVisible,
     setWidgetVisibility,
     moveWidgetBefore,
     moveWidgetToEnd,
@@ -264,26 +254,6 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
   const [draggedWidgetId, setDraggedWidgetId] = useState<DashboardWidgetId | null>(null)
   const [dropTargetWidgetId, setDropTargetWidgetId] = useState<DashboardWidgetId | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-
-  const widgetOrder = (() => {
-    if (!dashboard.widgetOrder?.length) return DEFAULT_WIDGET_ORDER
-    const validWidgetIds = new Set<DashboardWidgetId>(DEFAULT_WIDGET_ORDER)
-    const stored = (dashboard.widgetOrder as string[]).filter((widgetId): widgetId is DashboardWidgetId =>
-      validWidgetIds.has(widgetId as DashboardWidgetId),
-    )
-    const pinnedOrder: DashboardWidgetId[] = ['schedule', 'scratchpad', 'nextUp']
-
-    // Keep the schedule, mission, and next-up widgets locked together at the top.
-    const pinnedWidgets = pinnedOrder.filter(
-      widgetId => stored.includes(widgetId) || DEFAULT_WIDGET_ORDER.includes(widgetId),
-    )
-    const remainingWidgets = stored.filter(widgetId => !pinnedOrder.includes(widgetId))
-    const missingWidgets = DEFAULT_WIDGET_ORDER.filter(
-      widgetId => !pinnedWidgets.includes(widgetId) && !remainingWidgets.includes(widgetId),
-    )
-
-    return [...pinnedWidgets, ...remainingWidgets, ...missingWidgets]
-  })()
 
   useEffect(() => {
     if (!isWidgetEditMode) {
@@ -325,8 +295,6 @@ export default function DashboardTab({ onTabChange, isWidgetEditMode }: Dashboar
       setTimeout(() => setIsAnimating(false), 300)
     }, 50)
   }
-
-  const isWidgetVisible = (widgetId: DashboardWidgetId) => dashboard.widgetVisibility[widgetId] !== false
 
   const setWidgetVisible = (widgetId: DashboardWidgetId, visible: boolean) => {
     setWidgetVisibility(widgetId, visible)

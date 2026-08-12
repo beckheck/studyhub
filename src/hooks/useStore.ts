@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useSnapshot } from 'valtio'
 import { uid } from '../lib/utils'
 import { cascadeCourseClear } from '../lib/item-cascades'
+import { resolveOrder, reorder, moveToEnd, type DashboardWidgetId } from '../lib/dashboard-layout'
 import { store, storeLoadingState } from '../stores/app'
 import type { Item, ItemType } from '@/items/models'
 import type { ItemTask } from '@/items/task/modelSchema'
@@ -24,8 +25,6 @@ import type {
   GoogleCalendarConfig,
 } from '../types'
 
-const DEFAULT_DASHBOARD_WIDGET_ORDER = ['schedule', 'nextUp', 'calendar', 'soundtrack', 'tips']
-
 // Hook for loading state
 export function useStoreLoading() {
   const loadingState = useSnapshot(storeLoadingState)
@@ -43,9 +42,14 @@ export function useAppState() {
  */
 export function useDashboardLayout() {
   const dashboard = useSnapshot(store.dashboard)
+  const resolvedOrder = resolveOrder(dashboard.widgetOrder)
+
+  const setWidgetOrder = (widgetOrder: string[]) => {
+    store.dashboard.widgetOrder = widgetOrder
+  }
 
   return {
-    dashboard,
+    resolvedOrder,
     missionText: dashboard.missionText ?? '',
     missionLink: dashboard.missionLink ?? '',
     setMissionText: (missionText: string) => {
@@ -54,42 +58,19 @@ export function useDashboardLayout() {
     setMissionLink: (missionLink: string) => {
       store.dashboard.missionLink = missionLink
     },
-    setWidgetVisibility: (widgetId: string, visible: boolean) => {
+    isWidgetVisible: (widgetId: DashboardWidgetId) => dashboard.widgetVisibility[widgetId] !== false,
+    setWidgetVisibility: (widgetId: DashboardWidgetId, visible: boolean) => {
       store.dashboard.widgetVisibility[widgetId] = visible
     },
-    toggleWidgetVisibility: (widgetId: string) => {
-      const currentVisibility = store.dashboard.widgetVisibility[widgetId] !== false
-      store.dashboard.widgetVisibility[widgetId] = !currentVisibility
+    moveWidgetBefore: (widgetId: DashboardWidgetId, targetWidgetId: DashboardWidgetId) => {
+      const currentOrder = store.dashboard.widgetOrder as DashboardWidgetId[]
+      const next = reorder(currentOrder, widgetId, targetWidgetId)
+      if (next !== currentOrder) setWidgetOrder(next)
     },
-    setWidgetOrder: (widgetOrder: string[]) => {
-      store.dashboard.widgetOrder = widgetOrder
-    },
-    moveWidgetBefore: (widgetId: string, targetWidgetId: string) => {
-      const currentOrder = [...(store.dashboard.widgetOrder ?? DEFAULT_DASHBOARD_WIDGET_ORDER)]
-      const fromIndex = currentOrder.indexOf(widgetId)
-      const targetIndex = currentOrder.indexOf(targetWidgetId)
-
-      if (fromIndex === -1 || targetIndex === -1 || widgetId === targetWidgetId) {
-        return
-      }
-
-      currentOrder.splice(fromIndex, 1)
-
-      const adjustedTargetIndex = currentOrder.indexOf(targetWidgetId)
-      currentOrder.splice(adjustedTargetIndex, 0, widgetId)
-      store.dashboard.widgetOrder = currentOrder
-    },
-    moveWidgetToEnd: (widgetId: string) => {
-      const currentOrder = [...(store.dashboard.widgetOrder ?? DEFAULT_DASHBOARD_WIDGET_ORDER)]
-      const fromIndex = currentOrder.indexOf(widgetId)
-
-      if (fromIndex === -1 || fromIndex === currentOrder.length - 1) {
-        return
-      }
-
-      currentOrder.splice(fromIndex, 1)
-      currentOrder.push(widgetId)
-      store.dashboard.widgetOrder = currentOrder
+    moveWidgetToEnd: (widgetId: DashboardWidgetId) => {
+      const currentOrder = store.dashboard.widgetOrder as DashboardWidgetId[]
+      const next = moveToEnd(currentOrder, widgetId)
+      if (next !== currentOrder) setWidgetOrder(next)
     },
     isWidgetCollapsed: (widgetId: string) => {
       return store.dashboard.widgetCollapsed?.[widgetId] === true
