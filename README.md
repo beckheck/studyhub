@@ -11,7 +11,7 @@ A modern, interactive study portal built specifically for Generation Z students,
 
 ## 🛠️ Tech Stack
 
-- **Framework:** React 18
+- **Framework:** React 19
 - **Build Tool:** Vite+ https://viteplus.dev/
 - **Styling:** Tailwind CSS
 - **UI Components:** shadcn/ui + Radix UI
