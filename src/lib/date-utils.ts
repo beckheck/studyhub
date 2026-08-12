@@ -13,6 +13,7 @@
  * - Construct day boundaries with `new Date(y, m, d)` (local midnight)
  * - Handle multi-day events correctly across UTC midnight boundaries
  */
+import type { CalendarView } from '@/types'
 
 /**
  * Get the local date string (YYYY-MM-DD) from a Date object or timestamp
@@ -172,6 +173,24 @@ export function createLocalMidnightDate(dateString: string): Date {
   // This avoids timezone conversion issues that can occur with new Date(dateString)
   const [year, month, day] = dateString.split('-').map(Number)
   return new Date(year, month - 1, day, 0, 0, 0, 0)
+}
+
+/**
+ * Build a 6x7 calendar grid for the given month, starting on Monday.
+ *
+ * Each cell is a Date at local midnight. Leading days belong to the previous
+ * month and trailing days to the next. Callers derive in-month membership with
+ * `date.getMonth() === view.month`.
+ */
+export function buildCalendarMatrix(view: CalendarView): Date[][] {
+  const first = new Date(view.year, view.month, 1)
+  const offset = (first.getDay() + 6) % 7 // Monday = 0
+  const start = new Date(view.year, view.month, 1 - offset)
+  const flat = Array.from(
+    { length: 42 },
+    (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i),
+  )
+  return Array.from({ length: 6 }, (_, week) => flat.slice(week * 7, week * 7 + 7))
 }
 
 // Import timezone-aware utilities for date handling

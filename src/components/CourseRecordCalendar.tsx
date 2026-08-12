@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourseRecords, useCourses, useItems } from '@/hooks/useStore'
 import { getItemsOnDate } from '@/lib/calendar-queries'
+import { buildCalendarMatrix, getDateString } from '@/lib/date-utils'
 import { CourseRecord, Item } from '@/types'
 import {
   BookOpen,
@@ -66,44 +67,17 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
   const courseRecordsFiltered = courseRecords.filter(r => r.courseId === courseId)
 
   // Generate calendar matrix
-  const matrix = useMemo(() => {
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-
-    const startDay = firstDay.getDay()
-    const adjustedStartDay = startDay === 0 ? 6 : startDay - 1
-
-    const daysInMonth = lastDay.getDate()
-    const matrix: Date[] = []
-
-    for (let i = adjustedStartDay - 1; i >= 0; i--) {
-      matrix.push(new Date(year, month, -i))
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      matrix.push(new Date(year, month, day))
-    }
-
-    const remainingDays = 42 - matrix.length
-    for (let day = 1; day <= remainingDays; day++) {
-      matrix.push(new Date(year, month + 1, day))
-    }
-
-    return matrix
-  }, [currentDate])
+  const matrix = useMemo(
+    () => buildCalendarMatrix({ year: currentDate.getFullYear(), month: currentDate.getMonth() }).flat(),
+    [currentDate],
+  )
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const formatDateString = (date: Date): string => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-  }
-
   // Get events for a specific date
   const getDateInfo = (date: Date) => {
-    const dateStr = formatDateString(date)
+    const dateStr = getDateString(date)
     const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: courseId })
     const courseItems = entries.map(e => e.item)
     const tasks = courseItems.filter(item => item.type === 'task')
@@ -139,7 +113,7 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
   const handleSaveRecord = () => {
     if (!selectedDate || !recordContent.trim()) return
 
-    const dateStr = formatDateString(selectedDate)
+    const dateStr = getDateString(selectedDate)
 
     if (editingRecord) {
       updateRecord(editingRecord.id, {
@@ -404,7 +378,7 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              {selectedDate && formatDateDDMMYYYY(formatDateString(selectedDate))}
+              {selectedDate && formatDateDDMMYYYY(getDateString(selectedDate))}
             </DialogTitle>
             <DialogDescription>{getCourseTitle(courseId)} - View and add records for this day</DialogDescription>
           </DialogHeader>
@@ -637,16 +611,12 @@ export function QuickRecordDialog({
   const [recordContent, setRecordContent] = useState('')
   const [recordMood, setRecordMood] = useState<number | undefined>(undefined)
 
-  const formatDateString = (d: Date): string => {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }
-
   const handleSave = () => {
     if (!recordContent.trim()) return
 
     addRecord({
       courseId,
-      date: formatDateString(date),
+      date: getDateString(date),
       content: recordContent.trim(),
       type: recordType,
       mood: recordMood,
@@ -674,7 +644,7 @@ export function QuickRecordDialog({
             Quick Record
           </DialogTitle>
           <DialogDescription>
-            Add a record for {courseName} on {formatDateDDMMYYYY(formatDateString(date))}
+            Add a record for {courseName} on {formatDateDDMMYYYY(getDateString(date))}
           </DialogDescription>
         </DialogHeader>
 

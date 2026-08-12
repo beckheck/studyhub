@@ -9,7 +9,7 @@ import { useCourses, useItems } from '@/hooks/useStore'
 import { useItemWrite } from '@/hooks/useItemWrite'
 import { ItemDialogOptions, useItemDialog } from '@/items/ItemDialogProvider'
 import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries'
-import { getDateString, isMultiDayEvent } from '@/lib/date-utils'
+import { getDateString, isMultiDayEvent, buildCalendarMatrix } from '@/lib/date-utils'
 import { CalendarView, Item } from '@/types'
 import { CalendarDays, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -46,13 +46,7 @@ export default function PlannerTab() {
   const now = new Date()
   const [monthView, setMonthView] = useState<CalendarView>({ year: now.getFullYear(), month: now.getMonth() })
 
-  function monthMatrix(y: number, m: number): Date[] {
-    const first = new Date(y, m, 1)
-    const offset = (first.getDay() + 6) % 7 // Mon=0
-    const start = new Date(y, m, 1 - offset)
-    return Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i))
-  }
-  const matrix = useMemo(() => monthMatrix(monthView.year, monthView.month), [monthView])
+  const matrix = useMemo(() => buildCalendarMatrix(monthView).flat(), [monthView])
   function shiftMonth(delta: number): void {
     const d = new Date(monthView.year, monthView.month + delta, 1)
     setMonthView({ year: d.getFullYear(), month: d.getMonth() })

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useItems } from '@/hooks/useStore'
 import { getItemsOnDate } from '@/lib/calendar-queries'
+import { buildCalendarMatrix } from '@/lib/date-utils'
 import type { Item } from '@/types'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -13,38 +14,6 @@ interface MiniCalendarProps {
   onTabChange: (tab: string) => void
   onCourseSelect?: (courseId: string) => void
   isExpanded?: boolean // New prop to control layout
-}
-
-export function buildCalendarMatrix(currentDate: Date): Date[] {
-  const year = currentDate.getFullYear()
-  const month = currentDate.getMonth()
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-
-  // Adjust for Monday start (0 = Sunday, 1 = Monday, etc.)
-  const startDay = firstDay.getDay()
-  const adjustedStartDay = startDay === 0 ? 6 : startDay - 1
-
-  const daysInMonth = lastDay.getDate()
-  const matrix: Date[] = []
-
-  // Add previous month days
-  for (let i = adjustedStartDay - 1; i >= 0; i--) {
-    matrix.push(new Date(year, month, -i))
-  }
-
-  // Add current month days
-  for (let day = 1; day <= daysInMonth; day++) {
-    matrix.push(new Date(year, month, day))
-  }
-
-  // Add next month days to complete the grid (6 weeks = 42 days)
-  const remainingDays = 42 - matrix.length
-  for (let day = 1; day <= remainingDays; day++) {
-    matrix.push(new Date(year, month + 1, day))
-  }
-
-  return matrix
 }
 
 export default function MiniCalendar({ onTabChange, isExpanded = false }: MiniCalendarProps) {
@@ -59,7 +28,10 @@ export default function MiniCalendar({ onTabChange, isExpanded = false }: MiniCa
   today.setHours(0, 0, 0, 0)
 
   // Generate calendar matrix
-  const matrix = useMemo(() => buildCalendarMatrix(currentDate), [currentDate])
+  const matrix = useMemo(
+    () => buildCalendarMatrix({ year: currentDate.getFullYear(), month: currentDate.getMonth() }).flat(),
+    [currentDate],
+  )
 
   // Helper to get all items for a specific date, applying the view's display filters:
   // - completed tasks hidden on non-past dates (show on past dates for history)

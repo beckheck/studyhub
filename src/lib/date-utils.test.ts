@@ -17,6 +17,7 @@ import {
   getDateComponentsInTimezone,
   addDaysToComponents,
   addMonthsToComponents,
+  buildCalendarMatrix,
 } from './date-utils'
 
 describe('date-utils', () => {
@@ -249,6 +250,43 @@ describe('date-utils', () => {
       const result = addMonthsToComponents(components, 1)
 
       expect(result).toMatchObject({ year: 2025, month: 0, date: 15, hours: 10, minutes: 30 })
+    })
+  })
+
+  describe('buildCalendarMatrix', () => {
+    it('returns a 6x7 grid for a month that needs six weeks', () => {
+      const matrix = buildCalendarMatrix({ year: 2026, month: 7 })
+
+      expect(matrix).toHaveLength(6)
+      expect(matrix[0]).toHaveLength(7)
+      expect(matrix[5]).toHaveLength(7)
+      expect(matrix[0][0].getFullYear()).toBe(2026)
+      expect(matrix[0][0].getMonth()).toBe(6)
+      expect(matrix[5][6].getMonth()).toBe(8)
+    })
+
+    it('includes the last day of the target month', () => {
+      const matrix = buildCalendarMatrix({ year: 2026, month: 7 })
+      const flat = matrix.flat()
+
+      expect(flat.some(date => date.getFullYear() === 2026 && date.getMonth() === 7 && date.getDate() === 31)).toBe(
+        true,
+      )
+    })
+
+    it('starts the grid on a Monday', () => {
+      const matrix = buildCalendarMatrix({ year: 2026, month: 7 })
+
+      expect(matrix[0][0].getDay()).toBe(1)
+    })
+
+    it('consecutive cells are one day apart', () => {
+      const flat = buildCalendarMatrix({ year: 2026, month: 7 }).flat()
+
+      for (let i = 1; i < flat.length; i++) {
+        const diff = flat[i].getTime() - flat[i - 1].getTime()
+        expect(diff).toBe(24 * 60 * 60 * 1000)
+      }
     })
   })
 })

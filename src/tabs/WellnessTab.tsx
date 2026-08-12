@@ -15,7 +15,7 @@ import {
 } from '@/domain/wellness'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useWellness } from '@/hooks/useStore'
-import { getDateString } from '@/lib/date-utils'
+import { buildCalendarMatrix, getDateString } from '@/lib/date-utils'
 import { CalendarView, MonthlyMood, MoodEmoji, DailyHydration } from '@/types'
 import { motion } from 'framer-motion'
 import { Settings } from 'lucide-react'
@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next'
 export default function WellnessTab() {
   // Translation hooks
   const { t } = useTranslation('wellness')
-  const { formatDate } = useLocalization()
+  const { formatDate, getShortDayNames } = useLocalization()
   const { openDialog: openSettingsDialog } = useSettingsDialogContext()
 
   const {
@@ -166,34 +166,6 @@ export default function WellnessTab() {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() }
   })
-
-  // Generate calendar matrix for mood calendar
-  const generateCalendarMatrix = (year: number, month: number): (number | null)[][] => {
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = (firstDay.getDay() + 6) % 7 // Monday = 0
-
-    const matrix: (number | null)[][] = []
-    let currentDate = 1
-
-    // Generate 6 weeks (42 days)
-    for (let week = 0; week < 6; week++) {
-      const weekDays: (number | null)[] = []
-      for (let day = 0; day < 7; day++) {
-        const dayIndex = week * 7 + day
-        if (dayIndex < startingDayOfWeek || currentDate > daysInMonth) {
-          weekDays.push(null)
-        } else {
-          weekDays.push(currentDate)
-          currentDate++
-        }
-      }
-      matrix.push(weekDays)
-    }
-
-    return matrix
-  }
 
   // Navigate calendar months
   const navigateMonth = (delta: number): void => {
@@ -710,26 +682,24 @@ export default function WellnessTab() {
               <div className="space-y-2">
                 {/* Day Headers */}
                 <div className="grid grid-cols-7 gap-1 text-xs font-medium text-zinc-500 text-center">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  {getShortDayNames().map((day, i) => (
                     <div key={i} className="py-1">
-                      {day}
+                      {day.slice(0, 1)}
                     </div>
                   ))}
                 </div>
 
                 {/* Calendar Days */}
                 <div className="grid grid-cols-7 gap-1">
-                  {generateCalendarMatrix(calendarView.year, calendarView.month)
+                  {buildCalendarMatrix(calendarView)
                     .flat()
-                    .map((day, index) => {
-                      if (!day) {
+                    .map((date, index) => {
+                      const inMonth = date.getMonth() === calendarView.month
+                      if (!inMonth) {
                         return <div key={index} className="h-8" />
                       }
 
-                      const dateString = `${calendarView.year}-${String(calendarView.month + 1).padStart(
-                        2,
-                        '0',
-                      )}-${String(day).padStart(2, '0')}`
+                      const dateString = getDateString(date)
                       const dayMood = getMoodForDate(dateString)
                       const dayHydration = getHydrationForDate(dateString)
                       const isToday = dateString === getTodayDateString()
@@ -745,7 +715,7 @@ export default function WellnessTab() {
                             color: dayMood ? '#fff' : isToday ? '#334155' : '#64748b',
                           }}
                         >
-                          {day}
+                          {date.getDate()}
 
                           {/* Hydration indicator */}
                           {dayHydration && (
@@ -764,17 +734,10 @@ export default function WellnessTab() {
                               <div className="bg-white dark:bg-zinc-800 shadow-xl rounded-xl p-3 border border-white/20 dark:border-white/10 min-w-[220px]">
                                 {/* Date Header */}
                                 <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-3 text-center">
-                                  {formatDate(
-                                    new Date(
-                                      `${calendarView.year}-${String(calendarView.month + 1).padStart(2, '0')}-${String(
-                                        day,
-                                      ).padStart(2, '0')}`,
-                                    ),
-                                    {
-                                      month: 'short',
-                                      day: 'numeric',
-                                    },
-                                  )}
+                                  {formatDate(date, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
                                 </div>
 
                                 {/* Mood Section */}
