@@ -289,7 +289,7 @@ export default function StudyPortal(): React.JSX.Element {
                                 : undefined,
                           }}
                         >
-                          <Icon className={`w-5 h-5 flex-shrink-0 ${activeTab === value ? 'text-current' : ''}`} />
+                          <Icon className={`w-5 h-5 shrink-0 ${activeTab === value ? 'text-current' : ''}`} />
                           <span className={`font-medium ${activeTab === value ? 'font-semibold' : ''}`}>{label}</span>
                         </a>
                       ))}

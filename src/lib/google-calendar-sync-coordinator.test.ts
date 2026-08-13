@@ -57,6 +57,7 @@ type GoogleCalendarSyncStoreSpies = {
   readdDirtyItem: ReturnType<typeof vi.fn>
   clearDeleteTombstone: ReturnType<typeof vi.fn>
   addDeleteTombstone: ReturnType<typeof vi.fn>
+  setItemGoogleCalendarEventId: ReturnType<typeof vi.fn>
   setLastSyncedAt: ReturnType<typeof vi.fn>
 }
 
@@ -82,6 +83,14 @@ function makeStorePort(state: GoogleCalendarSyncStateSnapshot): {
         current = { ...current, pendingDeleteSync: [...current.pendingDeleteSync, entry] }
       }
     }),
+    setItemGoogleCalendarEventId: vi.fn((itemId: string, googleEventId: string) => {
+      current = {
+        ...current,
+        items: current.items.map(item =>
+          item.id === itemId ? ({ ...item, googleCalendarEventId: googleEventId } as Item) : item,
+        ),
+      }
+    }),
     setLastSyncedAt: vi.fn((_ts: number) => {}),
   }
   return {
@@ -91,6 +100,7 @@ function makeStorePort(state: GoogleCalendarSyncStateSnapshot): {
       readdDirtyItem: spies.readdDirtyItem,
       clearDeleteTombstone: spies.clearDeleteTombstone,
       addDeleteTombstone: spies.addDeleteTombstone,
+      setItemGoogleCalendarEventId: spies.setItemGoogleCalendarEventId,
       setLastSyncedAt: spies.setLastSyncedAt,
     } as GoogleCalendarSyncStorePort,
     spies,
@@ -197,6 +207,29 @@ describe('GoogleCalendarSyncCoordinator.drainQueue', () => {
     expect(spies.readdDirtyItem).not.toHaveBeenCalled()
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(spies.setLastSyncedAt).toHaveBeenCalledWith(NOW)
+  })
+
+  it('stamps googleCalendarEventId on the item when drainQueue creates a Google event', async () => {
+    const { coordinator, spies } = makeCoordinator(
+      makeState({ dirtyItemIds: ['evt-1'], items: [makeEvent({ id: 'evt-1' })] }),
+    )
+    fetchMock.mockResolvedValue(okResponse('g-evt-new'))
+    await coordinator.drainQueue()
+    expect(spies.setItemGoogleCalendarEventId).toHaveBeenCalledWith('evt-1', 'g-evt-new')
+  })
+
+  it('stamps a recreated googleCalendarEventId when the prior Google event was deleted', async () => {
+    const { coordinator, spies } = makeCoordinator(
+      makeState({
+        dirtyItemIds: ['evt-1'],
+        items: [makeEvent({ id: 'evt-1', googleCalendarEventId: 'g-evt-gone' })],
+      }),
+    )
+    fetchMock
+      .mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({ error: { message: 'Not Found' } }) })
+      .mockResolvedValueOnce(okResponse('g-evt-recreated'))
+    await coordinator.drainQueue()
+    expect(spies.setItemGoogleCalendarEventId).toHaveBeenCalledWith('evt-1', 'g-evt-recreated')
   })
 
   it('re-adds the dirty id when sync fails', async () => {

@@ -24,6 +24,7 @@ export interface GoogleCalendarSyncStorePort {
   readdDirtyItem(itemId: string): void
   clearDeleteTombstone(itemId: string): void
   addDeleteTombstone(entry: PendingDeleteSync): void
+  setItemGoogleCalendarEventId(itemId: string, googleEventId: string): void
   setLastSyncedAt(ts: number): void
 }
 
@@ -104,6 +105,12 @@ export function createGoogleCalendarSyncStorePort(store: StoreLike): GoogleCalen
     },
     addDeleteTombstone(entry: PendingDeleteSync) {
       store.pendingDeleteSync = addTombstone(store.pendingDeleteSync, entry)
+    },
+    setItemGoogleCalendarEventId(itemId: string, googleEventId: string) {
+      const item = store.items.find(i => i.id === itemId)
+      if (item) {
+        ;(item as Item & { googleCalendarEventId?: string }).googleCalendarEventId = googleEventId
+      }
     },
     setLastSyncedAt(ts: number) {
       store.googleCalendar.lastSyncedAt = ts
@@ -196,6 +203,9 @@ export class GoogleCalendarSyncCoordinator {
 
       if (result.success) {
         anySuccess = true
+        if (result.googleEventId) {
+          this.store.setItemGoogleCalendarEventId(itemId, result.googleEventId)
+        }
       } else if (item.type !== 'timetable') {
         console.error('Periodic sync failed for item:', itemId, result)
         this.store.readdDirtyItem(itemId)

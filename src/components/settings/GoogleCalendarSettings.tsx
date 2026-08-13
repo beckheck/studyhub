@@ -380,7 +380,7 @@ export default function GoogleCalendarSettings() {
                 {t('googleCalendar.syncCadence')}
               </Label>
               <Select value={String(googleCalendar.syncIntervalMin)} onValueChange={handleCadenceChange}>
-                <SelectTrigger id="sync-cadence-select" className="h-9 w-[110px]">
+                <SelectTrigger id="sync-cadence-select" className="h-9 w-27.5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
