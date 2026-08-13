@@ -45,6 +45,18 @@ A modern, interactive study portal built specifically for Generation Z students,
 - `vp build` - Build for production
 - `vp preview` - Preview production build
 
+## 🌍 GitHub Pages Deployment
+
+The web app is an installable PWA. Pushing to `main` triggers the [release workflow](.github/workflows/release.yml), which builds and deploys to GitHub Pages.
+
+### First-time setup
+
+1. Go to **Settings -> Pages** in the repository.
+2. Set **Source** to **GitHub Actions**.
+3. Push to `main` (or run the workflow manually from the Actions tab).
+
+The app is available at `https://<owner>.github.io/gen-z-study-portal/`.
+
 ## 💻 System Requirements
 
 - Node.js 22 or later

@@ -1,4 +1,5 @@
 allowBuilds:
   '@tsparticles/engine': set this to true or false
   react-particles: set this to true or false
+  sharp: true
   tsparticles-engine: set this to true or false

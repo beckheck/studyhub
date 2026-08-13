@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: voidzero-dev/setup-vp@v1.17.0
+        with:
+          node-version: 24
+          cache: true
+      - run: vp check
+      - run: vp test
+
+  build-and-deploy-web:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: voidzero-dev/setup-vp@v1.17.0
+        with:
+          node-version: 24
+          cache: true
+      - run: vp build --base /gen-z-study-portal/
+      - name: Smoke test build output
+        run: |
+          test -f dist/sw.js
+          test -f dist/manifest.webmanifest
+          test -f dist/index.html
+          grep -q '<div id="root">' dist/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
