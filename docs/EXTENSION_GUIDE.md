@@ -9,7 +9,7 @@
 3. **Click "Load unpacked"** and select the folder:
 
    ```plain
-   /Users/rstuven/dev/gen-z-study-portal/.output/chrome-mv3
+   $HOME$/dev/studyhub/.output/chrome-mv3
    ```
 
 4. The extension should now appear in your extensions list.

@@ -89,7 +89,7 @@ function GithubCornerRibbon() {
   const { t } = useTranslation('settings')
   return (
     <a
-      href="https://github.com/beckheck/gen-z-study-portal"
+      href="https://github.com/beckheck/studyhub"
       target="_blank"
       rel="noopener noreferrer"
       className="absolute -top-3 -right-3 z-20 group"

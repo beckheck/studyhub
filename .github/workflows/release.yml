@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: 24
           cache: true
-      - run: vp build --base /gen-z-study-portal/
+      - run: vp build --base /studyhub/
       - name: Smoke test build output
         run: |
           test -f dist/sw.js

@@ -23,8 +23,8 @@ A modern, interactive study portal built specifically for Generation Z students,
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/beckheck/gen-z-study-portal.git
-   cd gen-z-study-portal
+   git clone https://github.com/beckheck/studyhub.git
+   cd studyhub
    ```
 
 2. Install dependencies:
@@ -55,7 +55,7 @@ The web app is an installable PWA. Pushing to `main` triggers the [release workf
 2. Set **Source** to **GitHub Actions**.
 3. Push to `main` (or run the workflow manually from the Actions tab).
 
-The app is available at `https://<owner>.github.io/gen-z-study-portal/`.
+The app is available at `https://<owner>.github.io/studyhub/`.
 
 ## 💻 System Requirements
 
