@@ -8,7 +8,7 @@ import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useItems } from '@/hooks/useStore'
 import { useItemWrite } from '@/hooks/useItemWrite'
 import { ItemDialogOptions, useItemDialog } from '@/items/ItemDialogProvider'
-import { getItemsOnDate, type CalendarEntry } from '@/lib/calendar-queries'
+import { getItemsOnDate, courseTitlesFromCourses, type CalendarEntry } from '@/lib/calendar-queries'
 import { getDateString, isMultiDayEvent, buildCalendarMatrix } from '@/lib/date-utils'
 import { CalendarView, Item } from '@/types'
 import { CalendarDays, Plus } from 'lucide-react'
@@ -79,13 +79,19 @@ export default function PlannerTab() {
   // Helper: get all events for a specific date
   // Query returns occurrences (including recurrence expansion). View applies display filters.
   function getAllEventsForDate(date: Date): Item[] {
-    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse })
+    const entries = getItemsOnDate([...items] as Item[], date, {
+      courseFilter: filterCourse,
+      courseTitles: courseTitlesFromCourses(courses),
+    })
     return filterEntries(entries).map(e => e.item)
   }
 
   // Helper: get all events for tooltip (including hidden multi-day events)
   function getAllEventsForTooltip(date: Date): Item[] {
-    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: filterCourse })
+    const entries = getItemsOnDate([...items] as Item[], date, {
+      courseFilter: filterCourse,
+      courseTitles: courseTitlesFromCourses(courses),
+    })
     return filterEntries(entries, true).map(e => e.item)
   }
 

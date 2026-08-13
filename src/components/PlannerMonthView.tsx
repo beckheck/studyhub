@@ -1,4 +1,4 @@
-import { EventTypeIndicator } from '@/components/PlannerSharedComponents'
+import { EventTypeIndicator, getItemSecondaryDetail } from '@/components/PlannerSharedComponents'
 import { TasksProgressBar, type ProgressData } from '@/components/TasksProgressBar'
 import { Badge } from '@/components/ui/badge'
 import { RichTextDisplay } from '@/components/ui/rich-text-editor'
@@ -212,8 +212,10 @@ export function PlannerMonthView({
                         </div>
 
                         <div className="text-sm text-zinc-600 dark:text-zinc-300 ml-4">
-                          <div className="font-medium">{getCourseTitle(event.courseId)}</div>
-                          <div>{t(`items:${event.type}.title`)}</div>
+                          {getItemSecondaryDetail(event, getCourseTitle, t) && (
+                            <div className="font-medium">{getItemSecondaryDetail(event, getCourseTitle, t)}</div>
+                          )}
+                          {event.type !== 'timetable' && <div>{t(`items:${event.type}.title`)}</div>}
                           {event.location && <div>{t('tooltip.location', { location: event.location })}</div>}
                           {event.weight && <div>{t('tooltip.weight', { weight: event.weight })}</div>}
                           {event.priority && (

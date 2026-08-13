@@ -126,10 +126,11 @@ describe('calendar-queries', () => {
         [timetable],
         new Date('2024-01-08T00:00:00.000Z'),
         new Date('2024-01-08T23:59:59.999Z'),
-        { timezone: 'UTC' },
+        { timezone: 'UTC', courseTitles: { 'course-1': 'Calculus I' } },
       )
       expect(entries).toHaveLength(1)
       expect(entries[0].item.id).toBe('tt-1')
+      expect(entries[0].item.title).toBe('Calculus I')
       expect(entries[0].startsAt).toEqual(new Date('2024-01-08T08:20:00.000Z'))
       expect(entries[0].endsAt).toEqual(new Date('2024-01-08T09:30:00.000Z'))
       expect(entries[0].date).toEqual(new Date(2024, 0, 8))

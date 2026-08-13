@@ -8,20 +8,40 @@ export const EventTypeIndicator = ({ event, size = 'sm' }: { event: any; size?: 
   const sizeClass = size === 'md' ? 'w-2.5 h-2.5' : 'w-2 h-2'
 
   if (event.type === 'exam') {
-    return <span className={`flex-shrink-0 inline-block rounded-full bg-rose-500 ${sizeClass}`}></span>
+    return <span className={`shrink-0 inline-block rounded-full bg-rose-500 ${sizeClass}`}></span>
   }
   if (event.type === 'task') {
-    return <span className={`flex-shrink-0 inline-block rounded-full bg-amber-500 ${sizeClass}`}></span>
+    return <span className={`shrink-0 inline-block rounded-full bg-amber-500 ${sizeClass}`}></span>
   }
   if (event.type === 'event') {
     return (
       <span
-        className={`flex-shrink-0 rounded-full ${sizeClass}`}
+        className={`shrink-0 rounded-full ${sizeClass}`}
         style={{ backgroundColor: event.color || '#6366f1' }}
       ></span>
     )
   }
+  if (event.type === 'timetable') {
+    return (
+      <span
+        className={`shrink-0 rounded-full ${sizeClass}`}
+        style={{ backgroundColor: event.color || '#06b6d4' }}
+      ></span>
+    )
+  }
   return null
+}
+
+/** Secondary detail for calendar item tooltips and subtitles. Timetable uses activity type because title already holds the course name. */
+export function getItemSecondaryDetail(
+  item: { type: string; courseId?: string; activityType?: string },
+  getCourseTitle: (id: string) => string | undefined,
+  t: (key: string) => string,
+): string | undefined {
+  if (item.type === 'timetable') {
+    return item.activityType ? t(`items:timetable.activityTypes.${item.activityType}`) : undefined
+  }
+  return getCourseTitle(item.courseId ?? '') || undefined
 }
 
 // Shared event tooltip component
@@ -57,8 +77,10 @@ export const EventTooltip = ({
           <span className="font-medium text-zinc-900 dark:text-zinc-100">{event.title || event.type}</span>
         </div>
         <div className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
-          <div>{getCourseTitle(event.courseId)}</div>
-          <div>{t(`items:${event.type}.title`)}</div>
+          {getItemSecondaryDetail(event, getCourseTitle, t) && (
+            <div>{getItemSecondaryDetail(event, getCourseTitle, t)}</div>
+          )}
+          {event.type !== 'timetable' && <div>{t(`items:${event.type}.title`)}</div>}
           {event.location && <div>{t('tooltip.location', { location: event.location })}</div>}
           {event.weight && <div>{t('tooltip.weight', { weight: event.weight })}</div>}
           {event.priority && (

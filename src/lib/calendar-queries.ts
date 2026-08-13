@@ -19,6 +19,9 @@ export interface CalendarQueryOptions {
   expandRecurrence?: boolean
   /** IANA timezone for Timetable expansion. Defaults to the device timezone. */
   timezone?: string
+  /** Course id -> title map. Timetable entries use the course title as their display title. */
+  courseTitles?: Readonly<Record<string, string>>
+  includeTimetable?: boolean
 }
 
 export function getItemsInRange(
@@ -27,7 +30,7 @@ export function getItemsInRange(
   rangeEnd: Date,
   opts: CalendarQueryOptions = {},
 ): CalendarEntry[] {
-  const { courseFilter, expandRecurrence = true, timezone = getDeviceTimezone() } = opts
+  const { courseFilter, expandRecurrence = true, timezone = getDeviceTimezone(), courseTitles, includeTimetable } = opts
   const entries: CalendarEntry[] = []
 
   for (const item of items) {
@@ -35,7 +38,8 @@ export function getItemsInRange(
     if (courseFilter && courseFilter !== 'all' && item.courseId !== courseFilter) continue
 
     if (item.type === 'timetable') {
-      entries.push(...entriesForTimetable(item, rangeStart, rangeEnd, timezone))
+      if (!includeTimetable) continue
+      entries.push(...entriesForTimetable(item, rangeStart, rangeEnd, timezone, courseTitles))
     } else if (item.type === 'event') {
       entries.push(...entriesForEvent(item, rangeStart, rangeEnd, expandRecurrence))
     } else {
@@ -55,10 +59,18 @@ export function getItemsOnDate(items: readonly Item[], date: Date, opts: Calenda
   return getItemsInRange(items, dayStart, dayEnd, opts)
 }
 
-function entriesForTimetable(item: ItemTimetable, rangeStart: Date, rangeEnd: Date, timezone: string): CalendarEntry[] {
+function entriesForTimetable(
+  item: ItemTimetable,
+  rangeStart: Date,
+  rangeEnd: Date,
+  timezone: string,
+  courseTitles?: Readonly<Record<string, string>>,
+): CalendarEntry[] {
   const instances = getTimetableInstancesBetween(item, rangeStart, rangeEnd, timezone)
+  const courseTitle = item.courseId ? courseTitles?.[item.courseId] : undefined
+  const displayItem = courseTitle ? ({ ...item, title: courseTitle } as Item) : item
   return instances.map(instance => ({
-    item,
+    item: displayItem,
     date: new Date(instance.startsAt.getFullYear(), instance.startsAt.getMonth(), instance.startsAt.getDate()),
     startsAt: instance.startsAt,
     endsAt: instance.endsAt,
@@ -131,4 +143,8 @@ function itemEntry(item: Item): { date: Date; startsAt: Date } {
 
 export function entriesOnDate(entries: CalendarEntry[], date: Date): CalendarEntry[] {
   return entries.filter(e => isSameDate(e.date, date))
+}
+
+export function courseTitlesFromCourses(courses: ReadonlyArray<{ id: string; title: string }>): Record<string, string> {
+  return Object.fromEntries(courses.map(c => [c.id, c.title]))
 }

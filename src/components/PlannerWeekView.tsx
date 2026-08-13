@@ -1,4 +1,4 @@
-import { EventTooltip, EventTypeIndicator } from '@/components/PlannerSharedComponents'
+import { EventTooltip, EventTypeIndicator, getItemSecondaryDetail } from '@/components/PlannerSharedComponents'
 import { type ProgressData } from '@/components/TasksProgressBar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -262,8 +262,8 @@ export function PlannerWeekView({
                                 </div>
                                 <div className="text-xs text-zinc-500 truncate">
                                   {t(`items:${e.type}.title`)}
-                                  {` · `}
-                                  {getCourseTitle(e.courseId)}
+                                  {getItemSecondaryDetail(e, getCourseTitle, t) &&
+                                    ` · ${getItemSecondaryDetail(e, getCourseTitle, t)}`}
                                   {e.location && ` · ${e.location}`}
                                   {e.weight && ` · ${e.weight}%`}
                                   {e.priority && ` · ${e.priority} priority`}
@@ -314,8 +314,8 @@ export function PlannerWeekView({
                         </div>
                         <div className="text-xs text-zinc-500 truncate mt-0">
                           {t(`items:${e.type}.title`)}
-                          {` · `}
-                          {getCourseTitle(e.courseId)}
+                          {getItemSecondaryDetail(e, getCourseTitle, t) &&
+                            ` · ${getItemSecondaryDetail(e, getCourseTitle, t)}`}
                           <span className="inline">
                             {e.location && ` · ${e.location}`}
                             {e.weight && ` · ${e.weight}%`}

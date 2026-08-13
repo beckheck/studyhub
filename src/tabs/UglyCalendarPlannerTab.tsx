@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch'
 import { useCourses, useItems } from '@/hooks/useStore'
 import { Item } from '@/items/models'
 import { useItemDialog } from '@/items/ItemDialogProvider'
-import { getItemsInRange, type CalendarEntry } from '@/lib/calendar-queries'
+import { getItemsInRange, courseTitlesFromCourses, type CalendarEntry } from '@/lib/calendar-queries'
 import { getDateString } from '@/lib/date-utils'
 import { addDays, endOfMonth, endOfWeek, format, getDay, parse, startOfMonth, startOfWeek } from 'date-fns'
 import { enUS } from 'date-fns/locale'
@@ -158,18 +158,10 @@ export default function UglyCalendarPlannerTab() {
 
     const entries = getItemsInRange([...items] as Item[], rangeStart, rangeEnd, {
       courseFilter: filterCourse,
+      courseTitles: courseTitlesFromCourses(courses),
     })
 
-    return entries.flatMap(entry => {
-      const mapped = entryToCalendarEvent(entry, t)
-      if (entry.item.type !== 'timetable') return mapped
-      const course = courses.find(c => c.id === entry.item.courseId)
-      const courseName = course ? course.title : 'No Course'
-      return mapped.map(ev => ({
-        ...ev,
-        title: `${ev.title}: ${courseName}`,
-      }))
-    })
+    return entries.flatMap(entry => entryToCalendarEvent(entry, t))
   }, [items, filterCourse, courses, t, getVisibleDateRange])
 
   // Handle slot selection (creating new events)

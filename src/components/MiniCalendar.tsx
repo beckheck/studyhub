@@ -1,9 +1,9 @@
-import { EventTypeIndicator } from '@/components/PlannerSharedComponents'
+import { EventTypeIndicator, getItemSecondaryDetail } from '@/components/PlannerSharedComponents'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourses, useItems } from '@/hooks/useStore'
-import { getItemsOnDate } from '@/lib/calendar-queries'
+import { getItemsOnDate, courseTitlesFromCourses } from '@/lib/calendar-queries'
 import { buildCalendarMatrix } from '@/lib/date-utils'
 import type { Item } from '@/types'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
@@ -19,7 +19,7 @@ interface MiniCalendarProps {
 export default function MiniCalendar({ onTabChange, isExpanded = false }: MiniCalendarProps) {
   const { t: _t } = useTranslation('planner')
   const { getShortDayNames, formatDate: localizedFormatDate } = useLocalization()
-  const { getCourseTitle } = useCourses()
+  const { getCourseTitle, courses } = useCourses()
   const { items } = useItems()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
@@ -37,7 +37,9 @@ export default function MiniCalendar({ onTabChange, isExpanded = false }: MiniCa
   // - completed tasks hidden on non-past dates (show on past dates for history)
   // - completed exams always shown (a taken exam still belongs on its date)
   const getAllEventsForDate = (date: Date) => {
-    const entries = getItemsOnDate([...items] as Item[], date)
+    const entries = getItemsOnDate([...items] as Item[], date, {
+      courseTitles: courseTitlesFromCourses(courses),
+    })
     const isPastDate = date < today
     return entries
       .filter(e => isPastDate || !(e.item.type === 'task' && (e.item as { isCompleted: boolean }).isCompleted))
@@ -229,7 +231,9 @@ export default function MiniCalendar({ onTabChange, isExpanded = false }: MiniCa
                                 : 'text-zinc-600 dark:text-zinc-300'
                             }`}
                           >
-                            <div className="font-medium">{getCourseTitle(event.courseId) || 'No course'}</div>
+                            {getItemSecondaryDetail(event, getCourseTitle, _t) && (
+                              <div className="font-medium">{getItemSecondaryDetail(event, getCourseTitle, _t)}</div>
+                            )}
                             {'startsAt' in event && (
                               <div>
                                 {new Date(event.startsAt).toLocaleTimeString([], {

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { useLocalization } from '@/hooks/useLocalization'
 import { useCourseRecords, useCourses, useItems } from '@/hooks/useStore'
-import { getItemsOnDate } from '@/lib/calendar-queries'
+import { getItemsOnDate, courseTitlesFromCourses } from '@/lib/calendar-queries'
 import { buildCalendarMatrix, getDateString } from '@/lib/date-utils'
 import { CourseRecord, Item } from '@/types'
 import {
@@ -49,7 +49,7 @@ interface CourseRecordCalendarProps {
 export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarProps) {
   const { t } = useTranslation('common')
   const { getShortDayNames, formatDateDDMMYYYY } = useLocalization()
-  const { getCourseTitle } = useCourses()
+  const { getCourseTitle, courses } = useCourses()
   const { items } = useItems()
   const { courseRecords, addRecord, updateRecord, deleteRecord } = useCourseRecords()
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -78,7 +78,10 @@ export default function CourseRecordCalendar({ courseId }: CourseRecordCalendarP
   // Get events for a specific date
   const getDateInfo = (date: Date) => {
     const dateStr = getDateString(date)
-    const entries = getItemsOnDate([...items] as Item[], date, { courseFilter: courseId })
+    const entries = getItemsOnDate([...items] as Item[], date, {
+      courseFilter: courseId,
+      courseTitles: courseTitlesFromCourses(courses),
+    })
     const courseItems = entries.map(e => e.item)
     const tasks = courseItems.filter(item => item.type === 'task')
     const exams = courseItems.filter(item => item.type === 'exam')
