@@ -126,7 +126,7 @@ describe('calendar-queries', () => {
         [timetable],
         new Date('2024-01-08T00:00:00.000Z'),
         new Date('2024-01-08T23:59:59.999Z'),
-        { timezone: 'UTC', courseTitles: { 'course-1': 'Calculus I' } },
+        { timezone: 'UTC', courseTitles: { 'course-1': 'Calculus I' }, includeTimetable: true },
       )
       expect(entries).toHaveLength(1)
       expect(entries[0].item.id).toBe('tt-1')
@@ -139,7 +139,7 @@ describe('calendar-queries', () => {
     it('returns a timetable occurrence via getItemsOnDate on a matching weekday', () => {
       const timetable = makeTimetable()
       const date = new Date(2024, 0, 8, 12, 0, 0) // Monday, local calendar day
-      const entries = getItemsOnDate([timetable], date)
+      const entries = getItemsOnDate([timetable], date, { includeTimetable: true })
       expect(entries).toHaveLength(1)
       expect(entries[0].item.id).toBe('tt-1')
       expect(entries[0].date).toEqual(new Date(2024, 0, 8))
@@ -151,7 +151,7 @@ describe('calendar-queries', () => {
         [timetable],
         new Date('2024-01-09T00:00:00.000Z'),
         new Date('2024-01-09T23:59:59.999Z'),
-        { timezone: 'UTC' },
+        { timezone: 'UTC', includeTimetable: true },
       )
       expect(entries).toHaveLength(0)
     })
@@ -162,7 +162,7 @@ describe('calendar-queries', () => {
         [timetable],
         new Date('2024-01-08T00:00:00.000Z'),
         new Date('2024-01-08T23:59:59.999Z'),
-        { timezone: 'UTC' },
+        { timezone: 'UTC', includeTimetable: true },
       )
       expect(entries).toHaveLength(0)
     })
@@ -281,7 +281,7 @@ describe('calendar-queries', () => {
 
     it('returns weekly timetable occurrences across a month range', () => {
       const timetable = makeTimetable()
-      const entries = getItemsInRange([timetable], rangeStart, rangeEnd, { timezone: 'UTC' })
+      const entries = getItemsInRange([timetable], rangeStart, rangeEnd, { timezone: 'UTC', includeTimetable: true })
       const dates = entries.map(e => e.date.toISOString().split('T')[0])
       expect(dates).toEqual(['2024-01-01', '2024-01-08', '2024-01-15', '2024-01-22', '2024-01-29'])
       expect(entries).toHaveLength(5)
@@ -293,6 +293,7 @@ describe('calendar-queries', () => {
       const entries = getItemsInRange([tt1, tt2], rangeStart, rangeEnd, {
         courseFilter: 'math',
         timezone: 'UTC',
+        includeTimetable: true,
       })
       expect(entries.every(e => e.item.courseId === 'math')).toBe(true)
       expect(entries.length).toBeGreaterThan(0)
@@ -302,8 +303,11 @@ describe('calendar-queries', () => {
       const timetable = makeTimetable()
       const dayStart = new Date('2024-01-08T00:00:00.000Z')
       const dayEnd = new Date('2024-01-08T23:59:59.999Z')
-      const utc = getItemsInRange([timetable], dayStart, dayEnd, { timezone: 'UTC' })
-      const eastern = getItemsInRange([timetable], dayStart, dayEnd, { timezone: 'America/New_York' })
+      const utc = getItemsInRange([timetable], dayStart, dayEnd, { timezone: 'UTC', includeTimetable: true })
+      const eastern = getItemsInRange([timetable], dayStart, dayEnd, {
+        timezone: 'America/New_York',
+        includeTimetable: true,
+      })
       expect(utc).toHaveLength(1)
       expect(eastern).toHaveLength(1)
       expect(utc[0].startsAt.getTime()).not.toBe(eastern[0].startsAt.getTime())
