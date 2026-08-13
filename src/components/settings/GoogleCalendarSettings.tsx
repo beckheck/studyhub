@@ -4,11 +4,10 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useGoogleCalendar, useItems } from '@/hooks/useStore'
 import { useAppState } from '@/hooks/useStore'
-import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync'
+import { useGoogleCalendarSyncCoordinator } from '@/hooks/useGoogleCalendarSyncCoordinator'
 import { useTranslation } from 'react-i18next'
 import { googleOAuthManager } from '@/lib/google-oauth'
 import { browserRuntime, isExtension } from '@/lib/browser-runtime-stub'
-import { createPeriodicSync, refreshGoogleCalendarToken, runPeriodicSyncFromStore } from '@/lib/periodic-sync-runner'
 import { normalizeSyncIntervalMin, SYNC_INTERVAL_OPTIONS } from '@/lib/sync-cadence'
 import { store } from '@/stores/app'
 import { Loader2, LogOut, Upload, Download, RefreshCw } from 'lucide-react'
@@ -20,7 +19,7 @@ export default function GoogleCalendarSettings() {
     useGoogleCalendar()
   const appState = useAppState()
   const { addItem, updateEvent, updateTask, updateExam } = useItems()
-  const { fetchCalendars, bulkSyncItems, fetchEventsFromCalendar } = useGoogleCalendarSync()
+  const { fetchCalendars, bulkSyncItems, fetchEventsFromCalendar, drainQueue } = useGoogleCalendarSyncCoordinator()
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [bulkExporting, setBulkExporting] = useState(false)
@@ -279,14 +278,7 @@ export default function GoogleCalendarSettings() {
           setGoogleCalendarConfig({ lastSyncedAt: status.lastSyncedAt })
         }
       } else {
-        await runPeriodicSyncFromStore({
-          sync: createPeriodicSync(),
-          force: true,
-          onTokenExpired: () => {
-            // Web mode has a DOM, so it can refresh the token itself.
-            void refreshGoogleCalendarToken()
-          },
-        })
+        await drainQueue({ force: true })
       }
 
       // Only claim completion when the sync actually advanced the timestamp.

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { browserRuntime, isExtension } from '@/lib/browser-runtime-stub'
 import { normalizeSyncIntervalMin } from '@/lib/sync-cadence'
-import { createPeriodicSync, refreshGoogleCalendarToken, runPeriodicSyncFromStore } from '@/lib/periodic-sync-runner'
+import { refreshGoogleCalendarToken, useGoogleCalendarSyncCoordinator } from './useGoogleCalendarSyncCoordinator'
 import { useGoogleCalendar } from './useStore'
 
 /**
@@ -14,8 +14,9 @@ import { useGoogleCalendar } from './useStore'
  * Web mode: there is no background, so the hook runs the periodic sync on a
  * setInterval at the configured cadence.
  */
-export function usePeriodicSync(): void {
+export function useGoogleCalendarSyncPeriodic(): void {
   const { googleCalendar } = useGoogleCalendar()
+  const { drainQueue } = useGoogleCalendarSyncCoordinator()
 
   useEffect(() => {
     if (isExtension) {
@@ -35,15 +36,9 @@ export function usePeriodicSync(): void {
       return undefined
     }
 
-    const sync = createPeriodicSync()
-
     const run = (): Promise<void> =>
-      runPeriodicSyncFromStore({
-        sync,
-        onTokenExpired: () => {
-          // Web mode has a DOM, so it can refresh the token itself.
-          void refreshGoogleCalendarToken()
-        },
+      drainQueue({
+        force: false,
       })
 
     const minutes = normalizeSyncIntervalMin(googleCalendar.syncIntervalMin)
@@ -55,5 +50,5 @@ export function usePeriodicSync(): void {
     )
 
     return () => window.clearInterval(intervalId)
-  }, [googleCalendar.syncIntervalMin])
+  }, [googleCalendar.syncIntervalMin, drainQueue])
 }

@@ -44,11 +44,13 @@ The file attachment module previously imported the store at module top and read 
 
 We rejected keeping the store import and moving only the garbage collection, because the module read and wrote the store on every file operation, not only on garbage collection. We rejected write-only callbacks because the module reads too much for them to cover. Injecting reads through constructor callbacks is better than allowing direct store reads. The prohibition covers reads and writes.
 
-### Sync module does not write the store
+### Google Calendar Sync does not write Item fields directly
 
-The Google Calendar sync module returns the Google event id and never imports or writes the store. The caller stamps the id onto the item through a single update on success. The return value carries a `skipped` flag for cases where sync does not apply: sync disabled, no token, or an item type without a Google counterpart.
+The Google Calendar Sync HTTP layer returns the Google event id. It never imports or writes the store. The Item write flow stamps the id onto the Item on success. The return value carries a `skipped` flag when sync does not apply.
 
-We rejected having the sync module write the store directly. A lib module that mutates the app store singleton breaks the rule that lib modules access state through injected callbacks. Bulk sync and error notification callers would have no return value to act on.
+Queue state (dirty ids, tombstones, last sync timestamp) mutates only through injected store callbacks at the orchestration seam. No sync lib module imports the store singleton.
+
+We rejected having sync lib modules write the store directly. That breaks the injected-callback rule. Callers need return values to stamp Items and handle errors.
 
 ### Repository seam for app state
 
@@ -116,21 +118,31 @@ We rejected keeping the generic `updateItem(id, patch)` and `deleteItem(id)` on 
 
 ## Google Calendar
 
-### Google Calendar sync is web-only by design
+### One module owns Google Calendar Sync orchestration
 
-The OAuth flow opens a popup and waits for a `postMessage` handshake. In extension mode the UI runs at `chrome-extension://<id>/popup.html`, so the redirect cannot land back in the extension. No `chrome.identity.launchWebAuthFlow` adapter exists. The Google Calendar settings section previously rendered in every container mode, so extension users saw a Connect button that cannot complete.
+Real-time sync, retry queue, tombstones, periodic backstop, and token handling each lived in separate modules. Queue invariants were duplicated. Some lib modules imported the store directly.
 
-We decided that Google Calendar sync is a web-only feature by design. We will not build a `chrome.identity.launchWebAuthFlow` adapter. The Google Calendar settings section is hidden in extension mode, so users do not see a Connect button that cannot complete.
+We consolidated orchestration behind one lib module with a small interface. Queue state mutates only through injected store callbacks. The HTTP layer returns results. Callers stamp Item fields. Token refresh stays outside the store callbacks.
 
-We rejected building the `chrome.identity.launchWebAuthFlow` adapter now. It is feature work with its own risk, and we defer it to a scoped session. We rejected leaving the section visible in extension mode, because it shows a Connect button that cannot complete. A future review must not re-flag this as a gap. Extension sync, if ever wanted, is new work.
+We rejected leaving the pipeline spread across hooks and runners. That forced every caller to know which module owns which invariant.
+
+### Google Calendar Sync works in extension mode
+
+We previously decided Google Calendar Sync was web-only because GIS OAuth cannot redirect back into the extension.
+
+Extension mode now uses the platform OAuth flow. The UI handles connect and token refresh. The background runs periodic retry but cannot refresh tokens without a DOM, so it notifies open UI surfaces when the token expires.
+
+We rejected keeping the web-only decision. Extension users need sync in the extension. We rejected expecting GIS to work in extension mode. The redirect cannot land in the extension context.
 
 ### Google Identity Services for OAuth
 
 The OAuth client had three problems. The redirect URI was hardcoded to localhost, so production on any other origin broke. The client secret sat in the client bundle, where it provides no security. Token refresh existed but had zero callers, so every sync call silently failed after one hour.
 
-We replaced the custom OAuth popup flow with Google Identity Services (GIS). The GIS token client handles the authorization code flow, PKCE, and the redirect internally. There is no redirect URI, no client secret, and no popup management. Token refresh is wired through a `getValidAccessToken` callback injected into the sync module, following the injected-callback pattern. When the callback detects an expired token, it attempts a silent refresh. If the silent refresh fails, the sync operation returns a "reconnect" error instead of showing a popup mid-operation.
+We replaced the custom OAuth popup flow with Google Identity Services (GIS) for web mode. The GIS token client handles the authorization code flow, PKCE, and the redirect internally. There is no redirect URI, no client secret, and no popup management. Token refresh uses an injected callback. When the callback detects an expired token, it attempts a silent refresh. If the silent refresh fails, the sync operation returns a "reconnect" error instead of showing a popup mid-operation.
 
-We rejected a fixed origin set because it breaks on any unregistered origin. We rejected a user-configured redirect URI because it preserves the popup and handshake complexity that GIS eliminates. We rejected a backend relay because it contradicts the local-first principle: all data stays on-device. The web-only decision stands. GIS is a web-only library. Extension sync remains unbuilt and is still new work, not a gap.
+Extension mode uses the platform OAuth flow instead of GIS. Both paths persist tokens to the same store fields.
+
+We rejected a fixed origin set because it breaks on any unregistered origin. We rejected a user-configured redirect URI because it preserves the popup and handshake complexity that GIS eliminates. We rejected a backend relay because it contradicts the local-first principle: all data stays on-device.
 
 ---
 

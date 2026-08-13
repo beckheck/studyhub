@@ -2,8 +2,11 @@ import { listenLanguageChangeInExtensionBackground } from '@/i18n/config'
 import { enactSiteBlockingStrategyInTab } from '@/lib/site-blocking'
 import { StudySessionTimerManager } from '@/lib/study-session-timer-manager'
 import { getPhaseDurationSeconds, getPhaseEmoji } from '@/lib/technique-utils'
-import { buildSyncStatus } from '@/lib/periodic-sync'
-import { createPeriodicSync, runPeriodicSyncFromStore } from '@/lib/periodic-sync-runner'
+import {
+  buildGoogleCalendarSyncStatus,
+  createGoogleCalendarSyncStorePort,
+  GoogleCalendarSyncCoordinator,
+} from '@/lib/google-calendar-sync-coordinator'
 import { normalizeSyncIntervalMin } from '@/lib/sync-cadence'
 import { BackgroundMessage, BackgroundTimerState, TimerPhase } from '@/types'
 import { browser } from 'wxt/browser'
@@ -11,7 +14,13 @@ import { store } from '@/stores/app'
 import { snapshot } from 'valtio'
 
 const GCAL_SYNC_ALARM = 'gcal-periodic-sync'
-const gcalSync = createPeriodicSync()
+const gcalSyncCoordinator = new GoogleCalendarSyncCoordinator({
+  store: createGoogleCalendarSyncStorePort(store),
+  onTokenExpired: () => {
+    sendSyncMessage({ type: 'sync.tokenExpired' })
+  },
+  retryDelays: [1000, 2000, 4000],
+})
 
 declare function defineBackground(fn: () => void): any
 
@@ -97,7 +106,7 @@ export default defineBackground(() => {
         sendResponse({ success: true })
         return false // Synchronous response
       } else if (message.type === 'sync.getStatus') {
-        sendResponse(buildSyncStatus(snapshot(store)))
+        sendResponse(buildGoogleCalendarSyncStatus(snapshot(store)))
         return false // Synchronous response
       } else if (message.type === 'sync.triggerNow') {
         // Resolve only after the sync completes so the caller's follow-up
@@ -209,15 +218,7 @@ const sendCaptureSelectionMessage = (tabId: number, selectedText: string) => {
 // Mutations go through the store, which persists and propagates to other
 // contexts via HybridStorage.
 async function runPeriodicSyncFromBackground(options: { force?: boolean } = {}) {
-  await runPeriodicSyncFromStore({
-    sync: gcalSync,
-    force: options.force,
-    onTokenExpired: () => {
-      // The background cannot refresh the token (no DOM for GIS). Ask any
-      // open UI surface to refresh and persist the new token.
-      sendSyncMessage({ type: 'sync.tokenExpired' })
-    },
-  })
+  await gcalSyncCoordinator.drainQueue(options)
 }
 
 // Alarm-fired wrapper that enforces the configured cadence. The alarm ticks

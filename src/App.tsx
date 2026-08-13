@@ -13,7 +13,7 @@ import useBaseStyles from '@/hooks/useBaseStyles'
 import useCardOpacityStyles from '@/hooks/useCardOpacityStyles'
 import useDarkModeStyles from '@/hooks/useDarkModeStyles'
 import useModeAwareTab from '@/hooks/useModeAwareTab'
-import { usePeriodicSync } from '@/hooks/usePeriodicSync'
+import { useGoogleCalendarSyncPeriodic } from '@/hooks/useGoogleCalendarSyncPeriodic'
 import { useScrollToTop } from '@/hooks/useScrollToTop'
 import { useSoundtrack, useStoreLoading, useTheme } from '@/hooks/useStore'
 import { ItemDialogProvider } from '@/items/ItemDialogProvider'
@@ -141,7 +141,7 @@ export default function StudyPortal(): React.JSX.Element {
 
   // Periodic Google Calendar sync lifecycle (web-mode interval, extension-mode
   // token-expiry listener). Web mode has no background worker to own the loop.
-  usePeriodicSync()
+  useGoogleCalendarSyncPeriodic()
 
   const handleTabChange = useCallback(
     (value: string) => {
