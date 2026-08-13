@@ -469,21 +469,21 @@ export default function GoogleCalendarSettings() {
               )}
             </Button>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-red-800 dark:text-red-200 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-green-800 dark:text-green-200 text-sm">
-              {successMessage}
-            </div>
-          )}
         </>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-red-800 dark:text-red-200 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-green-800 dark:text-green-200 text-sm">
+          {successMessage}
+        </div>
       )}
     </div>
   )
