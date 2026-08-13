@@ -39,6 +39,8 @@ jobs:
           node-version: 24
           cache: true
       - run: vp build --base /studyhub/
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
       - name: Smoke test build output
         run: |
           test -f dist/sw.js
