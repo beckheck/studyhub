@@ -217,6 +217,16 @@
       "connected": "Conectado a Google Calendar",
       "notConnected": "No conectado a Google Calendar"
     },
+    "lastSynced": "Última sincronización",
+    "never": "Nunca",
+    "justNow": "ahora mismo",
+    "minutesAgo": "hace {{count}} min",
+    "hoursAgo": "hace {{count}} h",
+    "syncNow": "Sincronizar ahora",
+    "syncing": "Sincronizando...",
+    "syncCadence": "Sincronizar cada",
+    "cadenceMinutes": "{{count}} min",
+    "syncTriggered": "✅ Sincronización completada",
     "connected": "✅ Conectado exitosamente a Google Calendar",
     "disconnected": "✅ Desconectado de Google Calendar",
     "syncInfo": {
@@ -229,7 +239,8 @@
       "userCancelled": "La conexión fue cancelada",
       "connectionFailed": "Error al conectar con Google Calendar",
       "noCalendars": "No se encontraron calendarios. Asegúrate de que tu Cuenta de Google tenga calendarios.",
-      "disconnectFailed": "Error al desconectar de Google Calendar"
+      "disconnectFailed": "Error al desconectar de Google Calendar",
+      "syncFailed": "Error al sincronizar. Revisa la consola para más detalles."
     }
   }
 }

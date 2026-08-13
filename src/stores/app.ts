@@ -6,6 +6,7 @@ import { proxy, snapshot, subscribe } from 'valtio'
 import { createRepository } from '../lib/repository'
 import { deserialize, serialize } from '../lib/data-transfer'
 import { migrateV1ToV2 } from '../lib/migrations/v1-to-v2'
+import { migrateV2SyncState } from '../lib/migrations/v2-sync-state'
 import { hybridStorage } from '../lib/hybrid-storage'
 import type {
   AppState,
@@ -115,6 +116,8 @@ function createInitialState(): AppState {
     },
     googleCalendar: {
       syncEnabled: false,
+      syncIntervalMin: 5,
+      lastSyncedAt: 0,
     },
 
     // Academic planning
@@ -159,6 +162,10 @@ function createInitialState(): AppState {
 
     // Course records for tracking daily notes
     courseRecords: [],
+
+    // Google Calendar sync operational queues
+    dirtyItemIds: [],
+    pendingDeleteSync: [],
   }
 }
 
@@ -180,7 +187,10 @@ const repo = createRepository<AppState>({
   storageKey: STORAGE_KEY,
   serialize,
   deserialize,
-  migrations: [{ from: '2', to: '2', migrate: migrateV1ToV2 }],
+  migrations: [
+    { from: '2', to: '2', migrate: migrateV1ToV2 },
+    { from: '2', to: '2', migrate: migrateV2SyncState },
+  ],
 })
 
 // Flag to track if we're currently applying changes from storage

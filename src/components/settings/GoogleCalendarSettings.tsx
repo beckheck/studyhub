@@ -7,7 +7,11 @@ import { useAppState } from '@/hooks/useStore'
 import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync'
 import { useTranslation } from 'react-i18next'
 import { googleOAuthManager } from '@/lib/google-oauth'
-import { Loader2, LogOut, Upload, Download } from 'lucide-react'
+import { browserRuntime, isExtension } from '@/lib/browser-runtime-stub'
+import { createPeriodicSync, refreshGoogleCalendarToken, runPeriodicSyncFromStore } from '@/lib/periodic-sync-runner'
+import { normalizeSyncIntervalMin, SYNC_INTERVAL_OPTIONS } from '@/lib/sync-cadence'
+import { store } from '@/stores/app'
+import { Loader2, LogOut, Upload, Download, RefreshCw } from 'lucide-react'
 import { Item } from '@/items/models'
 
 export default function GoogleCalendarSettings() {
@@ -18,6 +22,7 @@ export default function GoogleCalendarSettings() {
   const { addItem, updateEvent, updateTask, updateExam } = useItems()
   const { fetchCalendars, bulkSyncItems, fetchEventsFromCalendar } = useGoogleCalendarSync()
   const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [bulkExporting, setBulkExporting] = useState(false)
   const [bulkImporting, setBulkImporting] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 })
@@ -258,6 +263,58 @@ export default function GoogleCalendarSettings() {
 
   const isConnected = !!googleCalendar.accessToken
 
+  // Run the periodic sync pipeline immediately. Extension mode delegates to
+  // the background alarm handler; web mode runs it in-bundle.
+  const handleSyncNow = async () => {
+    setSyncing(true)
+    setError(null)
+    setSuccessMessage(null)
+    const beforeLastSyncedAt = store.googleCalendar.lastSyncedAt
+
+    try {
+      if (isExtension) {
+        await browserRuntime.sendMessage({ type: 'sync.triggerNow' })
+        const status = await browserRuntime.sendMessage({ type: 'sync.getStatus' })
+        if (status && typeof status.lastSyncedAt === 'number') {
+          setGoogleCalendarConfig({ lastSyncedAt: status.lastSyncedAt })
+        }
+      } else {
+        await runPeriodicSyncFromStore({
+          sync: createPeriodicSync(),
+          onTokenExpired: () => {
+            // Web mode has a DOM, so it can refresh the token itself.
+            void refreshGoogleCalendarToken()
+          },
+        })
+      }
+
+      // Only claim completion when the sync actually advanced the timestamp.
+      // When the token is expired or nothing was pending, the stale "Last
+      // synced" label is the honest signal.
+      if (store.googleCalendar.lastSyncedAt > beforeLastSyncedAt) {
+        setSuccessMessage(t('googleCalendar.syncTriggered'))
+      }
+    } catch (err) {
+      console.error('Sync error:', err)
+      setError(t('googleCalendar.errors.syncFailed'))
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const handleCadenceChange = (value: string) => {
+    const minutes = Number(value)
+    setGoogleCalendarConfig({ syncIntervalMin: normalizeSyncIntervalMin(minutes) })
+  }
+
+  const formatLastSynced = (lastSyncedAt: number): string => {
+    if (!lastSyncedAt) return t('googleCalendar.never')
+    const minutes = Math.max(0, Math.floor((Date.now() - lastSyncedAt) / 60000))
+    if (minutes < 1) return t('googleCalendar.justNow')
+    if (minutes < 60) return t('googleCalendar.minutesAgo', { count: minutes })
+    return t('googleCalendar.hoursAgo', { count: Math.floor(minutes / 60) })
+  }
+
   return (
     <div className="space-y-4">
       {/* Connection Status */}
@@ -328,6 +385,44 @@ export default function GoogleCalendarSettings() {
               <li>{t('googleCalendar.syncInfo.updates')}</li>
               <li>{t('googleCalendar.syncInfo.deletes')}</li>
             </ul>
+          </div>
+
+          {/* Sync status and controls */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {t('googleCalendar.lastSynced')}:{' '}
+              <span className="font-medium">{formatLastSynced(googleCalendar.lastSyncedAt)}</span>
+            </p>
+            <Button onClick={handleSyncNow} disabled={syncing} variant="outline" size="sm">
+              {syncing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  {t('googleCalendar.syncing')}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                  {t('googleCalendar.syncNow')}
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Sync cadence selector */}
+          <div>
+            <Label htmlFor="sync-cadence-select">{t('googleCalendar.syncCadence')}</Label>
+            <Select value={String(googleCalendar.syncIntervalMin)} onValueChange={handleCadenceChange}>
+              <SelectTrigger id="sync-cadence-select" className="mt-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SYNC_INTERVAL_OPTIONS.map(minutes => (
+                  <SelectItem key={minutes} value={String(minutes)}>
+                    {t('googleCalendar.cadenceMinutes', { count: minutes })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bulk Export Button */}

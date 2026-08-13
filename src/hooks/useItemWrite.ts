@@ -7,6 +7,7 @@ import {
   type ItemSync,
 } from '@/items/item-write'
 import { store } from '@/stores/app'
+import { addToDirty, addTombstone, removeFromDirty, removeTombstone } from '@/lib/sync-queue'
 import type { Item } from '@/items/models'
 import type { ExamGrade } from '@/types'
 import type { SyncItemContext, GoogleCalendarSyncResult } from '@/lib/google-calendar-sync'
@@ -27,8 +28,36 @@ export function useItemWrite() {
   })
 
   const adapter: ItemSync = {
-    syncItem: (item, ctx) => syncItem(item, ctxWithoutToken(ctx)),
-    deleteItem: (item, ctx) => syncDeleteItem(item, ctxWithoutToken(ctx)),
+    syncItem: (item, ctx) => {
+      // Clear the dirty flag before the API call so the periodic alarm does
+      // not double-sync this item. Re-add on failure for retry.
+      store.dirtyItemIds = removeFromDirty(store.dirtyItemIds, item.id)
+      return syncItem(item, ctxWithoutToken(ctx)).then(result => {
+        if (!result.success) {
+          // Re-add on failure; also track skipped syncs (e.g. sync disabled)
+          // so the periodic alarm catches up when sync is re-enabled.
+          store.dirtyItemIds = addToDirty(store.dirtyItemIds, item.id)
+        }
+        return result
+      })
+    },
+    deleteItem: (item, ctx) => {
+      const googleCalendarEventId = (item as { googleCalendarEventId?: string }).googleCalendarEventId
+      // Queue a tombstone before the item is removed so the background can
+      // retry the Google delete if the real-time one fails.
+      if (googleCalendarEventId) {
+        store.pendingDeleteSync = addTombstone(store.pendingDeleteSync, {
+          itemId: item.id,
+          googleCalendarEventId,
+        })
+      }
+      return syncDeleteItem(item, ctxWithoutToken(ctx)).then(result => {
+        if (result.success) {
+          store.pendingDeleteSync = removeTombstone(store.pendingDeleteSync, item.id)
+        }
+        return result
+      })
+    },
   }
 
   function commit(items: Item[], result: GoogleCalendarSyncResult | null) {

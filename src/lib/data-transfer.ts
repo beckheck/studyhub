@@ -5,7 +5,15 @@ import {
   DEFAULT_MOOD_EMOJIS,
 } from '@/stores/app'
 import { DEFAULT_DASHBOARD_WIDGET_ORDER } from '@/lib/dashboard-layout'
-import type { AppState, CourseRecord, DashboardState, Item, SemesterDates, SoundtrackPosition } from '@/types'
+import type {
+  AppState,
+  CourseRecord,
+  DashboardState,
+  Item,
+  PendingDeleteSync,
+  SemesterDates,
+  SoundtrackPosition,
+} from '@/types'
 
 export function serialize(state: AppState): ExchangeFormatV2 {
   return {
@@ -26,6 +34,8 @@ export function serialize(state: AppState): ExchangeFormatV2 {
     fileAttachments: state.fileAttachments,
     dashboard: state.dashboard,
     courseRecords: convertDatesToTimestamps(state.courseRecords ?? [], /(At)$/),
+    dirtyItemIds: state.dirtyItemIds ?? [],
+    pendingDeleteSync: state.pendingDeleteSync ?? [],
     settings: {
       selectedCourseId: state.selectedCourseId,
       soundtrackEmbed: state.soundtrack.embed,
@@ -144,8 +154,11 @@ function deserializeV2(data: ExchangeFormatV2): AppState {
       apiKey: data.settings.weather.apiKey,
       location: data.settings.weather.location,
     },
-    googleCalendar: data.settings.googleCalendar || {
-      syncEnabled: false,
+    googleCalendar: {
+      ...data.settings.googleCalendar,
+      syncIntervalMin: data.settings.googleCalendar?.syncIntervalMin ?? 5,
+      lastSyncedAt: data.settings.googleCalendar?.lastSyncedAt ?? 0,
+      syncEnabled: data.settings.googleCalendar?.syncEnabled ?? false,
     },
     focusTimer: data.settings.focusTimer || {
       ...DEFAULT_FOCUS_TIMER_CONFIG,
@@ -190,6 +203,8 @@ function deserializeV2(data: ExchangeFormatV2): AppState {
     },
     courseRecords,
     sessions,
+    dirtyItemIds: data.dirtyItemIds ?? [],
+    pendingDeleteSync: (data.pendingDeleteSync ?? []) as PendingDeleteSync[],
   }
 }
 
@@ -421,6 +436,8 @@ export interface ExchangeFormatV2 {
       calendarId?: string
       calendars?: Array<{ id: string; summary: string }>
       syncEnabled: boolean
+      syncIntervalMin?: number
+      lastSyncedAt?: number
     }
   }
   courseRecords?: Array<{
@@ -435,6 +452,10 @@ export interface ExchangeFormatV2 {
   }>
   dashboard?: DashboardState
   semesterDates?: SemesterDates
+  /** Item IDs with pending create/update sync (backstop queue) */
+  dirtyItemIds?: string[]
+  /** Tombstone list of deleted items needing Google Calendar cleanup */
+  pendingDeleteSync?: Array<{ itemId: string; googleCalendarEventId: string }>
 }
 
 // Inlined Item type definitions

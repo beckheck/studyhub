@@ -2,10 +2,16 @@ import { listenLanguageChangeInExtensionBackground } from '@/i18n/config'
 import { enactSiteBlockingStrategyInTab } from '@/lib/site-blocking'
 import { StudySessionTimerManager } from '@/lib/study-session-timer-manager'
 import { getPhaseDurationSeconds, getPhaseEmoji } from '@/lib/technique-utils'
+import { buildSyncStatus } from '@/lib/periodic-sync'
+import { createPeriodicSync, runPeriodicSyncFromStore } from '@/lib/periodic-sync-runner'
+import { normalizeSyncIntervalMin } from '@/lib/sync-cadence'
 import { BackgroundMessage, BackgroundTimerState, TimerPhase } from '@/types'
 import { browser } from 'wxt/browser'
 import { store } from '@/stores/app'
 import { snapshot } from 'valtio'
+
+const GCAL_SYNC_ALARM = 'gcal-periodic-sync'
+const gcalSync = createPeriodicSync()
 
 declare function defineBackground(fn: () => void): any
 
@@ -48,6 +54,20 @@ export default defineBackground(() => {
         title: 'Open StudyHub ✨ in New Tab',
         contexts: ['all'],
       })
+
+      // Always-running periodic sync heartbeat. The alarm ticks at the finest
+      // cadence (1 minute) and the handler gates execution on the configured
+      // syncIntervalMin, so changing the setting takes effect without
+      // recreating the alarm.
+      void browser.alarms.create(GCAL_SYNC_ALARM, { periodInMinutes: 1 })
+    })
+
+    // Periodic Google Calendar sync backstop. Wakes the background service
+    // worker when the worker is dormant (same liveness model as the timer).
+    browser.alarms.onAlarm.addListener(alarm => {
+      if (alarm.name === GCAL_SYNC_ALARM) {
+        void runPeriodicSyncIfDue()
+      }
     })
 
     // Handle context menu clicks
@@ -76,6 +96,27 @@ export default defineBackground(() => {
         openStudyPortalTab(message.activeTab)
         sendResponse({ success: true })
         return false // Synchronous response
+      } else if (message.type === 'sync.getStatus') {
+        sendResponse(buildSyncStatus(snapshot(store)))
+        return false // Synchronous response
+      } else if (message.type === 'sync.triggerNow') {
+        // Resolve only after the sync completes so the caller's follow-up
+        // sync.getStatus reads the updated lastSyncedAt, not a stale value.
+        runPeriodicSyncFromBackground()
+          .then(() => {
+            sendResponse({ success: true })
+          })
+          .catch(error => {
+            console.error('Periodic sync failed:', error)
+            sendResponse({ success: true })
+          })
+        return true // Asynchronous response
+      } else if (message.type === 'sync.tokenExpired') {
+        // The background never receives this broadcast (Chrome and Firefox
+        // skip the sender's own onMessage listener). The branch exists to
+        // exhaust the message union so the timer fallback below narrows to
+        // BackgroundMessage_Timer.
+        return false
       } else {
         // Timer messages are handled asynchronously
         const result = timerManager.handleMessage(message, sendResponse)
@@ -161,6 +202,49 @@ const sendCaptureSelectionMessage = (tabId: number, selectedText: string) => {
     action: 'captureSelection',
     selectedText,
   })
+}
+
+// Run the periodic sync backstop against the background's synced store.
+// Mutations go through the store, which persists and propagates to other
+// contexts via HybridStorage.
+async function runPeriodicSyncFromBackground() {
+  await runPeriodicSyncFromStore({
+    sync: gcalSync,
+    onTokenExpired: () => {
+      // The background cannot refresh the token (no DOM for GIS). Ask any
+      // open UI surface to refresh and persist the new token.
+      sendSyncMessage({ type: 'sync.tokenExpired' })
+    },
+  })
+}
+
+// Alarm-fired wrapper that enforces the configured cadence. The alarm ticks
+// every minute; the gate lets a sync run at most once per syncIntervalMin.
+// The manual "Sync now" path bypasses the gate, so it always runs.
+let lastSyncRunAt = 0
+
+async function runPeriodicSyncIfDue() {
+  const state = snapshot(store)
+  const intervalMs = normalizeSyncIntervalMin(state.googleCalendar.syncIntervalMin) * 60 * 1000
+  if (lastSyncRunAt !== 0 && Date.now() - lastSyncRunAt < intervalMs) {
+    return
+  }
+  lastSyncRunAt = Date.now()
+  await runPeriodicSyncFromBackground()
+}
+
+/**
+ * Safely broadcast a sync message to UI contexts, ignoring errors when no
+ * listeners are active.
+ */
+function sendSyncMessage(message: { type: 'sync.tokenExpired' }): void {
+  try {
+    browser.runtime.sendMessage(message).catch(() => {
+      // Ignore errors if no listeners are active
+    })
+  } catch {
+    // Runtime not available, ignore
+  }
 }
 
 const toggleOverlay = () => {

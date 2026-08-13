@@ -63,7 +63,28 @@ export type BackgroundMessage_Timer =
   | BackgroundMessage_Timer_UpdateState
   | BackgroundMessage_Timer_BroadcastState
 
-export type BackgroundMessage = BackgroundMessage_Tab | BackgroundMessage_TextSelected | BackgroundMessage_Timer
+interface BackgroundMessage_Sync_TokenExpired {
+  type: 'sync.tokenExpired'
+}
+
+interface BackgroundMessage_Sync_GetStatus {
+  type: 'sync.getStatus'
+}
+
+interface BackgroundMessage_Sync_TriggerNow {
+  type: 'sync.triggerNow'
+}
+
+export type BackgroundMessage_Sync =
+  | BackgroundMessage_Sync_TokenExpired
+  | BackgroundMessage_Sync_GetStatus
+  | BackgroundMessage_Sync_TriggerNow
+
+export type BackgroundMessage =
+  | BackgroundMessage_Tab
+  | BackgroundMessage_TextSelected
+  | BackgroundMessage_Timer
+  | BackgroundMessage_Sync
 
 // Content script message interfaces
 interface ContentScriptMessage_BlockSite {
@@ -534,6 +555,16 @@ export interface GoogleCalendarConfig {
   calendars?: Array<{ id: string; summary: string }>
   /** Whether sync is enabled */
   syncEnabled: boolean
+  /** Periodic sync cadence in minutes (setting) */
+  syncIntervalMin: number
+  /** Last successful sync timestamp (status) */
+  lastSyncedAt: number
+}
+
+/** Tombstone entry for a deleted item that still needs Google Calendar cleanup */
+export interface PendingDeleteSync {
+  itemId: string
+  googleCalendarEventId: string
 }
 
 /**
@@ -597,6 +628,10 @@ export interface AppState {
   focusTimer: FocusTimerConfig
   semesterDates: SemesterDates
   courseRecords: CourseRecord[]
+  /** Item IDs with pending create/update sync (backstop queue) */
+  dirtyItemIds: string[]
+  /** Tombstone list of deleted items needing Google Calendar cleanup */
+  pendingDeleteSync: PendingDeleteSync[]
 }
 
 export interface AppTab {

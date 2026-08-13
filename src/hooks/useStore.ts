@@ -774,7 +774,11 @@ export function useGoogleCalendar() {
     clearGoogleCalendar: () => {
       store.googleCalendar = {
         syncEnabled: false,
+        syncIntervalMin: 5,
+        lastSyncedAt: 0,
       }
+      store.dirtyItemIds = []
+      store.pendingDeleteSync = []
     },
   }
 }
