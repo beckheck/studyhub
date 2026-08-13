@@ -1,11 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vite-plus/test'
 import { getItemsInRange, getItemsOnDate, entriesOnDate } from './calendar-queries'
-import type { Item } from '@/items/models'
 import type { ItemEvent } from '@/items/event/modelSchema'
 import type { ItemTask } from '@/items/task/modelSchema'
 import type { ItemExam } from '@/items/exam/modelSchema'
+import type { ItemTimetable } from '@/items/timetable/modelSchema'
 
 const REAL_NOW = Date.now
+
+function makeTimetable(overrides: Partial<ItemTimetable> = {}): ItemTimetable {
+  return {
+    id: 'tt-1',
+    type: 'timetable',
+    title: 'Lecture',
+    courseId: 'course-1',
+    isDeleted: false,
+    createdAt: new Date('2024-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+    weekday: 1,
+    blockId: '1',
+    activityType: 'lecture',
+    ...overrides,
+  } as ItemTimetable
+}
 
 function makeEvent(overrides: Partial<ItemEvent> = {}): ItemEvent {
   return {
@@ -104,18 +120,49 @@ describe('calendar-queries', () => {
       expect(entries).toHaveLength(1)
     })
 
-    it('excludes timetable items', () => {
-      const timetable = {
-        id: 'tt-1',
-        type: 'timetable',
-        title: 'Lecture',
-        courseId: 'c1',
-        isDeleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-      const date = new Date('2024-01-10T12:00:00.000Z')
-      const entries = getItemsOnDate([timetable as unknown as Item], date)
+    it('returns a timetable occurrence on a matching weekday', () => {
+      const timetable = makeTimetable()
+      const entries = getItemsInRange(
+        [timetable],
+        new Date('2024-01-08T00:00:00.000Z'),
+        new Date('2024-01-08T23:59:59.999Z'),
+        { timezone: 'UTC' },
+      )
+      expect(entries).toHaveLength(1)
+      expect(entries[0].item.id).toBe('tt-1')
+      expect(entries[0].startsAt).toEqual(new Date('2024-01-08T08:20:00.000Z'))
+      expect(entries[0].endsAt).toEqual(new Date('2024-01-08T09:30:00.000Z'))
+      expect(entries[0].date).toEqual(new Date(2024, 0, 8))
+    })
+
+    it('returns a timetable occurrence via getItemsOnDate on a matching weekday', () => {
+      const timetable = makeTimetable()
+      const date = new Date(2024, 0, 8, 12, 0, 0) // Monday, local calendar day
+      const entries = getItemsOnDate([timetable], date)
+      expect(entries).toHaveLength(1)
+      expect(entries[0].item.id).toBe('tt-1')
+      expect(entries[0].date).toEqual(new Date(2024, 0, 8))
+    })
+
+    it('does not return a timetable on a non-matching weekday', () => {
+      const timetable = makeTimetable()
+      const entries = getItemsInRange(
+        [timetable],
+        new Date('2024-01-09T00:00:00.000Z'),
+        new Date('2024-01-09T23:59:59.999Z'),
+        { timezone: 'UTC' },
+      )
+      expect(entries).toHaveLength(0)
+    })
+
+    it('excludes soft-deleted timetable items', () => {
+      const timetable = makeTimetable({ isDeleted: true })
+      const entries = getItemsInRange(
+        [timetable],
+        new Date('2024-01-08T00:00:00.000Z'),
+        new Date('2024-01-08T23:59:59.999Z'),
+        { timezone: 'UTC' },
+      )
       expect(entries).toHaveLength(0)
     })
 
@@ -229,6 +276,36 @@ describe('calendar-queries', () => {
       const task2 = makeTask({ id: 't2', courseId: 'bio', dueAt: new Date('2024-01-10T10:00:00.000Z') })
       const entries = getItemsInRange([task1, task2], rangeStart, rangeEnd, { courseFilter: 'all' })
       expect(entries).toHaveLength(2)
+    })
+
+    it('returns weekly timetable occurrences across a month range', () => {
+      const timetable = makeTimetable()
+      const entries = getItemsInRange([timetable], rangeStart, rangeEnd, { timezone: 'UTC' })
+      const dates = entries.map(e => e.date.toISOString().split('T')[0])
+      expect(dates).toEqual(['2024-01-01', '2024-01-08', '2024-01-15', '2024-01-22', '2024-01-29'])
+      expect(entries).toHaveLength(5)
+    })
+
+    it('filters timetable by courseFilter', () => {
+      const tt1 = makeTimetable({ id: 'tt-1', courseId: 'math' })
+      const tt2 = makeTimetable({ id: 'tt-2', courseId: 'bio' })
+      const entries = getItemsInRange([tt1, tt2], rangeStart, rangeEnd, {
+        courseFilter: 'math',
+        timezone: 'UTC',
+      })
+      expect(entries.every(e => e.item.courseId === 'math')).toBe(true)
+      expect(entries.length).toBeGreaterThan(0)
+    })
+
+    it('passes timezone through to timetable expansion', () => {
+      const timetable = makeTimetable()
+      const dayStart = new Date('2024-01-08T00:00:00.000Z')
+      const dayEnd = new Date('2024-01-08T23:59:59.999Z')
+      const utc = getItemsInRange([timetable], dayStart, dayEnd, { timezone: 'UTC' })
+      const eastern = getItemsInRange([timetable], dayStart, dayEnd, { timezone: 'America/New_York' })
+      expect(utc).toHaveLength(1)
+      expect(eastern).toHaveLength(1)
+      expect(utc[0].startsAt.getTime()).not.toBe(eastern[0].startsAt.getTime())
     })
   })
 

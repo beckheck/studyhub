@@ -1,9 +1,10 @@
-import { getDateString, isDateInRange, isSameDate } from './date-utils'
+import { getDateString, getDeviceTimezone, isDateInRange, isSameDate } from './date-utils'
 import { generateRecurrenceOccurrences, type EventOccurrence } from './recurrence-utils'
 import type { Item } from '@/items/models'
 import type { ItemEvent } from '@/items/event/modelSchema'
 import type { ItemExam } from '@/items/exam/modelSchema'
 import type { ItemTask } from '@/items/task/modelSchema'
+import { getTimetableInstancesBetween, type ItemTimetable } from '@/items/timetable/modelSchema'
 
 export interface CalendarEntry {
   item: Item
@@ -16,6 +17,8 @@ export interface CalendarEntry {
 export interface CalendarQueryOptions {
   courseFilter?: string
   expandRecurrence?: boolean
+  /** IANA timezone for Timetable expansion. Defaults to the device timezone. */
+  timezone?: string
 }
 
 export function getItemsInRange(
@@ -24,15 +27,16 @@ export function getItemsInRange(
   rangeEnd: Date,
   opts: CalendarQueryOptions = {},
 ): CalendarEntry[] {
-  const { courseFilter, expandRecurrence = true } = opts
+  const { courseFilter, expandRecurrence = true, timezone = getDeviceTimezone() } = opts
   const entries: CalendarEntry[] = []
 
   for (const item of items) {
-    if (item.type === 'timetable') continue
     if (item.isDeleted) continue
     if (courseFilter && courseFilter !== 'all' && item.courseId !== courseFilter) continue
 
-    if (item.type === 'event') {
+    if (item.type === 'timetable') {
+      entries.push(...entriesForTimetable(item, rangeStart, rangeEnd, timezone))
+    } else if (item.type === 'event') {
       entries.push(...entriesForEvent(item, rangeStart, rangeEnd, expandRecurrence))
     } else {
       const { date, startsAt } = itemEntry(item)
@@ -49,6 +53,16 @@ export function getItemsOnDate(items: readonly Item[], date: Date, opts: Calenda
   const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
   return getItemsInRange(items, dayStart, dayEnd, opts)
+}
+
+function entriesForTimetable(item: ItemTimetable, rangeStart: Date, rangeEnd: Date, timezone: string): CalendarEntry[] {
+  const instances = getTimetableInstancesBetween(item, rangeStart, rangeEnd, timezone)
+  return instances.map(instance => ({
+    item,
+    date: new Date(instance.startsAt.getFullYear(), instance.startsAt.getMonth(), instance.startsAt.getDate()),
+    startsAt: instance.startsAt,
+    endsAt: instance.endsAt,
+  }))
 }
 
 function entriesForEvent(

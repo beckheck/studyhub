@@ -98,9 +98,19 @@ We rejected adding to the item schema ad hoc. New item kinds extend the union th
 
 Calendar views each inlined their own date-filtering logic, with subtle differences for completed items, multi-day events, and course filters. Recurrence expansion existed but had zero production imports, so a recurring event showed once on its `startsAt` and never on its recurrence dates.
 
-We consolidated the query logic into one shared module. The query returns `CalendarEntry[]`. Each entry carries the occurrence's effective start and end times and a sequence number alongside the source item. The query answers the question "what occurs on this date." Views apply display filters themselves. Timetable items are excluded because their expansion uses a different mechanism.
+We consolidated the query logic into one shared module. The query returns `CalendarEntry[]`. Each entry carries the occurrence's effective start and end times and a sequence number alongside the source item. The query answers the question "what occurs on this date." Views apply display filters themselves.
 
-We rejected returning `Item[]` because it cannot carry occurrence-specific times. A recurring Wednesday study group needs `startsAt: Jan 14 2pm` for its Jan 14 occurrence, but `item.startsAt` gives `Jan 7 2pm`. We rejected a per-date API only, because a month grid would invoke recurrence expansion 42 times instead of once for the visible range.
+We expanded Timetable into the same query. A Timetable defines a weekday pattern, not concrete dates, so its expansion differs from Events — but every calendar surface should ask one module "what occurs in this range," not maintain parallel paths.
+
+We rejected returning `Item[]` because it cannot carry occurrence-specific times. A recurring Wednesday study group needs `startsAt: Jan 14 2pm` for its Jan 14 occurrence, but `item.startsAt` gives `Jan 7 2pm`. We rejected a per-date API only, because a month grid would invoke recurrence expansion 42 times instead of once for the visible range. We rejected keeping Timetable expansion in views, because views duplicated logic and one surface hardcoded a timezone.
+
+### Timetable expansion uses the device timezone
+
+Timetable expansion previously hardcoded one timezone. Students outside that region saw wrong weekday boundaries.
+
+We default to the device timezone. Callers may override when the query runs outside the user's local context. A user-configurable timezone setting remains future work.
+
+We rejected keeping a hardcoded timezone. We rejected deferring Timetable unification until a settings UI exists.
 
 ### The Item write flow
 
@@ -143,11 +153,3 @@ We replaced the custom OAuth popup flow with Google Identity Services (GIS) for 
 Extension mode uses the platform OAuth flow instead of GIS. Both paths persist tokens to the same store fields.
 
 We rejected a fixed origin set because it breaks on any unregistered origin. We rejected a user-configured redirect URI because it preserves the popup and handshake complexity that GIS eliminates. We rejected a backend relay because it contradicts the local-first principle: all data stays on-device.
-
----
-
-## Open questions
-
-### Timetable expansion timezone
-
-The inline timetable expansion hardcodes `America/Santiago` as the timezone. The user never selects a timezone. Resolving the default (a user setting, or the device timezone) needs a decision.

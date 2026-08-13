@@ -372,3 +372,15 @@ export function createDateInTimezone(
     return new Date(year, month, date, hours, minutes, seconds, milliseconds)
   }
 }
+
+/**
+ * Return the device IANA timezone (e.g. "America/New_York").
+ * Falls back to UTC when the runtime cannot resolve one.
+ */
+export function getDeviceTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch {
+    return 'UTC'
+  }
+}

@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { useCourses, useItems } from '@/hooks/useStore'
 import { Item } from '@/items/models'
-import { getTimetableInstancesBetween, ItemTimetable } from '@/items/timetable/modelSchema'
 import { useItemDialog } from '@/items/ItemDialogProvider'
 import { getItemsInRange, type CalendarEntry } from '@/lib/calendar-queries'
 import { getDateString } from '@/lib/date-utils'
@@ -89,6 +88,19 @@ function entryToCalendarEvent(entry: CalendarEntry, t: (key: string) => string):
       },
     ]
   }
+  if (item.type === 'timetable') {
+    return [
+      {
+        id: `${item.id}-${startsAt.getTime()}`,
+        title: item.title || '',
+        start: startsAt,
+        end: endsAt || startsAt,
+        resource: item as Item,
+        allDay: false,
+        type: 'timetable',
+      },
+    ]
+  }
   return []
 }
 
@@ -144,35 +156,20 @@ export default function UglyCalendarPlannerTab() {
   const events = useMemo((): CalendarEvent[] => {
     const { rangeStart, rangeEnd } = getVisibleDateRange()
 
-    // Use the shared query for events, tasks, and exams (with recurrence expansion).
-    // Timetable items are expanded separately (different mechanism: weekday pattern + timezone).
     const entries = getItemsInRange([...items] as Item[], rangeStart, rangeEnd, {
       courseFilter: filterCourse,
     })
 
-    const calendarEvents: CalendarEvent[] = entries.flatMap(entry => entryToCalendarEvent(entry, t))
-
-    // Expand timetable items inline (not handled by the shared query)
-    for (const item of items) {
-      if (item.type !== 'timetable') continue
-      if (filterCourse !== 'all' && item.courseId !== filterCourse) continue
-      const course = courses.find(c => c.id === item.courseId)
+    return entries.flatMap(entry => {
+      const mapped = entryToCalendarEvent(entry, t)
+      if (entry.item.type !== 'timetable') return mapped
+      const course = courses.find(c => c.id === entry.item.courseId)
       const courseName = course ? course.title : 'No Course'
-      const instances = getTimetableInstancesBetween(item as ItemTimetable, rangeStart, rangeEnd, 'America/Santiago')
-      for (const instance of instances) {
-        calendarEvents.push({
-          id: `${item.id}-${instance.startsAt.getTime()}`,
-          title: `${item.title || ''}: ${courseName}`,
-          start: instance.startsAt,
-          end: instance.endsAt,
-          resource: item as Item,
-          allDay: false,
-          type: 'timetable',
-        })
-      }
-    }
-
-    return calendarEvents
+      return mapped.map(ev => ({
+        ...ev,
+        title: `${ev.title}: ${courseName}`,
+      }))
+    })
   }, [items, filterCourse, courses, t, getVisibleDateRange])
 
   // Handle slot selection (creating new events)
