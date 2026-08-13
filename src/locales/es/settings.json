@@ -211,8 +211,10 @@
     "disconnecting": "Desconectando...",
     "selectCalendar": "Seleccionar Calendario",
     "selectPlaceholder": "Elige un calendario...",
-    "bulkExport": "Exportar Todos los Elementos a Google Calendar",
-    "bulkExporting": "Exportando...",
+    "bulkExport": "Exportar todos los Elementos ({{total}})",
+    "bulkExporting": "Exportando ({{current}}/{{total}})...",
+    "bulkImport": "Importar Elementos",
+    "bulkImporting": "Importando ({{current}}/{{total}})...",
     "status": {
       "connected": "Conectado a Google Calendar",
       "notConnected": "No conectado a Google Calendar"

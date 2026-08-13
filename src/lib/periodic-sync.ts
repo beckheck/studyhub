@@ -32,6 +32,10 @@ export interface PeriodicSyncDeps {
  * is cleared from the dirty list before its API call and re-added on failure.
  * Timetable items never sync, so the periodic loop drops them without
  * re-adding.
+ *
+ * Pass `force: true` (the "Sync now" button) to run even with an empty queue
+ * and stamp lastSyncedAt as a completed check. Force never masks failures:
+ * pending work still requires at least one successful API call to stamp.
  */
 export interface SyncStatusPayload {
   success: true
@@ -58,13 +62,13 @@ export function buildSyncStatus(state: {
   }
 }
 
-export async function runPeriodicSync(deps: PeriodicSyncDeps): Promise<void> {
+export async function runPeriodicSync(deps: PeriodicSyncDeps, options: { force?: boolean } = {}): Promise<void> {
   if (!deps.syncEnabled) {
     return
   }
 
   const hasWork = deps.dirtyItemIds.length > 0 || deps.pendingDeleteSync.length > 0
-  if (!hasWork) {
+  if (!hasWork && !options.force) {
     return
   }
 
@@ -114,7 +118,7 @@ export async function runPeriodicSync(deps: PeriodicSyncDeps): Promise<void> {
     }
   }
 
-  if (anySuccess) {
+  if (anySuccess || (options.force && !hasWork)) {
     deps.onLastSyncedAt(Date.now())
   }
 }

@@ -8,6 +8,8 @@ import { store } from '@/stores/app'
 export interface PeriodicSyncRunnerOptions {
   sync: GoogleCalendarSync
   onTokenExpired: () => void
+  /** Run even with an empty queue so lastSyncedAt updates ("Sync now"). */
+  force?: boolean
 }
 
 /** Shared GoogleCalendarSync instance (retry backoff once per process). */
@@ -40,29 +42,32 @@ export async function refreshGoogleCalendarToken(): Promise<boolean> {
 export async function runPeriodicSyncFromStore(options: PeriodicSyncRunnerOptions): Promise<void> {
   const state = snapshot(store)
 
-  await runPeriodicSync({
-    syncEnabled: state.googleCalendar.syncEnabled,
-    accessToken: state.googleCalendar.accessToken ?? '',
-    tokenExpiresAt: state.googleCalendar.tokenExpiresAt,
-    calendarId: state.googleCalendar.calendarId ?? '',
-    dirtyItemIds: state.dirtyItemIds,
-    pendingDeleteSync: state.pendingDeleteSync,
-    items: state.items as any[],
-    courses: Object.fromEntries(state.courses.map(c => [c.id, c.title])),
-    projects: Object.fromEntries(state.projects.map(p => [p.id, p.title])),
-    sync: options.sync,
-    onDirtyCleared: itemId => {
-      store.dirtyItemIds = removeFromDirty(store.dirtyItemIds, itemId)
+  await runPeriodicSync(
+    {
+      syncEnabled: state.googleCalendar.syncEnabled,
+      accessToken: state.googleCalendar.accessToken ?? '',
+      tokenExpiresAt: state.googleCalendar.tokenExpiresAt,
+      calendarId: state.googleCalendar.calendarId ?? '',
+      dirtyItemIds: state.dirtyItemIds,
+      pendingDeleteSync: state.pendingDeleteSync,
+      items: state.items as any[],
+      courses: Object.fromEntries(state.courses.map(c => [c.id, c.title])),
+      projects: Object.fromEntries(state.projects.map(p => [p.id, p.title])),
+      sync: options.sync,
+      onDirtyCleared: itemId => {
+        store.dirtyItemIds = removeFromDirty(store.dirtyItemIds, itemId)
+      },
+      onDirtyReadded: itemId => {
+        store.dirtyItemIds = addToDirty(store.dirtyItemIds, itemId)
+      },
+      onTombstoneCleared: itemId => {
+        store.pendingDeleteSync = removeTombstone(store.pendingDeleteSync, itemId)
+      },
+      onLastSyncedAt: ts => {
+        store.googleCalendar.lastSyncedAt = ts
+      },
+      onTokenExpired: options.onTokenExpired,
     },
-    onDirtyReadded: itemId => {
-      store.dirtyItemIds = addToDirty(store.dirtyItemIds, itemId)
-    },
-    onTombstoneCleared: itemId => {
-      store.pendingDeleteSync = removeTombstone(store.pendingDeleteSync, itemId)
-    },
-    onLastSyncedAt: ts => {
-      store.googleCalendar.lastSyncedAt = ts
-    },
-    onTokenExpired: options.onTokenExpired,
-  })
+    { force: options.force },
+  )
 }

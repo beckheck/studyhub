@@ -281,6 +281,7 @@ export default function GoogleCalendarSettings() {
       } else {
         await runPeriodicSyncFromStore({
           sync: createPeriodicSync(),
+          force: true,
           onTokenExpired: () => {
             // Web mode has a DOM, so it can refresh the token itself.
             void refreshGoogleCalendarToken()
@@ -327,20 +328,6 @@ export default function GoogleCalendarSettings() {
       ) : (
         <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-lg">
           <p className="text-yellow-800 dark:text-yellow-200 text-sm">{t('googleCalendar.status.notConnected')}</p>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-red-800 dark:text-red-200 text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Success Message */}
-      {successMessage && (
-        <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-green-800 dark:text-green-200 text-sm">
-          {successMessage}
         </div>
       )}
 
@@ -393,100 +380,117 @@ export default function GoogleCalendarSettings() {
               {t('googleCalendar.lastSynced')}:{' '}
               <span className="font-medium">{formatLastSynced(googleCalendar.lastSyncedAt)}</span>
             </p>
-            <Button onClick={handleSyncNow} disabled={syncing} variant="outline" size="sm">
-              {syncing ? (
+            <div className="flex items-center gap-2">
+              <Label
+                htmlFor="sync-cadence-select"
+                className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap"
+              >
+                {t('googleCalendar.syncCadence')}
+              </Label>
+              <Select value={String(googleCalendar.syncIntervalMin)} onValueChange={handleCadenceChange}>
+                <SelectTrigger id="sync-cadence-select" className="h-9 w-[110px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SYNC_INTERVAL_OPTIONS.map(minutes => (
+                    <SelectItem key={minutes} value={String(minutes)}>
+                      {t('googleCalendar.cadenceMinutes', { count: minutes })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleSyncNow} disabled={syncing} variant="outline" size="sm">
+                {syncing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    {t('googleCalendar.syncing')}
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                    {t('googleCalendar.syncNow')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Bulk Export, Bulk Import, and Disconnect */}
+          <div className="grid gap-2 lg:grid-cols-3 lg:gap-3">
+            <Button
+              onClick={handleBulkExport}
+              disabled={bulkExporting || bulkImporting || appState.items.length === 0}
+              variant="outline"
+              className="w-full rounded-xl"
+            >
+              {bulkExporting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  {t('googleCalendar.syncing')}
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t('googleCalendar.bulkExporting', {
+                    current: bulkProgress.current,
+                    total: bulkProgress.total,
+                  })}
                 </>
               ) : (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-1" />
-                  {t('googleCalendar.syncNow')}
+                  <Upload className="w-4 h-4 mr-2" />
+                  {t('googleCalendar.bulkExport', {
+                    total: appState.items.length,
+                  })}
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={handleBulkImport}
+              disabled={bulkImporting || bulkExporting}
+              variant="outline"
+              className="w-full rounded-xl"
+            >
+              {bulkImporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t('googleCalendar.bulkImporting', {
+                    current: bulkProgress.current,
+                    total: bulkProgress.total,
+                  })}
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  {t('googleCalendar.bulkImport')}
+                </>
+              )}
+            </Button>
+
+            <Button onClick={handleDisconnect} disabled={loading} variant="destructive" className="w-full rounded-xl">
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t('googleCalendar.disconnecting')}
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {t('googleCalendar.disconnectButton')}
                 </>
               )}
             </Button>
           </div>
 
-          {/* Sync cadence selector */}
-          <div>
-            <Label htmlFor="sync-cadence-select">{t('googleCalendar.syncCadence')}</Label>
-            <Select value={String(googleCalendar.syncIntervalMin)} onValueChange={handleCadenceChange}>
-              <SelectTrigger id="sync-cadence-select" className="mt-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SYNC_INTERVAL_OPTIONS.map(minutes => (
-                  <SelectItem key={minutes} value={String(minutes)}>
-                    {t('googleCalendar.cadenceMinutes', { count: minutes })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-red-800 dark:text-red-200 text-sm">
+              {error}
+            </div>
+          )}
 
-          {/* Bulk Export Button */}
-          <Button
-            onClick={handleBulkExport}
-            disabled={bulkExporting || bulkImporting || appState.items.length === 0}
-            variant="outline"
-            className="w-full"
-          >
-            {bulkExporting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('googleCalendar.bulkExporting', {
-                  defaultValue: `Exporting (${bulkProgress.current}/${bulkProgress.total})`,
-                })}
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4 mr-2" />
-                {t('googleCalendar.bulkExport', {
-                  defaultValue: `Export All Items to Google Calendar (${appState.items.length})`,
-                })}
-              </>
-            )}
-          </Button>
-
-          {/* Bulk Import Button */}
-          <Button
-            onClick={handleBulkImport}
-            disabled={bulkImporting || bulkExporting}
-            variant="outline"
-            className="w-full"
-          >
-            {bulkImporting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('googleCalendar.bulkImporting', {
-                  defaultValue: `Importing (${bulkProgress.current}/${bulkProgress.total})`,
-                })}
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                {t('googleCalendar.bulkImport', {
-                  defaultValue: `Import Items from Google Calendar`,
-                })}
-              </>
-            )}
-          </Button>
-
-          {/* Disconnect Button */}
-          <Button onClick={handleDisconnect} disabled={loading} variant="destructive" className="w-full">
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('googleCalendar.disconnecting')}
-              </>
-            ) : (
-              <>
-                <LogOut className="w-4 h-4 mr-2" />
-                {t('googleCalendar.disconnectButton')}
-              </>
-            )}
-          </Button>
+          {/* Success Message */}
+          {successMessage && (
+            <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-green-800 dark:text-green-200 text-sm">
+              {successMessage}
+            </div>
+          )}
         </>
       )}
     </div>

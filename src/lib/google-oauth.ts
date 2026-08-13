@@ -1,3 +1,6 @@
+import { browser } from 'wxt/browser'
+import { isExtension } from '@/lib/browser-runtime-stub'
+
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar'
 
 export interface GoogleOAuthState {
@@ -77,6 +80,16 @@ export class GoogleOAuthManager {
       throw new Error('Google client ID not configured. Set VITE_GOOGLE_CLIENT_ID env var.')
     }
 
+    if (isExtension) {
+      // Chrome extensions cannot load the GIS script (MV3 CSP forbids remote
+      // script-src). Use chrome.identity.launchWebAuthFlow instead.
+      try {
+        return await this.launchExtensionAuthFlow({ interactive: true, prompt: 'consent' })
+      } catch {
+        return null
+      }
+    }
+
     await loadGisScript()
 
     const oauth2 = getGoogleAccounts()
@@ -110,6 +123,11 @@ export class GoogleOAuthManager {
       throw new Error('Google client ID not configured.')
     }
 
+    if (isExtension) {
+      // Silent launchWebAuthFlow: no popup, fails when no active Google session.
+      return this.launchExtensionAuthFlow({ interactive: false, prompt: '' })
+    }
+
     await loadGisScript()
 
     const oauth2 = getGoogleAccounts()
@@ -138,6 +156,16 @@ export class GoogleOAuthManager {
   }
 
   async revokeToken(accessToken: string): Promise<boolean> {
+    if (isExtension) {
+      // GIS revoke is DOM-only. Call the raw revocation endpoint instead.
+      try {
+        const response = await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(accessToken)}`)
+        return response.ok
+      } catch {
+        return false
+      }
+    }
+
     await loadGisScript()
 
     const oauth2 = getGoogleAccounts()
@@ -156,6 +184,39 @@ export class GoogleOAuthManager {
     const now = Date.now()
     const bufferTime = 5 * 60 * 1000
     return now >= expiresAt - bufferTime
+  }
+
+  private async launchExtensionAuthFlow(options: { interactive: boolean; prompt: string }): Promise<GoogleOAuthState> {
+    const redirectUrl = browser.identity.getRedirectURL()
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+    authUrl.searchParams.set('client_id', this.clientId)
+    authUrl.searchParams.set('redirect_uri', redirectUrl)
+    authUrl.searchParams.set('response_type', 'token')
+    authUrl.searchParams.set('scope', CALENDAR_SCOPE)
+    if (options.prompt) {
+      authUrl.searchParams.set('prompt', options.prompt)
+    }
+
+    const responseUrl = await browser.identity.launchWebAuthFlow({
+      url: authUrl.toString(),
+      interactive: options.interactive,
+    })
+
+    if (!responseUrl) {
+      throw new Error('Google OAuth flow did not return a response.')
+    }
+
+    const params = new URLSearchParams(new URL(responseUrl).hash.substring(1))
+    const accessToken = params.get('access_token')
+    if (params.get('error') || !accessToken) {
+      throw new Error(`Google OAuth failed: ${params.get('error') ?? 'missing access token'}`)
+    }
+
+    const expiresIn = Number(params.get('expires_in')) || 3600
+    return {
+      accessToken,
+      expiresAt: Date.now() + expiresIn * 1000,
+    }
   }
 
   private parseTokenResponse(response: GisTokenResponse): GoogleOAuthState {

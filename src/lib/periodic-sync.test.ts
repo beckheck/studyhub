@@ -82,6 +82,35 @@ describe('runPeriodicSync', () => {
     expect(deps.onTokenExpired).not.toHaveBeenCalled()
   })
 
+  it('stamps lastSyncedAt on an empty queue when forced', async () => {
+    const deps = makeDeps()
+    await runPeriodicSync(deps, { force: true })
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(deps.onTokenExpired).not.toHaveBeenCalled()
+    expect(deps.onLastSyncedAt).toHaveBeenCalledWith(NOW)
+  })
+
+  it('does not stamp when forced but the token is expired', async () => {
+    const deps = makeDeps({ tokenExpiresAt: NOW - 1000 })
+    await runPeriodicSync(deps, { force: true })
+    expect(deps.onTokenExpired).toHaveBeenCalledTimes(1)
+    expect(deps.onLastSyncedAt).not.toHaveBeenCalled()
+  })
+
+  it('does not stamp when forced but pending work fails', async () => {
+    const deps = makeDeps({
+      dirtyItemIds: ['evt-1'],
+      items: [makeEvent({ id: 'evt-1' })],
+    })
+
+    fetchMock.mockResolvedValue(errorResponse('Forbidden'))
+
+    await runPeriodicSync(deps, { force: true })
+
+    expect(deps.onDirtyReadded).toHaveBeenCalledWith('evt-1')
+    expect(deps.onLastSyncedAt).not.toHaveBeenCalled()
+  })
+
   it('does not broadcast token expiry when queues are empty', async () => {
     const deps = makeDeps({ tokenExpiresAt: NOW - 1000 })
     await runPeriodicSync(deps)

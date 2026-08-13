@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAppContext } from '@/contexts/AppContext'
 import { useScrollToTop } from '@/hooks/useScrollToTop'
 import { useSettingsDialog } from '@/hooks/useSettingsDialog'
 import { useCallback, useEffect } from 'react'
@@ -7,7 +6,6 @@ import { useTranslation } from 'react-i18next'
 
 export default function SettingsTab() {
   const { t } = useTranslation('settings')
-  const { isExtension } = useAppContext()
   const { scrollToTop } = useScrollToTop()
   const { settingsDialogs } = useSettingsDialog()
 
@@ -28,10 +26,7 @@ export default function SettingsTab() {
     'hydration',
     'weatherApi',
   ]
-  const settingsKeysInCustomOrder = SETTINGS_DIALOGS_IN_CUSTOM_ORDER.filter(
-    key => !(isExtension && key === 'googleCalendar'),
-  )
-  const settingsDialogsInCustomOrder = settingsKeysInCustomOrder.map(key => ({
+  const settingsDialogsInCustomOrder = SETTINGS_DIALOGS_IN_CUSTOM_ORDER.map(key => ({
     key,
     ...settingsDialogs[key],
   }))

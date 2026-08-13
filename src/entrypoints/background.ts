@@ -102,7 +102,8 @@ export default defineBackground(() => {
       } else if (message.type === 'sync.triggerNow') {
         // Resolve only after the sync completes so the caller's follow-up
         // sync.getStatus reads the updated lastSyncedAt, not a stale value.
-        runPeriodicSyncFromBackground()
+        // Forced so an empty queue still stamps lastSyncedAt.
+        runPeriodicSyncFromBackground({ force: true })
           .then(() => {
             sendResponse({ success: true })
           })
@@ -207,9 +208,10 @@ const sendCaptureSelectionMessage = (tabId: number, selectedText: string) => {
 // Run the periodic sync backstop against the background's synced store.
 // Mutations go through the store, which persists and propagates to other
 // contexts via HybridStorage.
-async function runPeriodicSyncFromBackground() {
+async function runPeriodicSyncFromBackground(options: { force?: boolean } = {}) {
   await runPeriodicSyncFromStore({
     sync: gcalSync,
+    force: options.force,
     onTokenExpired: () => {
       // The background cannot refresh the token (no DOM for GIS). Ask any
       // open UI surface to refresh and persist the new token.
