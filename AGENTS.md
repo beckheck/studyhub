@@ -60,12 +60,9 @@ Formatting: 2-space indent, single quotes, no semicolons, trailing commas, recom
 ## Writing Style
 
 - Adhere to E-Prime + ASD-STE100 Simplified Technical English.
-- Write for one-read comprehension. Fluid prose instead of performance.
+- Use Google dev docs style. More dead, plain, direct, fluid prose. No aphorisms, no flourishes, no jargon, no slang and no idioms. Simple.
 - Avoid passive voice. Identify the agent of every action.
-- Avoid jargon, slang and idioms. Use plain, direct language.
-- Avoid "it's not A, it's B" or similar constructions. Use more plain, fluid alternatives such as: "it {verb} B instead of A."
-- DO NOT use terms such as "load-bearing" or "load-carrying". Use instead a context-sensitive, plain language alternative.
-- DO NOT use cleft or pseudo-cleft sentences: a copula plus a relative clause, used to emphasise, where a plain verb works. Write subject, verb, object.
+- DO NOT use cleft or pseudo-cleft sentences.
   - "that file is what a reviewer reads" => "a reviewer reads that file"
   - "it is the relay that decides" => "the relay decides"
   - "what makes it safe is the roster" => "the roster makes it safe"
